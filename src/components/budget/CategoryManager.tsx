@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import * as lucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'CreditCard', 'DollarSign', 'Gift', 'Heart', 'Plane', 'BookOpen', 'Briefcase', 'Film', 'Gamepad2', 'Music'];
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cyan', 'fuchsia'];
 const scopeSchema = z.object({
@@ -26,7 +27,7 @@ const EditScopeForm = ({ scope, onSave, onCancel }: { scope: ScopeWithIcon, onSa
     defaultValues: {
       name: scope.name,
       dailyLimit: scope.dailyLimit,
-      icon: scope.icon.displayName || 'Circle',
+      icon: (scope.icon as any).displayName || 'Circle',
       color: scope.color,
     },
   });
@@ -50,7 +51,7 @@ const EditScopeForm = ({ scope, onSave, onCancel }: { scope: ScopeWithIcon, onSa
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}><X className="w-4 h-4 mr-1" />Cancel</Button>
-        <Button type="submit" size="sm" className="bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600"><Save className="w-4 h-4 mr-1" />Save</Button>
+        <Button type="submit" size="sm" className="bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95"><Save className="w-4 h-4 mr-1" />Save Changes</Button>
       </div>
     </form>
   );
@@ -85,13 +86,13 @@ export function CategoryManager() {
             <Controller name="name" control={control} render={({ field }) => <Input placeholder="Category Name" {...field} />} />
             <Controller name="dailyLimit" control={control} render={({ field }) => <Input type="number" placeholder="Daily Limit" {...field} value={field.value ?? 0} onChange={(e) => field.onChange(Number(e.target.value) || 0)} />} />
             <Controller name="icon" control={control} render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue placeholder="Select Icon" /></SelectTrigger>
                 <SelectContent>{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
               </Select>
             )} />
             <Controller name="color" control={control} render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue placeholder="Select Color" /></SelectTrigger>
                 <SelectContent>{colorPresets.map(color => <SelectItem key={color} value={color}>{color}</SelectItem>)}</SelectContent>
               </Select>
@@ -107,11 +108,17 @@ export function CategoryManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
+            {scopes.length === 0 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-8 px-4 border-2 border-dashed rounded-lg">
+                <PlusCircle className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-4 text-muted-foreground">Get started by adding your first category above.</p>
+              </motion.div>
+            )}
             {scopes.map((scope) => (
               editingScopeId === scope.id ? (
                 <EditScopeForm key={scope.id} scope={scope} onSave={(data) => handleSave(scope.id, data)} onCancel={() => setEditingScopeId(null)} />
               ) : (
-                <div key={scope.id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-colors">
+                <div key={scope.id} className="group flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-all duration-200 hover:scale-[1.02]">
                   <div className="flex items-center gap-3">
                     <div className={cn('p-1.5 rounded-md', `bg-${scope.color}-100 dark:bg-${scope.color}-900/50`)}>
                       <scope.icon className={cn('w-5 h-5', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />

@@ -89,11 +89,8 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       const index = state.scopes.findIndex((s) => s.id === id);
       if (index !== -1) {
         const updatedScope = { ...state.scopes[index], ...data };
-        if (data.icon) {
-          state.scopes[index] = { ...updatedScope, icon: getIcon(data.icon) };
-        } else {
-          state.scopes[index] = updatedScope;
-        }
+        const newIcon = data.icon ? getIcon(data.icon) : state.scopes[index].icon;
+        state.scopes[index] = { ...updatedScope, icon: newIcon };
       }
     }));
     try {

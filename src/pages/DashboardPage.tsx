@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Wallet } from 'lucide-react';
 import { useBudgetStore } from '@/lib/store';
 import { ScopeCard } from '@/components/budget/ScopeCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
@@ -29,7 +29,7 @@ export function DashboardPage() {
               Daily SpendScope
             </h1>
             <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Your real-time guide to daily spending. Total daily budget: ${totalLimit.toFixed(2)}
+              Your real-time guide to daily spending. Total daily budget: <span className="text-gradient font-bold">${totalLimit.toFixed(2)}</span>
             </p>
           </div>
           <AnimatePresence>
@@ -39,9 +39,13 @@ export function DashboardPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex justify-center items-center py-20"
+                className="flex flex-col justify-center items-center py-20 space-y-4"
               >
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <div className="flex items-center gap-3 text-primary">
+                  <Wallet className="h-10 w-10" />
+                  <Loader2 className="h-10 w-10 animate-spin" />
+                </div>
+                <p className="text-muted-foreground">Loading your budget...</p>
               </motion.div>
             ) : (
               <>
@@ -68,7 +72,7 @@ export function DashboardPage() {
       </main>
       <Button
         onClick={() => setIsDrawerOpen(true)}
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95 animate-pulse"
         size="icon"
       >
         <Plus className="h-8 w-8" />
