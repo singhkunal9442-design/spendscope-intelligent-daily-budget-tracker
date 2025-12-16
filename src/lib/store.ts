@@ -180,3 +180,9 @@ export const useMonthlyRemaining = () => {
   const spent = useSpentThisMonth();
   return budget - spent;
 };
+export const useSpentAllTime = (scopeId: string) => {
+  const transactions = useBudgetStore(state => state.transactions);
+  return transactions
+    .filter((t) => t.scopeId === scopeId)
+    .reduce((sum, t) => sum + t.amount, 0);
+};
