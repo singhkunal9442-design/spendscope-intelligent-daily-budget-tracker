@@ -3,22 +3,18 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
 }
-
-// Minimal real-world chat example types (shared by frontend and worker)
-export interface User {
+// SpendScope Application Types
+export interface Scope {
   id: string;
   name: string;
+  dailyLimit: number;
+  icon: string; // Icon name from lucide-react
+  color: string; // e.g., 'emerald', 'amber', 'rose'
 }
-
-export interface Chat {
+export interface Transaction {
   id: string;
-  title: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  chatId: string;
-  userId: string;
-  text: string;
-  ts: number; // epoch millis
+  scopeId: string;
+  amount: number;
+  description?: string;
+  date: string; // ISO string for date
 }

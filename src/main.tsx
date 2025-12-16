@@ -13,19 +13,9 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import { SettingsPage } from '@/pages/SettingsPage';
+import { HistoryPage } from '@/pages/HistoryPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 const queryClient = new QueryClient();
-// Placeholder for History page
-function HistoryPage() {
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="py-8 md:py-10 lg:py-12">
-        <h1 className="text-4xl font-bold">History</h1>
-        <p className="text-muted-foreground mt-2">This page is under construction.</p>
-      </div>
-    </div>
-  );
-}
 const router = createBrowserRouter([
   {
     path: "/",

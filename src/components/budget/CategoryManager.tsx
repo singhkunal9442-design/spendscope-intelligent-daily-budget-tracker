@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useBudgetStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Edit, Save, PlusCircle } from 'lucide-react';
-import { Scope } from '@/types/domain';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Edit, Save } from 'lucide-react';
+import { Scope } from '@shared/types';
+import { toast } from 'sonner';
 export function CategoryManager() {
-  const { scopes, updateScope } = useBudgetStore();
+  const scopes = useBudgetStore(state => state.scopes);
+  const updateScope = useBudgetStore(state => state.updateScope);
   const [editingScopeId, setEditingScopeId] = useState<string | null>(null);
   const [newLimit, setNewLimit] = useState<number>(0);
   const handleEdit = (scope: Scope) => {
@@ -14,30 +16,41 @@ export function CategoryManager() {
     setNewLimit(scope.dailyLimit);
   };
   const handleSave = (scope: Scope) => {
-    updateScope({ ...scope, dailyLimit: newLimit });
+    if (newLimit < 0) {
+      toast.error("Daily limit cannot be negative.");
+      return;
+    }
+    const scopeToUpdate = { ...scope, dailyLimit: newLimit };
+    updateScope(scopeToUpdate);
     setEditingScopeId(null);
   };
   return (
     <Card>
       <CardHeader>
         <CardTitle>Manage Scopes</CardTitle>
+        <CardDescription>Set the daily spending limit for each category.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {scopes.map((scope) => (
             <div key={scope.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-3">
-                {typeof scope.icon !== 'string' && <scope.icon className="w-5 h-5 text-muted-foreground" />}
+                <scope.icon className="w-5 h-5 text-muted-foreground" />
                 <span className="font-medium">{scope.name}</span>
               </div>
               <div className="flex items-center gap-4">
                 {editingScopeId === scope.id ? (
-                  <Input
-                    type="number"
-                    value={newLimit}
-                    onChange={(e) => setNewLimit(parseFloat(e.target.value))}
-                    className="w-24 h-9"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      value={newLimit}
+                      onChange={(e) => setNewLimit(parseFloat(e.target.value) || 0)}
+                      className="w-28 h-9 pl-6"
+                      step="1"
+                      min="0"
+                    />
+                  </div>
                 ) : (
                   <span className="font-mono text-sm">${scope.dailyLimit.toFixed(2)}</span>
                 )}
@@ -54,7 +67,6 @@ export function CategoryManager() {
             </div>
           ))}
         </div>
-        {/* Add new scope functionality can be added here */}
       </CardContent>
     </Card>
   );
