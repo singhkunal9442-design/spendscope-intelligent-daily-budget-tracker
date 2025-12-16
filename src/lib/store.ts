@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { isToday, parseISO } from 'date-fns';
+import { isToday, parseISO, isSameMonth } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Scope, Transaction } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
@@ -17,6 +17,7 @@ interface BudgetState {
   loadData: () => Promise<void>;
   addScope: (scope: Omit<Scope, 'id'>) => Promise<void>;
   updateScope: (id: string, dailyLimit: number) => Promise<void>;
+  updateScopeFull: (id: string, data: Partial<Omit<Scope, 'id'>>) => Promise<void>;
   deleteScope: (id: string) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<void>;
 }
@@ -81,6 +82,32 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       set({ scopes: originalScopes }); // Revert on failure
     }
   },
+  updateScopeFull: async (id: string, data: Partial<Omit<Scope, 'id'>>) => {
+    const originalScopes = get().scopes;
+    // Optimistic update
+    set(produce((state: BudgetState) => {
+      const index = state.scopes.findIndex((s) => s.id === id);
+      if (index !== -1) {
+        const updatedScope = { ...state.scopes[index], ...data };
+        if (data.icon) {
+          state.scopes[index] = { ...updatedScope, icon: getIcon(data.icon) };
+        } else {
+          state.scopes[index] = updatedScope;
+        }
+      }
+    }));
+    try {
+      await api<Scope>(`/api/scopes/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      toast.success(`Category "${data.name || 'Category'}" updated.`);
+    } catch (error) {
+      console.error("Failed to update scope", error);
+      toast.error("Failed to save changes. Reverting.");
+      set({ scopes: originalScopes }); // Revert on failure
+    }
+  },
   deleteScope: async (id: string) => {
     const originalScopes = get().scopes;
     const scopeToDelete = originalScopes.find(s => s.id === id);
@@ -92,6 +119,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     try {
       await api(`/api/scopes/${id}`, { method: 'DELETE' });
       toast.success(`Category "${scopeToDelete.name}" deleted.`);
+      // Transactions are preserved as orphans, UI handles this via fallbacks.
     } catch (error) {
       console.error("Failed to delete scope", error);
       toast.error("Failed to delete category. Reverting.");
@@ -139,4 +167,19 @@ export const useSpentToday = (scopeId: string) => {
       (t) => t.scopeId === scopeId && isToday(parseISO(t.date))
     )
     .reduce((sum, t) => sum + t.amount, 0);
+};
+export const useSpentThisMonth = () => {
+  const transactions = useBudgetStore(state => state.transactions);
+  return transactions
+    .filter(t => isSameMonth(parseISO(t.date), new Date()))
+    .reduce((sum, t) => sum + t.amount, 0);
+};
+export const useMonthlyBudget = () => {
+  const scopes = useBudgetStore(state => state.scopes);
+  return scopes.reduce((sum, s) => sum + s.dailyLimit * 30, 0);
+};
+export const useMonthlyRemaining = () => {
+  const budget = useMonthlyBudget();
+  const spent = useSpentThisMonth();
+  return budget - spent;
 };

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MonthlyOverviewCard } from '@/components/budget/MonthlyOverviewCard';
 export function DashboardPage() {
   const scopes = useBudgetStore(state => state.scopes);
   const loadData = useBudgetStore(state => state.loadData);
@@ -20,7 +21,7 @@ export function DashboardPage() {
   return (
     <div className="min-h-screen w-full bg-background text-foreground relative">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
-      <ThemeToggle className="fixed top-4 right-4" />
+      <ThemeToggle className="fixed top-4 right-4 z-50" />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-16">
           <div className="text-center mb-12">
@@ -43,21 +44,24 @@ export function DashboardPage() {
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </motion.div>
             ) : (
-              <motion.div
-                key="scopes"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  visible: { transition: { staggerChildren: 0.1 } },
-                }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {scopes.map((scope) => (
-                  <motion.div key={scope.id} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                    <ScopeCard scope={scope} />
-                  </motion.div>
-                ))}
-              </motion.div>
+              <>
+                <MonthlyOverviewCard />
+                <motion.div
+                  key="scopes"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.1 } },
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                >
+                  {scopes.map((scope) => (
+                    <motion.div key={scope.id} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                      <ScopeCard scope={scope} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
         </div>

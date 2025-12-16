@@ -1,33 +1,20 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Landmark, FileWarning, Wallet, ShoppingBag, TrendingUp, TrendingDown } from 'lucide-react';
+import { Calendar, TrendingUp, PiggyBank, Banknote } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useFormatAmount, useSpentThisMonth, useCurrentBalance, useCurrentSalary, useUnpaidBillsTotal, useTransactions } from '@/lib/store';
+import { useBudgetStore, useMonthlyBudget, useSpentThisMonth, useMonthlyRemaining } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
-import { Skeleton } from '@/components/ui/skeleton';
-import { HelpTooltip } from '@/components/HelpTooltip';
-export function MonthlyOverviewCardSkeleton() {
-  return (
-    <div className="p-8 rounded-[2.5rem] border bg-card shadow-glass animate-pulse space-y-8">
-      <div className="flex justify-between items-center"><Skeleton className="h-8 w-40" /><Skeleton className="h-10 w-32 rounded-lg" /></div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
-      </div>
-      <Skeleton className="h-2 w-full rounded-full" />
-    </div>
-  );
-}
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
 export function MonthlyOverviewCard() {
-  const transactions = useTransactions();
-  const formatAmount = useFormatAmount();
+  const monthlyBudget = useMonthlyBudget();
   const spentThisMonth = useSpentThisMonth();
-  const currentBalance = useCurrentBalance();
-  const currentSalary = useCurrentSalary();
-  const unpaidBillsTotal = useUnpaidBillsTotal();
-  // availableCash is strictly the adjusted balance minus month-to-date spending
-  const availableCash = currentBalance - spentThisMonth;
-  const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
+  const remainingThisMonth = useMonthlyRemaining();
+  const transactions = useBudgetStore(state => state.transactions);
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -41,109 +28,50 @@ export function MonthlyOverviewCard() {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [transactions]);
-  // Percentage reflects how much of the CURRENT liquid balance has been consumed by transactions
-  const percentage = currentBalance > 0 ? Math.min((spentThisMonth / (currentBalance + spentThisMonth)) * 100, 100) : 0;
-  const stats = [
-    { 
-      label: 'Live Balance', 
-      value: formatAmount(currentBalance), 
-      icon: Landmark, 
-      help: "Your liquid baseline. This represents your starting balance minus any recurring bills you have marked as 'Settled' for this month." 
-    },
-    { 
-      label: 'Total Spent', 
-      value: formatAmount(spentThisMonth), 
-      icon: FileWarning, 
-      help: "Sum of all transactions logged this month across all categories." 
-    },
-    { 
-      label: 'Salary', 
-      value: formatAmount(currentSalary), 
-      icon: Wallet, 
-      help: "Your expected monthly income, used as a high-level scope indicator." 
-    },
-    { 
-      label: 'Bills Due', 
-      value: formatAmount(unpaidBillsTotal), 
-      icon: ShoppingBag, 
-      help: "Total value of recurring bills not yet marked as paid." 
-    },
-    { 
-      label: 'Available Cash', 
-      value: formatAmount(availableCash), 
-      icon: availableCash < 0 ? TrendingDown : TrendingUp, 
-      isPrimary: true, 
-      help: "True Liquidity: Your Live Balance minus your month-to-date spending. This is exactly what you have left to spend." 
-    },
-  ];
+  const percentage = monthlyBudget > 0 ? Math.min((spentThisMonth / monthlyBudget) * 100, 100) : 0;
+  const getProgressColor = () => {
+    if (percentage > 90) return 'bg-red-500';
+    if (percentage > 70) return 'bg-amber-500';
+    return 'bg-emerald-500';
+  };
   return (
-    <div className="p-8 md:p-12 rounded-[3rem] border border-border/50 shadow-glass bg-card/80 backdrop-blur-md relative overflow-hidden group">
-      <div className="flex flex-col gap-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-spendscope-500/10 border border-spendscope-500/20">
-              <Calendar className="w-8 h-8 text-spendscope-500" />
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className={cn(
+        "relative p-6 rounded-2xl overflow-hidden shadow-lg group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 mb-12",
+        "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
+      )}
+    >
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+        <div className="flex-1 space-y-4">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold text-foreground">Monthly Overview</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center md:text-left">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><PiggyBank className="w-4 h-4" /> Budget</p>
+              <p className="text-xl font-bold text-foreground">{currencyFormatter.format(monthlyBudget)}</p>
             </div>
-            <div>
-              <h2 className="text-3xl font-black tracking-tighter">{currentMonth} Overview</h2>
-              <p className="text-label mt-1">Real-time Financial Pulse</p>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><Banknote className="w-4 h-4" /> Spent</p>
+              <p className="text-xl font-bold text-foreground">{currencyFormatter.format(spentThisMonth)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50 col-span-2 sm:col-span-1">
+              <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><TrendingUp className="w-4 h-4" /> Remaining</p>
+              <p className={cn("text-xl font-bold", remainingThisMonth < 0 ? 'text-red-500' : 'text-emerald-500')}>{currencyFormatter.format(remainingThisMonth)}</p>
             </div>
           </div>
-          <div className="w-full md:w-80 h-16 opacity-30 group-hover:opacity-60 transition-all duration-700 hover:scale-105">
-            <ScopeSparkline data={sparkData} color="emerald" />
+          <div className="pt-2">
+            <Progress value={percentage} className={cn("h-3", getProgressColor())} />
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={cn(
-                "p-5 rounded-3xl border border-border/20 transition-all duration-300 relative",
-                stat.isPrimary
-                  ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 shadow-lg shadow-emerald-500/5"
-                  : "bg-muted/10 hover:bg-muted/20"
-              )}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <stat.icon className={cn("w-4 h-4", stat.isPrimary ? "text-emerald-500" : "text-muted-foreground/60")} />
-                  <p className="text-label leading-none">{stat.label}</p>
-                </div>
-                <HelpTooltip message={stat.help} className="h-4 w-4" />
-              </div>
-              <p className={cn(
-                "text-2xl font-black tracking-tighter",
-                stat.isPrimary ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
-              )}>{stat.value}</p>
-            </motion.div>
-          ))}
-        </div>
-        <div className="space-y-5">
-          <div className="flex justify-between items-end px-1">
-            <div className="space-y-1">
-              <p className="text-label">Monthly Utilization</p>
-              <p className="text-sm font-bold text-muted-foreground">
-                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized from available liquid baseline.
-              </p>
-            </div>
-            <p className="text-2xl font-black text-foreground tracking-tighter">{Math.round(percentage)}%</p>
-          </div>
-          <div className="h-4 w-full bg-muted/30 rounded-full overflow-hidden p-1 border border-border/10">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${percentage}%` }}
-              transition={{ duration: 1.5, ease: "circOut" }}
-              className={cn(
-                "h-full rounded-full transition-all shadow-glow",
-                percentage > 90 ? "bg-red-500" : "bg-gradient-to-r from-spendscope-500 to-emerald-500"
-              )}
-            />
-          </div>
+        <div className="w-full md:w-1/3 h-24 md:h-auto md:self-stretch">
+          <ScopeSparkline data={sparkData} color="emerald" />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
