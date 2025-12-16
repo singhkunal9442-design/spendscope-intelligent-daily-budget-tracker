@@ -1,15 +1,20 @@
 import React from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useTheme } from '@/hooks/use-theme';
+import { Skeleton } from '@/components/ui/skeleton';
 interface HistoryChartProps {
   data: { date: string; total: number }[];
+  isLoading?: boolean;
 }
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
-export function HistoryChart({ data }: HistoryChartProps) {
+export function HistoryChart({ data, isLoading }: HistoryChartProps) {
   const { isDark } = useTheme();
+  if (isLoading) {
+    return <Skeleton className="h-80 w-full" />;
+  }
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -35,7 +40,7 @@ export function HistoryChart({ data }: HistoryChartProps) {
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `${value}`}
           />
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#ffffff1a' : '#0000001a'} />
           <Tooltip

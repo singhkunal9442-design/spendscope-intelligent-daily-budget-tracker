@@ -157,6 +157,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   },
 }));
 // Selectors
+export const useIsLoading = () => useBudgetStore(state => state.loading && !state.initialized);
 export const useSpentToday = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return transactions

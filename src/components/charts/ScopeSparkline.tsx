@@ -1,10 +1,15 @@
 import React from 'react';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 interface ScopeSparklineProps {
   data: { date: string; spent: number }[];
   color: string;
+  isLoading?: boolean;
 }
-export function ScopeSparkline({ data, color }: ScopeSparklineProps) {
+export function ScopeSparkline({ data, color, isLoading }: ScopeSparklineProps) {
+  if (isLoading) {
+    return <Skeleton className="h-full w-full" />;
+  }
   const colorMap: Record<string, string> = {
     emerald: 'hsl(142.1 76.2% 36.3%)',
     sky: 'hsl(198.3 93.3% 49.6%)',
