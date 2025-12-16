@@ -11,7 +11,7 @@ import { useBudgetStore } from '@/lib/store';
 import { toast } from 'sonner';
 const expenseSchema = z.object({
   scopeId: z.string().min(1, 'Please select a category'),
-  amount: z.coerce.number().positive('Amount must be positive'),
+  amount: z.coerce.number().min(0.01, 'Amount must be positive'),
 });
 type ExpenseFormData = z.infer<typeof expenseSchema>;
 interface AddExpenseDrawerProps {
@@ -19,7 +19,8 @@ interface AddExpenseDrawerProps {
   onOpenChange: (open: boolean) => void;
 }
 export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) {
-  const { scopes, addTransaction } = useBudgetStore();
+  const scopes = useBudgetStore(state => state.scopes);
+  const addTransaction = useBudgetStore(state => state.addTransaction);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -30,7 +31,7 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
   const onSubmit = (data: ExpenseFormData) => {
     addTransaction(data);
     const scopeName = scopes.find(s => s.id === data.scopeId)?.name || 'Category';
-    toast.success(`$${data.amount} added to ${scopeName}`);
+    toast.success(`$${data.amount.toFixed(2)} added to ${scopeName}`);
     reset();
     onOpenChange(false);
   };

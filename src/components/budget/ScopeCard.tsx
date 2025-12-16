@@ -2,10 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Scope } from '@/types/domain';
-import { useSpentToday } from '@/lib/store';
+import { useSpentToday, ScopeWithIcon } from '@/lib/store';
 interface ScopeCardProps {
-  scope: Scope;
+  scope: ScopeWithIcon;
 }
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -14,7 +13,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 export function ScopeCard({ scope }: ScopeCardProps) {
   const spentToday = useSpentToday(scope.id);
   const remaining = scope.dailyLimit - spentToday;
-  const percentage = scope.dailyLimit > 0 ? (spentToday / scope.dailyLimit) * 100 : 0;
+  const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';
     if (percentage > 70) return 'bg-amber-500';
@@ -31,11 +30,7 @@ export function ScopeCard({ scope }: ScopeCardProps) {
       <div className="flex justify-between items-start">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            {typeof Icon === 'string' ? (
-              <span className="text-2xl">{Icon}</span>
-            ) : (
-              <Icon className="w-6 h-6 text-muted-foreground" />
-            )}
+            <Icon className="w-6 h-6 text-muted-foreground" />
             <h3 className="text-lg font-semibold text-foreground">{scope.name}</h3>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -52,11 +47,16 @@ export function ScopeCard({ scope }: ScopeCardProps) {
       <div className="mt-6 space-y-2">
         <div className="flex justify-between text-sm font-medium">
           <span className="text-muted-foreground">Remaining</span>
-          <span className={cn('font-bold', remaining < 0 ? 'text-red-500' : 'text-emerald-500')}>
+          <motion.span
+            className={cn('font-bold', remaining < 0 ? 'text-red-500' : 'text-emerald-500')}
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 0.3 }}
+            key={remaining}
+          >
             {currencyFormatter.format(remaining)}
-          </span>
+          </motion.span>
         </div>
-        <Progress value={percentage} indicatorClassName={getProgressColor()} />
+        <Progress value={percentage} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-emerald-400 [&>div]:via-amber-400 [&>div]:to-red-500" />
       </div>
     </motion.div>
   );
