@@ -5,14 +5,16 @@ import { cn } from '@/lib/utils';
 import { useBudgetStore, useSpentToday, ScopeWithIcon } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
+import { Pencil } from 'lucide-react';
 interface ScopeCardProps {
   scope: ScopeWithIcon;
+  onEdit: (scope: ScopeWithIcon) => void;
 }
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
-export function ScopeCard({ scope }: ScopeCardProps) {
+export function ScopeCard({ scope, onEdit }: ScopeCardProps) {
   const spentToday = useSpentToday(scope.id);
   const transactions = useBudgetStore(state => state.transactions);
   const sparkData = useMemo(() => {
@@ -41,15 +43,25 @@ export function ScopeCard({ scope }: ScopeCardProps) {
   return (
     <motion.div
       layout
+      onClick={() => onEdit(scope)}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "relative p-6 rounded-2xl overflow-hidden shadow-lg group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300",
+        "relative p-6 rounded-2xl overflow-hidden shadow-lg group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer",
         "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
       )}
     >
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 0, scale: 0 }}
+        whileHover={{ opacity: 1, scale: 1 }}
+        className="absolute top-3 right-3 bg-primary/90 text-primary-foreground px-2 py-1 rounded-full text-xs font-medium shadow-lg flex items-center gap-1 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100"
+      >
+        <Pencil className="w-3 h-3" />
+        Edit
+      </motion.div>
       <div className="flex justify-between items-start">
         <div className="space-y-1">
           <div className="flex items-center gap-3">

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Loader2, Wallet } from 'lucide-react';
-import { useBudgetStore } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon } from '@/lib/store';
 import { ScopeCard } from '@/components/budget/ScopeCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
+import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -13,7 +14,8 @@ export function DashboardPage() {
   const loadData = useBudgetStore(state => state.loadData);
   const initialized = useBudgetStore(state => state.initialized);
   const loading = useBudgetStore(state => state.loading);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
+  const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -61,7 +63,7 @@ export function DashboardPage() {
                 >
                   {scopes.map((scope) => (
                     <motion.div key={scope.id} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                      <ScopeCard scope={scope} />
+                      <ScopeCard scope={scope} onEdit={setEditingScope} />
                     </motion.div>
                   ))}
                 </motion.div>
@@ -71,14 +73,15 @@ export function DashboardPage() {
         </div>
       </main>
       <Button
-        onClick={() => setIsDrawerOpen(true)}
+        onClick={() => setIsAddDrawerOpen(true)}
         className="fixed bottom-6 right-6 h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95 animate-pulse"
         size="icon"
       >
         <Plus className="h-8 w-8" />
         <span className="sr-only">Add Expense</span>
       </Button>
-      <AddExpenseDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} />
+      <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
+      <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
       <Toaster richColors />
     </div>
   );
