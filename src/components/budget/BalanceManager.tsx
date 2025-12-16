@@ -1,0 +1,72 @@
+import React from 'react';
+import { useBudgetStore, useCurrentBalance, useFormatAmount } from '@/lib/store';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Wallet, Save } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { motion } from 'framer-motion';
+const balanceSchema = z.object({
+  balance: z.number().min(0, 'Balance must be a non-negative number'),
+});
+type BalanceFormData = z.infer<typeof balanceSchema>;
+export function BalanceManager() {
+  const currentBalance = useCurrentBalance();
+  const setCurrentBalance = useBudgetStore(state => state.setCurrentBalance);
+  const formatAmount = useFormatAmount();
+  const { control, handleSubmit, formState: { errors } } = useForm<BalanceFormData>({
+    resolver: zodResolver(balanceSchema),
+    defaultValues: {
+      balance: currentBalance,
+    },
+  });
+  const handleUpdateBalance = (data: BalanceFormData) => {
+    setCurrentBalance(data.balance);
+  };
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Starting Balance</CardTitle>
+          <CardDescription>Set your initial account balance to track your available cash accurately.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(handleUpdateBalance)} className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-grow w-full">
+                <Controller
+                  name="balance"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 5000"
+                        {...field}
+                        value={field.value ?? 0}
+                        onChange={(e) => field.onChange(Number(e.target.value) || 0)}
+                        className="pl-10 h-12 rounded-2xl"
+                      />
+                    </div>
+                  )}
+                />
+                {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance.message}</p>}
+              </div>
+              <Button type="submit" className="w-full sm:w-auto btn-premium h-12">
+                <Save className="w-4 h-4 mr-2" />
+                Update Balance
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground text-center sm:text-left">
+              Current starting balance is set to: <span className="font-bold text-foreground">{formatAmount(currentBalance)}</span>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
