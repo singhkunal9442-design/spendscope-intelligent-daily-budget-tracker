@@ -7,9 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBudgetStore, ScopeWithIcon } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon, useSpentToday } from '@/lib/store';
 import { Save, X } from 'lucide-react';
-import * as lucideIcons from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'CreditCard', 'DollarSign', 'Gift', 'Heart', 'Plane', 'BookOpen', 'Briefcase', 'Film', 'Gamepad2', 'Music'];
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cyan', 'fuchsia'];
 const scopeSchema = z.object({
@@ -24,6 +27,51 @@ interface EditScopeDrawerProps {
   onOpenChange: (open: boolean) => void;
   scope: ScopeWithIcon | null;
 }
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+const TodaySpentStat = ({ scope }: { scope: ScopeWithIcon }) => {
+  const spentToday = useSpentToday(scope.id);
+  const remaining = scope.dailyLimit - spentToday;
+  const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
+  const getProgressColor = () => {
+    if (percentage > 90) return 'bg-red-500';
+    if (percentage > 70) return 'bg-amber-500';
+    return 'bg-emerald-500';
+  };
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className={cn(
+        "relative p-4 rounded-xl overflow-hidden shadow-md",
+        "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
+      )}>
+        <CardContent className="p-0 space-y-2">
+          <div className="flex justify-between text-sm font-medium">
+            <span className="text-muted-foreground">Spent Today</span>
+            <span className="font-bold text-foreground">{currencyFormatter.format(spentToday)} / {currencyFormatter.format(scope.dailyLimit)}</span>
+          </div>
+          <Progress value={percentage} className={cn("h-2", getProgressColor())} />
+          <div className="flex justify-between text-sm font-medium pt-1">
+            <span className="text-muted-foreground">Remaining</span>
+            <motion.span
+              className={cn('font-bold', remaining < 0 ? 'text-red-500' : 'text-emerald-500')}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 0.3 }}
+              key={remaining}
+            >
+              {currencyFormatter.format(remaining)}
+            </motion.span>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerProps) {
   const updateScopeFull = useBudgetStore(state => state.updateScopeFull);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<ScopeFormData>({
@@ -60,7 +108,10 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
             <DrawerTitle>Edit Category</DrawerTitle>
             <DrawerDescription>Update the details for "{scope?.name}".</DrawerDescription>
           </DrawerHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-4 flex-grow flex flex-col space-y-4">
+          <div className="p-4 pt-0">
+            {scope && <TodaySpentStat scope={scope} />}
+          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0 flex-grow flex flex-col space-y-4">
             <div className="space-y-4 flex-grow overflow-y-auto pr-2">
               <div>
                 <Label htmlFor="name">Category Name</Label>
