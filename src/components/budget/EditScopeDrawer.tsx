@@ -143,7 +143,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
       setEditingTxId(null);
     } else {
       addTransaction({ ...data, scopeId: scope.id });
-      toast.success(`${data.amount.toFixed(2)} added to ${scope.name}`);
+      toast.success(`${currencyFormatter.format(data.amount)} added to ${scope.name}`);
     }
     resetMiniForm();
   };
@@ -213,11 +213,15 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                               <p className="text-sm font-medium">{currencyFormatter.format(tx.amount)}</p>
                               <p className="text-xs text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
                             </div>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingTxId(tx.id)}><Edit className="w-3 h-3" /></Button>
+                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 bg-muted/50 rounded-md backdrop-blur transition-all">
+                              <motion.div whileHover={{ scale: 1.1, rotate: [0, 2, -2, 0] }}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTxId(tx.id)}><Edit className="w-4 h-4" /></Button>
+                              </motion.div>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></Button>
+                                  <motion.div whileHover={{ scale: 1.1, rotate: [0, 2, -2, 0] }}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></Button>
+                                  </motion.div>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>Delete this transaction of {currencyFormatter.format(tx.amount)}?</AlertDialogDescription></AlertDialogHeader>

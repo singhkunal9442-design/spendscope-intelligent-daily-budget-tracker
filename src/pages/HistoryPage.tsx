@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { useBudgetStore, useIsLoading } from '@/lib/store';
+import { useBudgetStore, useIsLoading, formatAmount } from '@/lib/store';
 import { Transaction } from '@shared/types';
-import { format, isToday, isYesterday, parseISO } from 'date-fns';
+import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AnimatePresence, motion } from 'framer-motion';
 import { generateCSV, downloadCSV } from '@/lib/csv-utils';
@@ -140,17 +140,20 @@ export function HistoryPage() {
                               </div>
                               <div className="flex items-center gap-1">
                                 <p className="font-mono font-semibold mr-2">{currencyFormatter.format(tx.amount)}</p>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity md:opacity-100">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTransaction(tx)}><Edit className="w-4 h-4" /></Button>
+                                <motion.div
+                                  whileHover={{ scale: 1.05, rotate: [0, 1, -1, 0] }}
+                                  className="ml-auto flex items-center gap-2 p-1 bg-muted/50 hover:bg-muted/80 backdrop-blur-sm rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all md:group-hover:scale-105"
+                                >
+                                  <Button variant="ghost" size="icon" className="h-10 w-10 min-w-[40px]" onClick={() => setEditingTransaction(tx)}><Edit className="w-4 h-4" /></Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></Button>
+                                      <Button variant="ghost" size="icon" className="h-10 w-10 min-w-[40px] text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                       <AlertDialogHeader>
                                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                          This will permanently delete the transaction of {currencyFormatter.format(tx.amount)} for "{tx.description || scope?.name || 'Uncategorized'}". This action cannot be undone.
+                                          This will permanently delete the transaction of {formatAmount(tx.amount)} for "{tx.description || scope?.name || 'Uncategorized'}". This action cannot be undone.
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
@@ -159,7 +162,7 @@ export function HistoryPage() {
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   </AlertDialog>
-                                </div>
+                                </motion.div>
                               </div>
                             </div>
                           );

@@ -6,6 +6,7 @@ import { Scope, Transaction } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
+export const formatAmount = (amt: number) => `$${amt.toFixed(2)}`;
 export type ScopeWithIcon = Omit<Scope, 'icon'> & {
   icon: lucideIcons.LucideIcon;
 };
@@ -178,7 +179,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }));
     try {
       await api(`/api/transactions/${id}`, { method: 'DELETE' });
-      toast.success("Transaction deleted.");
+      toast.success(`Deleted transaction of ${formatAmount(txToDelete.amount)}.`);
     } catch (error) {
       console.error("Failed to delete transaction", error);
       toast.error("Failed to delete transaction. Reverting.");
