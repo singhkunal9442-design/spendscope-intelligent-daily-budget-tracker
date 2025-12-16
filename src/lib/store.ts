@@ -20,6 +20,8 @@ interface BudgetState {
   updateScopeFull: (id: string, data: Partial<Omit<Scope, 'id'>>) => Promise<void>;
   deleteScope: (id: string) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<void>;
+  updateTransaction: (id: string, changes: Partial<Omit<Transaction, 'id'>>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
 }
 const getIcon = (iconName: string): lucideIcons.LucideIcon => {
   const Icon = (lucideIcons as any)[iconName];
@@ -64,7 +66,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   },
   updateScope: async (id: string, dailyLimit: number) => {
     const originalScopes = get().scopes;
-    // Optimistic update
     set(produce((state: BudgetState) => {
       const index = state.scopes.findIndex((s) => s.id === id);
       if (index !== -1) {
@@ -79,12 +80,11 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     } catch (error) {
       console.error("Failed to update scope", error);
       toast.error("Failed to save changes. Reverting.");
-      set({ scopes: originalScopes }); // Revert on failure
+      set({ scopes: originalScopes });
     }
   },
   updateScopeFull: async (id: string, data: Partial<Omit<Scope, 'id'>>) => {
     const originalScopes = get().scopes;
-    // Optimistic update
     set(produce((state: BudgetState) => {
       const index = state.scopes.findIndex((s) => s.id === id);
       if (index !== -1) {
@@ -102,25 +102,23 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     } catch (error) {
       console.error("Failed to update scope", error);
       toast.error("Failed to save changes. Reverting.");
-      set({ scopes: originalScopes }); // Revert on failure
+      set({ scopes: originalScopes });
     }
   },
   deleteScope: async (id: string) => {
     const originalScopes = get().scopes;
     const scopeToDelete = originalScopes.find(s => s.id === id);
     if (!scopeToDelete) return;
-    // Optimistic update
     set(produce((state: BudgetState) => {
       state.scopes = state.scopes.filter(s => s.id !== id);
     }));
     try {
       await api(`/api/scopes/${id}`, { method: 'DELETE' });
       toast.success(`Category "${scopeToDelete.name}" deleted.`);
-      // Transactions are preserved as orphans, UI handles this via fallbacks.
     } catch (error) {
       console.error("Failed to delete scope", error);
       toast.error("Failed to delete category. Reverting.");
-      set({ scopes: originalScopes }); // Revert on failure
+      set({ scopes: originalScopes });
     }
   },
   addTransaction: async (transaction) => {
@@ -130,7 +128,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       id: tempId,
       date: new Date().toISOString(),
     };
-    // Optimistic update
     set(produce((state: BudgetState) => {
       state.transactions.push(newTransaction);
     }));
@@ -139,7 +136,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         method: 'POST',
         body: JSON.stringify(transaction),
       });
-      // Replace temporary transaction with server-confirmed one
       set(produce((state: BudgetState) => {
         const index = state.transactions.findIndex((t) => t.id === tempId);
         if (index !== -1) {
@@ -149,10 +145,44 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     } catch (error) {
       console.error("Failed to add transaction", error);
       toast.error("Transaction failed to save. Removing.");
-      // Revert on failure
       set(produce((state: BudgetState) => {
         state.transactions = state.transactions.filter((t) => t.id !== tempId);
       }));
+    }
+  },
+  updateTransaction: async (id: string, changes: Partial<Omit<Transaction, 'id'>>) => {
+    const originalTransactions = get().transactions;
+    set(produce((state: BudgetState) => {
+      const index = state.transactions.findIndex(t => t.id === id);
+      if (index !== -1) {
+        state.transactions[index] = { ...state.transactions[index], ...changes };
+      }
+    }));
+    try {
+      await api(`/api/transactions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(changes),
+      });
+    } catch (error) {
+      console.error("Failed to update transaction", error);
+      toast.error("Failed to update transaction. Reverting.");
+      set({ transactions: originalTransactions });
+    }
+  },
+  deleteTransaction: async (id: string) => {
+    const originalTransactions = get().transactions;
+    const txToDelete = originalTransactions.find(t => t.id === id);
+    if (!txToDelete) return;
+    set(produce((state: BudgetState) => {
+      state.transactions = state.transactions.filter(t => t.id !== id);
+    }));
+    try {
+      await api(`/api/transactions/${id}`, { method: 'DELETE' });
+      toast.success("Transaction deleted.");
+    } catch (error) {
+      console.error("Failed to delete transaction", error);
+      toast.error("Failed to delete transaction. Reverting.");
+      set({ transactions: originalTransactions });
     }
   },
 }));
@@ -161,9 +191,7 @@ export const useIsLoading = () => useBudgetStore(state => state.loading && !stat
 export const useSpentToday = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return transactions
-    .filter(
-      (t) => t.scopeId === scopeId && isToday(parseISO(t.date))
-    )
+    .filter(t => t.scopeId === scopeId && isToday(parseISO(t.date)))
     .reduce((sum, t) => sum + t.amount, 0);
 };
 export const useSpentThisMonth = () => {
@@ -184,6 +212,16 @@ export const useMonthlyRemaining = () => {
 export const useSpentAllTime = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return transactions
-    .filter((t) => t.scopeId === scopeId)
+    .filter(t => t.scopeId === scopeId)
     .reduce((sum, t) => sum + t.amount, 0);
+};
+export const useTransactionsForScope = (scopeId: string) => {
+  const transactions = useBudgetStore(state => state.transactions);
+  return transactions.filter(t => t.scopeId === scopeId);
+};
+export const useRecentTransactions = (scopeId: string, limit = 5) => {
+  const transactions = useTransactionsForScope(scopeId);
+  return transactions
+    .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+    .slice(0, limit);
 };

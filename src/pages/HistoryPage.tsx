@@ -1,16 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useBudgetStore, useIsLoading } from '@/lib/store';
 import { Transaction } from '@shared/types';
-import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AnimatePresence, motion } from 'framer-motion';
 import { generateCSV, downloadCSV } from '@/lib/csv-utils';
 import { HistoryChart } from '@/components/charts/HistoryChart';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { TransactionEditDialog } from '@/components/budget/TransactionEditDialog';
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -48,7 +49,9 @@ const HistorySkeleton = () => (
 export function HistoryPage() {
   const transactions = useBudgetStore(state => state.transactions);
   const scopes = useBudgetStore(state => state.scopes);
+  const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
   const isLoading = useIsLoading();
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const scopesMap = React.useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
   const sortedTransactions = [...transactions].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
   const groupedTransactions = groupTransactionsByDay(sortedTransactions);
@@ -72,6 +75,11 @@ export function HistoryPage() {
   };
   return (
     <div className="py-8 md:py-10 lg:py-12">
+      <TransactionEditDialog
+        transaction={editingTransaction}
+        open={!!editingTransaction}
+        onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}
+      />
       <div className="text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
           Transaction History
@@ -122,7 +130,7 @@ export function HistoryPage() {
                           const Icon = scope?.icon;
                           const color = scope?.color ?? 'gray';
                           return (
-                            <div key={tx.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div key={tx.id} className="group flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors duration-200">
                               <div className="flex items-center gap-4">
                                 {Icon && <div className={cn('p-1.5 rounded-md', `bg-${color}-100 dark:bg-${color}-900/50`)}><Icon className={cn('w-5 h-5', `text-${color}-600 dark:text-${color}-400`)} /></div>}
                                 <div>
@@ -130,7 +138,29 @@ export function HistoryPage() {
                                   <p className="text-sm text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
                                 </div>
                               </div>
-                              <p className="font-mono font-semibold">{currencyFormatter.format(tx.amount)}</p>
+                              <div className="flex items-center gap-1">
+                                <p className="font-mono font-semibold mr-2">{currencyFormatter.format(tx.amount)}</p>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity md:opacity-100">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTransaction(tx)}><Edit className="w-4 h-4" /></Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will permanently delete the transaction of {currencyFormatter.format(tx.amount)} for "{tx.description || scope?.name || 'Uncategorized'}". This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </div>
                             </div>
                           );
                         })}

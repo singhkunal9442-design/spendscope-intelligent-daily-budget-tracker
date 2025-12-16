@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,15 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBudgetStore, ScopeWithIcon, useSpentToday, useSpentAllTime } from '@/lib/store';
-import { Save, X, PlusCircle } from 'lucide-react';
+import { useBudgetStore, ScopeWithIcon, useSpentToday, useSpentAllTime, useRecentTransactions } from '@/lib/store';
+import { Save, X, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { format, parseISO } from 'date-fns';
 const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'CreditCard', 'DollarSign', 'Gift', 'Heart', 'Plane', 'BookOpen', 'Briefcase', 'Film', 'Gamepad2', 'Music'];
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cyan', 'fuchsia'];
 const scopeSchema = z.object({
@@ -94,13 +96,28 @@ const SpendingStatsSkeleton = () => (
 export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerProps) {
   const updateScopeFull = useBudgetStore(state => state.updateScopeFull);
   const addTransaction = useBudgetStore(state => state.addTransaction);
+  const updateTransaction = useBudgetStore(state => state.updateTransaction);
+  const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
+  const recentTransactions = useRecentTransactions(scope?.id || '', 5);
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<ScopeFormData>({
     resolver: zodResolver(scopeSchema),
   });
-  const { control: miniControl, handleSubmit: miniHandleSubmit, reset: resetMiniForm, formState: { errors: miniErrors } } = useForm<ExpenseMiniFormData>({
+  const { control: miniControl, handleSubmit: miniHandleSubmit, reset: resetMiniForm, setValue: setMiniValue, formState: { errors: miniErrors } } = useForm<ExpenseMiniFormData>({
     resolver: zodResolver(expenseMiniSchema),
     defaultValues: { amount: 0, description: '' },
   });
+  const editingTx = useMemo(() => {
+    return recentTransactions.find(tx => tx.id === editingTxId) || null;
+  }, [editingTxId, recentTransactions]);
+  useEffect(() => {
+    if (editingTx) {
+      setMiniValue('amount', editingTx.amount);
+      setMiniValue('description', editingTx.description || '');
+    } else {
+      resetMiniForm();
+    }
+  }, [editingTx, setMiniValue, resetMiniForm]);
   useEffect(() => {
     if (scope) {
       reset({
@@ -120,14 +137,21 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   };
   const onMiniSubmit = (data: ExpenseMiniFormData) => {
     if (!scope) return;
-    addTransaction({ ...data, scopeId: scope.id });
-    toast.success(`${data.amount.toFixed(2)} added to ${scope.name}`);
+    if (editingTxId) {
+      updateTransaction(editingTxId, data);
+      toast.success(`Transaction updated.`);
+      setEditingTxId(null);
+    } else {
+      addTransaction({ ...data, scopeId: scope.id });
+      toast.success(`${data.amount.toFixed(2)} added to ${scope.name}`);
+    }
     resetMiniForm();
   };
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       reset();
       resetMiniForm();
+      setEditingTxId(null);
     }
     onOpenChange(isOpen);
   };
@@ -141,13 +165,13 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
           </DrawerHeader>
           <div className="p-4 pt-0 space-y-4">
             {scope ? <SpendingStats scope={scope} /> : <SpendingStatsSkeleton />}
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="quick-add" className="border-none">
+            <Accordion type="multiple" className="w-full space-y-2">
+              <AccordionItem value="add-edit-tx" className="border-none">
                 <Card className="backdrop-blur-xl bg-card/60 border-border/20">
                   <AccordionTrigger className="p-3 text-sm font-medium hover:no-underline">
                     <div className="flex items-center gap-2">
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Quick Add Expense</span>
+                      {editingTxId ? <Edit className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                      <span>{editingTxId ? 'Edit Expense' : 'Quick Add Expense'}</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="p-4 pt-0">
@@ -167,8 +191,44 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                           )} />
                         </div>
                       </div>
-                      <Button type="submit" size="sm" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95">Add Expense</Button>
+                      <Button type="submit" size="sm" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95">{editingTxId ? 'Update Expense' : 'Add Expense'}</Button>
+                      {editingTxId && <Button type="button" size="sm" variant="ghost" className="w-full" onClick={() => setEditingTxId(null)}>Cancel Edit</Button>}
                     </form>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
+              <AccordionItem value="recent-tx" className="border-none">
+                <Card className="backdrop-blur-xl bg-card/60 border-border/20">
+                  <AccordionTrigger className="p-3 text-sm font-medium hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <span>Recent Transactions</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-4 pt-0">
+                    <div className="space-y-2">
+                      <AnimatePresence>
+                        {recentTransactions.length > 0 ? recentTransactions.map(tx => (
+                          <motion.div key={tx.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="group flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                            <div>
+                              <p className="text-sm font-medium">{currencyFormatter.format(tx.amount)}</p>
+                              <p className="text-xs text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingTxId(tx.id)}><Edit className="w-3 h-3" /></Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>Delete this transaction of {currencyFormatter.format(tx.amount)}?</AlertDialogDescription></AlertDialogHeader>
+                                  <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </motion.div>
+                        )) : <p className="text-xs text-muted-foreground text-center py-2">No recent transactions.</p>}
+                      </AnimatePresence>
+                    </div>
                   </AccordionContent>
                 </Card>
               </AccordionItem>

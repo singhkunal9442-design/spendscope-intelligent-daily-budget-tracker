@@ -62,4 +62,26 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const created = await TransactionEntity.create(c.env, newTransaction);
     return ok(c, created);
   });
+  app.put('/api/transactions/:id', async (c) => {
+    const id = c.req.param('id');
+    if (!isStr(id)) return bad(c, 'Invalid ID');
+    const txData = (await c.req.json()) as Partial<Omit<Transaction, 'id'>>;
+    // Basic validation
+    if (txData.amount !== undefined && (typeof txData.amount !== 'number' || txData.amount <= 0)) {
+        return bad(c, 'Invalid amount');
+    }
+    const transaction = new TransactionEntity(c.env, id);
+    if (!(await transaction.exists())) {
+      return notFound(c, 'Transaction not found');
+    }
+    await transaction.patch(txData);
+    return ok(c, await transaction.getState());
+  });
+  app.delete('/api/transactions/:id', async (c) => {
+    const id = c.req.param('id');
+    if (!isStr(id)) return bad(c, 'Invalid ID');
+    const deleted = await TransactionEntity.delete(c.env, id);
+    if (!deleted) return notFound(c, 'Transaction not found');
+    return ok(c, { deleted: true });
+  });
 }
