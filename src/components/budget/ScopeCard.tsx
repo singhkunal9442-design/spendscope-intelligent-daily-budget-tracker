@@ -6,15 +6,49 @@ import { useBudgetStore, useSpentToday, ScopeWithIcon } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Pencil } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 interface ScopeCardProps {
   scope: ScopeWithIcon;
   onEdit: (scope: ScopeWithIcon) => void;
+  isLoading?: boolean;
 }
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
-export function ScopeCard({ scope, onEdit }: ScopeCardProps) {
+export function ScopeCardSkeleton() {
+  return (
+    <div className={cn(
+      "relative p-6 rounded-2xl overflow-hidden",
+      "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
+    )}>
+      <div className="flex justify-between items-start">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-lg" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <div className="text-right space-y-2">
+          <Skeleton className="h-4 w-12 ml-auto" />
+          <Skeleton className="h-6 w-16 ml-auto" />
+        </div>
+      </div>
+      <div className="mt-6 space-y-2">
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-12" />
+        </div>
+        <Skeleton className="h-2 w-full" />
+      </div>
+      <div className="mt-4 h-10 w-full">
+        <Skeleton className="h-full w-full" />
+      </div>
+    </div>
+  );
+}
+export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   const spentToday = useSpentToday(scope.id);
   const transactions = useBudgetStore(state => state.transactions);
   const sparkData = useMemo(() => {
@@ -32,6 +66,9 @@ export function ScopeCard({ scope, onEdit }: ScopeCardProps) {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [scope.id, transactions]);
+  if (isLoading) {
+    return <ScopeCardSkeleton />;
+  }
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
   const getProgressColor = () => {

@@ -6,11 +6,45 @@ import { cn } from '@/lib/utils';
 import { useBudgetStore, useMonthlyBudget, useSpentThisMonth, useMonthlyRemaining } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
+import { Skeleton } from '@/components/ui/skeleton';
+interface MonthlyOverviewCardProps {
+  isLoading?: boolean;
+}
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
-export function MonthlyOverviewCard() {
+export function MonthlyOverviewCardSkeleton() {
+  return (
+    <div className={cn(
+      "relative p-6 rounded-2xl overflow-hidden shadow-lg mb-12",
+      "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
+    )}>
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+        <div className="flex-1 space-y-4 w-full">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-7 w-7" />
+            <Skeleton className="h-8 w-1/2" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Skeleton className="h-20 rounded-lg" />
+            <Skeleton className="h-20 rounded-lg" />
+            <div className="col-span-2 sm:col-span-1">
+              <Skeleton className="h-20 rounded-lg" />
+            </div>
+          </div>
+          <div className="pt-2">
+            <Skeleton className="h-3 w-full" />
+          </div>
+        </div>
+        <div className="w-full md:w-1/3 h-24 md:h-auto md:self-stretch">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+export function MonthlyOverviewCard({ isLoading }: MonthlyOverviewCardProps) {
   const monthlyBudget = useMonthlyBudget();
   const spentThisMonth = useSpentThisMonth();
   const remainingThisMonth = useMonthlyRemaining();
@@ -28,6 +62,9 @@ export function MonthlyOverviewCard() {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [transactions]);
+  if (isLoading) {
+    return <MonthlyOverviewCardSkeleton />;
+  }
   const percentage = monthlyBudget > 0 ? Math.min((spentThisMonth / monthlyBudget) * 100, 100) : 0;
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';

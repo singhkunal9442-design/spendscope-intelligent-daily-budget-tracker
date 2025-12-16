@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useBudgetStore } from '@/lib/store';
+import { useBudgetStore, useIsLoading } from '@/lib/store';
 import { Transaction } from '@shared/types';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +8,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { generateCSV, downloadCSV } from '@/lib/csv-utils';
 import { HistoryChart } from '@/components/charts/HistoryChart';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -32,9 +33,22 @@ const groupTransactionsByDay = (transactions: Transaction[]) => {
     return acc;
   }, {} as Record<string, Transaction[]>);
 };
+const HistorySkeleton = () => (
+  <div className="w-full max-w-3xl mx-auto space-y-2">
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="border rounded-md p-4">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-5 w-20" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 export function HistoryPage() {
   const transactions = useBudgetStore(state => state.transactions);
   const scopes = useBudgetStore(state => state.scopes);
+  const isLoading = useIsLoading();
   const scopesMap = React.useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
   const sortedTransactions = [...transactions].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
   const groupedTransactions = groupTransactionsByDay(sortedTransactions);
@@ -66,17 +80,18 @@ export function HistoryPage() {
           A complete log of all your expenses.
         </p>
       </div>
-      {transactions.length > 0 && (
-        <div className="max-w-4xl mx-auto mb-12">
-          <HistoryChart data={dailyTotalsData} />
-        </div>
-      )}
+      <div className="max-w-4xl mx-auto mb-12">
+        <HistoryChart data={dailyTotalsData} isLoading={isLoading} />
+      </div>
       <div className="flex justify-center mb-8">
-        <Button onClick={handleExport} variant="outline" disabled={transactions.length === 0}>
-          <Download className="w-4 h-4 mr-2" /> Export as CSV
+        <Button onClick={handleExport} variant="outline" disabled={transactions.length === 0 || isLoading}>
+          {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+          Export as CSV
         </Button>
       </div>
-      {transactions.length === 0 ? (
+      {isLoading ? (
+        <HistorySkeleton />
+      ) : transactions.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
           <p className="text-muted-foreground text-lg">No transactions yet. Add one from the dashboard!</p>
         </motion.div>

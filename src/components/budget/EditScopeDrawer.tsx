@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'CreditCard', 'DollarSign', 'Gift', 'Heart', 'Plane', 'BookOpen', 'Briefcase', 'Film', 'Gamepad2', 'Music'];
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cyan', 'fuchsia'];
 const scopeSchema = z.object({
@@ -76,6 +77,20 @@ const SpendingStats = ({ scope }: { scope: ScopeWithIcon }) => {
     </motion.div>
   );
 };
+const SpendingStatsSkeleton = () => (
+  <Card className={cn("relative p-4 rounded-xl overflow-hidden", "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20")}>
+    <CardContent className="p-0 space-y-3">
+      <div className="space-y-1">
+        <div className="flex justify-between"><Skeleton className="h-4 w-20" /><Skeleton className="h-4 w-24" /></div>
+        <Skeleton className="h-2 w-full" />
+        <div className="flex justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-16" /></div>
+      </div>
+      <div className="border-t border-border/50 pt-2 mt-3">
+        <div className="flex justify-between"><Skeleton className="h-3 w-16" /><Skeleton className="h-3 w-20" /></div>
+      </div>
+    </CardContent>
+  </Card>
+);
 export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerProps) {
   const updateScopeFull = useBudgetStore(state => state.updateScopeFull);
   const addTransaction = useBudgetStore(state => state.addTransaction);
@@ -106,7 +121,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   const onMiniSubmit = (data: ExpenseMiniFormData) => {
     if (!scope) return;
     addTransaction({ ...data, scopeId: scope.id });
-    toast.success(`$${data.amount.toFixed(2)} added to ${scope.name}`);
+    toast.success(`${data.amount.toFixed(2)} added to ${scope.name}`);
     resetMiniForm();
   };
   const handleOpenChange = (isOpen: boolean) => {
@@ -122,10 +137,10 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
         <div className="mx-auto w-full h-full flex flex-col">
           <DrawerHeader className="flex-shrink-0">
             <DrawerTitle>Edit Category</DrawerTitle>
-            <DrawerDescription>Update details for "{scope?.name}".</DrawerDescription>
+            <DrawerDescription>Update details for "{scope?.name || '...'}".</DrawerDescription>
           </DrawerHeader>
           <div className="p-4 pt-0 space-y-4">
-            {scope && <SpendingStats scope={scope} />}
+            {scope ? <SpendingStats scope={scope} /> : <SpendingStatsSkeleton />}
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="quick-add" className="border-none">
                 <Card className="backdrop-blur-xl bg-card/60 border-border/20">
