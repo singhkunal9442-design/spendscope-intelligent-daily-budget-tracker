@@ -15,7 +15,7 @@ const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'Credi
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo'];
 const newScopeSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  dailyLimit: z.coerce.number().min(0, 'Limit must be non-negative'),
+  dailyLimit: z.number().min(0, 'Limit must be non-negative'),
   icon: z.string().min(1, 'Icon is required'),
   color: z.string().min(1, 'Color is required'),
 });
@@ -56,7 +56,19 @@ export function CategoryManager() {
         <CardContent>
           <form onSubmit={handleSubmit(handleAddNewScope)} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <Controller name="name" control={control} render={({ field }) => <Input placeholder="Category Name" {...field} />} />
-            <Controller name="dailyLimit" control={control} render={({ field }) => <Input type="number" placeholder="Daily Limit" {...field} />} />
+            <Controller
+              name="dailyLimit"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  type="number"
+                  placeholder="Daily Limit"
+                  {...field}
+                  value={field.value ?? 0}
+                  onChange={(e) => field.onChange(Number(e.target.value) || 0)}
+                />
+              )}
+            />
             <Controller name="icon" control={control} render={({ field }) => (
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <SelectTrigger><SelectValue placeholder="Select Icon" /></SelectTrigger>
@@ -81,7 +93,7 @@ export function CategoryManager() {
         <CardContent>
           <div className="space-y-4">
             {scopes.map((scope) => {
-              const Icon = (lucideIcons as any)[scope.icon.displayName || 'Circle'];
+              const Icon = (lucideIcons as any)[scope.icon.name || 'Circle'];
               return (
                 <div key={scope.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">

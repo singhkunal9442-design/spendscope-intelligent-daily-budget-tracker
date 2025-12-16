@@ -9,6 +9,7 @@ import { generateCSV, downloadCSV } from '@/lib/csv-utils';
 import { HistoryChart } from '@/components/charts/HistoryChart';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { cn } from '@/lib/utils';
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -104,10 +105,11 @@ export function HistoryPage() {
                         {dayTxs.map(tx => {
                           const scope = scopesMap.get(tx.scopeId);
                           const Icon = scope?.icon;
+                          const color = scope?.color ?? 'gray';
                           return (
                             <div key={tx.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                               <div className="flex items-center gap-4">
-                                {Icon && <div className={cn('p-1.5 rounded-md', `bg-${scope.color}-100 dark:bg-${scope.color}-900/50`)}><Icon className={cn('w-5 h-5', `text-${scope.color}-600 dark:text-${scope.color}-400`)} /></div>}
+                                {Icon && <div className={cn('p-1.5 rounded-md', `bg-${color}-100 dark:bg-${color}-900/50`)}><Icon className={cn('w-5 h-5', `text-${color}-600 dark:text-${color}-400`)} /></div>}
                                 <div>
                                   <p className="font-medium">{scope?.name || 'Uncategorized'}</p>
                                   <p className="text-sm text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
