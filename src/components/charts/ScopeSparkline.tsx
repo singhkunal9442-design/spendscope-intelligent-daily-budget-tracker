@@ -1,16 +1,10 @@
 import React from 'react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { useTheme } from '@/hooks/use-theme';
+import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 interface ScopeSparklineProps {
   data: { date: string; spent: number }[];
   color: string;
 }
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
 export function ScopeSparkline({ data, color }: ScopeSparklineProps) {
-  const { isDark } = useTheme();
   const colorMap: Record<string, string> = {
     emerald: 'hsl(142.1 76.2% 36.3%)',
     sky: 'hsl(198.3 93.3% 49.6%)',
@@ -32,16 +26,6 @@ export function ScopeSparkline({ data, color }: ScopeSparklineProps) {
             <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <Tooltip
-          contentStyle={{
-            backgroundColor: isDark ? 'hsl(var(--background))' : '#ffffff',
-            borderColor: 'hsl(var(--border))',
-            borderRadius: 'var(--radius)',
-            fontSize: '12px',
-          }}
-          labelStyle={{ fontWeight: 'bold' }}
-          formatter={(value: number) => [currencyFormatter.format(value), 'Spent']}
-        />
         <Area
           type="monotone"
           dataKey="spent"
