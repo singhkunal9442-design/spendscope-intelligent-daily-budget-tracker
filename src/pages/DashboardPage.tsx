@@ -1,196 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Wallet, PlusCircle, TrendingUp } from 'lucide-react';
-import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, useSettings, type ScopeWithIcon } from '@/lib/store';
-import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
-import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useBudgetStore, selectScopes } from '@/lib/store';
+import { ScopeCard } from '@/components/budget/ScopeCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
-import { AddBillDrawer } from '@/components/budget/AddBillDrawer';
-import { AddScopeDrawer } from '@/components/budget/AddScopeDrawer';
-import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
-import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
-import { OnboardingModal } from '@/components/budget/OnboardingModal';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
-import { MonthlyScopeCard } from '@/components/budget/MonthlyScopeCard';
-import { Bill } from '@shared/types';
+import { ThemeToggle } from '@/components/ThemeToggle';
 export function DashboardPage() {
-  const scopes = useScopes();
-  const bills = useBills();
-  const settings = useSettings();
-  const loadData = useBudgetStore(s => s.loadData);
-  const isLoading = useIsLoading();
-  const formatAmount = useFormatAmount();
-  const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
-  const [isAddBillDrawerOpen, setIsAddBillDrawerOpen] = useState(false);
-  const [isAddScopeDrawerOpen, setIsAddScopeDrawerOpen] = useState(false);
-  const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
-  const [editingBill, setEditingBill] = useState<Bill | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-  useEffect(() => {
-    // Sync onboarding with remote settings
-    // Lint fix: Including settings in dependency array as it's used in the effect body
-    if (!isLoading && settings && !settings.onboarded) {
-      setShowOnboarding(true);
-    }
-  }, [isLoading, settings]);
-  const totalLimit = React.useMemo(() =>
-    scopes.reduce((sum, s) => sum + s.dailyLimit, 0),
-  [scopes]);
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        ease: "easeOut"
-      }
-    }
-  };
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.25,
-        ease: "circOut"
-      }
-    }
-  };
+  const scopes = useBudgetStore(selectScopes);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const totalLimit = scopes.reduce((sum, s) => sum + s.dailyLimit, 0);
   return (
-    <div className="relative min-h-screen">
-      <main className="pb-32">
-        <div className="flex flex-col gap-12">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-2"
-          >
-            <h1 className="text-5xl font-black tracking-tighter text-foreground">
-              Spend<span className="text-spendscope-500">Scope</span>
+    <div className="min-h-screen w-full bg-background text-foreground relative">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
+      <ThemeToggle className="fixed top-4 right-4" />
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-12 md:py-16">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+              Daily SpendScope
             </h1>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-label">Daily Budget</span>
-              <span className="text-lg font-black">{formatAmount(totalLimit)}</span>
-            </div>
-          </motion.div>
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div 
-                key="loader" 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }} 
-                className="space-y-12"
-              >
-                <MonthlyOverviewCardSkeleton />
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={`skeleton-${i}`} />)}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="dashboard-content"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col gap-16"
-              >
-                <motion.div variants={itemVariants}>
-                  <MonthlyOverviewCard />
-                </motion.div>
-                {scopes.length === 0 && bills.length === 0 ? (
-                  <motion.div variants={itemVariants} className="text-center py-24 glass rounded-3xl border border-dashed border-border/60">
-                    <Wallet className="mx-auto h-16 w-16 text-muted-foreground/30 mb-6" />
-                    <h3 className="text-2xl font-black mb-3">Initialize Your Scope</h3>
-                    <p className="text-muted-foreground mb-8 max-w-xs mx-auto">Create your first category to start tracking your daily spending limits.</p>
-                    <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="btn-premium">
-                      New Category
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <>
-                    <div className="space-y-8">
-                      <div className="flex items-end justify-between px-2">
-                        <div>
-                          <h2 className="text-3xl font-black tracking-tighter">Daily Scopes</h2>
-                          <p className="text-label mt-1">Today's Allowances</p>
-                        </div>
-                        <Button variant="ghost" size="sm" className="font-bold text-spendscope-600 dark:text-spendscope-400" onClick={() => setIsAddScopeDrawerOpen(true)}>
-                          <PlusCircle className="w-4 h-4 mr-2" /> Add Scope
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {scopes.map((scope) => (
-                          <motion.div key={`daily-${scope.id}`} variants={itemVariants}>
-                            <ScopeCard scope={scope} onEdit={setEditingScope} />
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-8">
-                      <div className="flex items-end justify-between px-2">
-                        <div>
-                          <h2 className="text-3xl font-black tracking-tighter">Monthly Progress</h2>
-                          <p className="text-label mt-1">30-Day Velocity</p>
-                        </div>
-                        <div className="flex items-center gap-2 text-spendscope-500">
-                           <TrendingUp className="w-5 h-5" />
-                           <span className="text-sm font-black uppercase tracking-widest">Live View</span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {scopes.map((scope) => (
-                          <motion.div key={`monthly-${scope.id}`} variants={itemVariants}>
-                            <MonthlyScopeCard scope={scope} onEdit={setEditingScope} />
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-8">
-                      <div className="flex items-end justify-between px-2">
-                        <div>
-                          <h2 className="text-3xl font-black tracking-tighter">Recurring Bills</h2>
-                          <p className="text-label mt-1">Fixed Expenses</p>
-                        </div>
-                        <Button variant="ghost" size="sm" className="font-bold text-spendscope-600 dark:text-spendscope-400" onClick={() => setIsAddBillDrawerOpen(true)}>
-                          <PlusCircle className="w-4 h-4 mr-2" /> Add Bill
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {bills.map((bill) => (
-                          <motion.div key={`bill-${bill.id}`} variants={itemVariants}>
-                            <BillCard bill={bill} onEdit={setEditingBill} />
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Your real-time guide to daily spending. Total daily budget: ${totalLimit.toFixed(2)}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {scopes.map((scope) => (
+              <ScopeCard key={scope.id} scope={scope} />
+            ))}
+          </div>
         </div>
       </main>
       <Button
-        onClick={() => setIsAddDrawerOpen(true)}
-        className="fixed bottom-10 right-10 h-16 w-16 btn-premium z-50 p-0"
+        onClick={() => setIsDrawerOpen(true)}
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50"
         size="icon"
       >
         <Plus className="h-8 w-8" />
+        <span className="sr-only">Add Expense</span>
       </Button>
-      <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
-      <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
-      <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
-      <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
-      <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
-      <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
-      <Toaster richColors position="top-center" />
+      <AddExpenseDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} />
+      <Toaster richColors />
     </div>
   );
 }
