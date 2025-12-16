@@ -35,6 +35,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await scope.patch(scopeData);
     return ok(c, await scope.getState());
   });
+  app.delete('/api/scopes/:id', async (c) => {
+    const id = c.req.param('id');
+    if (!isStr(id)) return bad(c, 'Invalid ID');
+    const deleted = await ScopeEntity.delete(c.env, id);
+    if (!deleted) return notFound(c);
+    return ok(c, { deleted: true });
+  });
   // TRANSACTIONS API
   app.get('/api/transactions', async (c) => {
     const { items } = await TransactionEntity.list(c.env);

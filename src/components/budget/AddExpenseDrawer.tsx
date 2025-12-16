@@ -11,7 +11,8 @@ import { useBudgetStore } from '@/lib/store';
 import { toast } from 'sonner';
 const expenseSchema = z.object({
   scopeId: z.string().min(1, 'Please select a category'),
-  amount: z.coerce.number().min(0.01, 'Amount must be positive'),
+  amount: z.number().min(0.01, 'Amount must be positive'),
+  description: z.string().optional(),
 });
 type ExpenseFormData = z.infer<typeof expenseSchema>;
 interface AddExpenseDrawerProps {
@@ -25,13 +26,14 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       scopeId: '',
-      amount: undefined,
+      amount: 0,
+      description: '',
     },
   });
   const onSubmit = (data: ExpenseFormData) => {
     addTransaction(data);
     const scopeName = scopes.find(s => s.id === data.scopeId)?.name || 'Category';
-    toast.success(`$${data.amount.toFixed(2)} added to ${scopeName}`);
+    toast.success(`$${data.amount.toFixed(2)} added to ${scopeName}${data.description ? ` - ${data.description}` : ''}`);
     reset();
     onOpenChange(false);
   };
@@ -51,16 +53,8 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {scopes.map((scope) => (
-                        <SelectItem key={scope.id} value={scope.id}>
-                          {scope.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                    <SelectContent>{scopes.map((scope) => (<SelectItem key={scope.id} value={scope.id}>{scope.name}</SelectItem>))}</SelectContent>
                   </Select>
                 )}
               />
@@ -72,16 +66,24 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
                 name="amount"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="amount" type="number" step="0.01" placeholder="e.g., 12.50" value={field.value || ''} />
+                  <Input {...field} id="amount" type="number" step="0.01" placeholder="e.g., 12.50" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                 )}
               />
               {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>}
             </div>
+            <div>
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <Input {...field} id="description" placeholder="e.g., Morning latte" value={field.value || ''} />
+                )}
+              />
+            </div>
             <DrawerFooter>
               <Button type="submit">Add Transaction</Button>
-              <DrawerClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DrawerClose>
+              <DrawerClose asChild><Button variant="outline">Cancel</Button></DrawerClose>
             </DrawerFooter>
           </form>
         </div>

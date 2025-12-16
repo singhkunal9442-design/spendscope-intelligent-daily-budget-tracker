@@ -16,7 +16,8 @@ interface BudgetState {
   initialized: boolean;
   loadData: () => Promise<void>;
   addScope: (scope: Omit<Scope, 'id'>) => Promise<void>;
-  updateScope: (scope: Scope) => Promise<void>;
+  updateScope: (id: string, dailyLimit: number) => Promise<void>;
+  deleteScope: (id: string) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<void>;
 }
 const getIcon = (iconName: string): lucideIcons.LucideIcon => {
@@ -46,7 +47,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }
   },
   addScope: async (scope) => {
-    // Optimistic update can be added here
     try {
       const newScope = await api<Scope>('/api/scopes', {
         method: 'POST',
@@ -55,29 +55,46 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       set(produce((state: BudgetState) => {
         state.scopes.push({ ...newScope, icon: getIcon(newScope.icon) });
       }));
+      toast.success(`Category "${newScope.name}" added.`);
     } catch (error) {
       console.error("Failed to add scope", error);
       toast.error("Failed to add new category.");
     }
   },
-  updateScope: async (updatedScope) => {
+  updateScope: async (id: string, dailyLimit: number) => {
     const originalScopes = get().scopes;
-    const scopeWithIconName = { ...updatedScope, icon: updatedScope.icon.displayName || 'Circle' };
     // Optimistic update
     set(produce((state: BudgetState) => {
-      const index = state.scopes.findIndex((s) => s.id === updatedScope.id);
+      const index = state.scopes.findIndex((s) => s.id === id);
       if (index !== -1) {
-        state.scopes[index] = { ...updatedScope, icon: getIcon(updatedScope.icon.displayName || 'Circle') };
+        state.scopes[index].dailyLimit = dailyLimit;
       }
     }));
     try {
-      await api<Scope>(`/api/scopes/${updatedScope.id}`, {
+      await api<Scope>(`/api/scopes/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(scopeWithIconName),
+        body: JSON.stringify({ dailyLimit }),
       });
     } catch (error) {
       console.error("Failed to update scope", error);
       toast.error("Failed to save changes. Reverting.");
+      set({ scopes: originalScopes }); // Revert on failure
+    }
+  },
+  deleteScope: async (id: string) => {
+    const originalScopes = get().scopes;
+    const scopeToDelete = originalScopes.find(s => s.id === id);
+    if (!scopeToDelete) return;
+    // Optimistic update
+    set(produce((state: BudgetState) => {
+      state.scopes = state.scopes.filter(s => s.id !== id);
+    }));
+    try {
+      await api(`/api/scopes/${id}`, { method: 'DELETE' });
+      toast.success(`Category "${scopeToDelete.name}" deleted.`);
+    } catch (error) {
+      console.error("Failed to delete scope", error);
+      toast.error("Failed to delete category. Reverting.");
       set({ scopes: originalScopes }); // Revert on failure
     }
   },
