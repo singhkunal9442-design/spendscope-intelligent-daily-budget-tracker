@@ -21,6 +21,13 @@ const scopeSchema = z.object({
   color: z.string().min(1, 'Color is required'),
 });
 type ScopeFormData = z.infer<typeof scopeSchema>;
+const shakeVariants = {
+  hover: {
+    scale: [1, 1.1, 0.9, 1.05, 1],
+    rotate: [0, 2, -2, 1, -1, 0],
+    transition: { duration: 0.4 }
+  }
+};
 const EditScopeForm = ({ scope, onSave, onCancel }: { scope: ScopeWithIcon, onSave: (data: ScopeFormData) => void, onCancel: () => void }) => {
   const { control, handleSubmit } = useForm<ScopeFormData>({
     resolver: zodResolver(scopeSchema),
@@ -114,11 +121,12 @@ export function CategoryManager() {
                 <p className="mt-4 text-muted-foreground">Get started by adding your first category above.</p>
               </motion.div>
             )}
-            {scopes.map((scope) => (
-              editingScopeId === scope.id ? (
+            {scopes.map((scope) => {
+              const txCount = transactions.filter(t => t.scopeId === scope.id).length;
+              return editingScopeId === scope.id ? (
                 <EditScopeForm key={scope.id} scope={scope} onSave={(data) => handleSave(scope.id, data)} onCancel={() => setEditingScopeId(null)} />
               ) : (
-                <div key={scope.id} className="group flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-all duration-200 hover:scale-[1.02]">
+                <div key={scope.id} className="group flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/60 backdrop-blur-sm rounded-lg transition-all duration-200 hover:scale-[1.02]">
                   <div className="flex items-center gap-3">
                     <div className={cn('p-1.5 rounded-md', `bg-${scope.color}-100 dark:bg-${scope.color}-900/50`)}>
                       <scope.icon className={cn('w-5 h-5', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />
@@ -132,14 +140,15 @@ export function CategoryManager() {
                     <Button size="icon" variant="ghost" onClick={() => setEditingScopeId(scope.id)} className="hover:text-primary transition-colors"><Edit className="w-4 h-4" /></Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></Button>
+                        <motion.div variants={shakeVariants} whileHover="hover">
+                          <Button size="lg" variant="ghost" className="h-10 w-10 rounded-lg text-red-500 hover:text-red-600 transition-colors"><Trash2 className="w-5 h-5" /></Button>
+                        </motion.div>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently delete the "{scope.name}" category.
-                            The {transactions.filter(t => t.scopeId === scope.id).length} transactions in this category will be preserved but uncategorized.
+                            This will permanently delete the "{scope.name}" category. This affects {txCount} transaction(s), which will be preserved but uncategorized.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -151,7 +160,7 @@ export function CategoryManager() {
                   </div>
                 </div>
               )
-            ))}
+            })}
           </div>
         </CardContent>
       </Card>
