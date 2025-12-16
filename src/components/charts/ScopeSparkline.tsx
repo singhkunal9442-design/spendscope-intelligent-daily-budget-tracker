@@ -1,15 +1,16 @@
 import React from 'react';
-import { Area, AreaChart, ResponsiveContainer } from 'recharts';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { useTheme } from '@/hooks/use-theme';
 interface ScopeSparklineProps {
   data: { date: string; spent: number }[];
   color: string;
-  isLoading?: boolean;
 }
-export function ScopeSparkline({ data, color, isLoading }: ScopeSparklineProps) {
-  if (isLoading) {
-    return <div className="shimmer-bg h-full w-full rounded bg-muted/30"></div>;
-  }
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+export function ScopeSparkline({ data, color }: ScopeSparklineProps) {
+  const { isDark } = useTheme();
   const colorMap: Record<string, string> = {
     emerald: 'hsl(142.1 76.2% 36.3%)',
     sky: 'hsl(198.3 93.3% 49.6%)',
@@ -31,6 +32,16 @@ export function ScopeSparkline({ data, color, isLoading }: ScopeSparklineProps) 
             <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
           </linearGradient>
         </defs>
+        <Tooltip
+          contentStyle={{
+            backgroundColor: isDark ? 'hsl(var(--background))' : '#ffffff',
+            borderColor: 'hsl(var(--border))',
+            borderRadius: 'var(--radius)',
+            fontSize: '12px',
+          }}
+          labelStyle={{ fontWeight: 'bold' }}
+          formatter={(value: number) => [currencyFormatter.format(value), 'Spent']}
+        />
         <Area
           type="monotone"
           dataKey="spent"
