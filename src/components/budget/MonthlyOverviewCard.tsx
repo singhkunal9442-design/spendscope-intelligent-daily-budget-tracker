@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, TrendingUp, PiggyBank, Banknote, Landmark, FileWarning } from 'lucide-react';
+import { Calendar, TrendingUp, Landmark, FileWarning } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useBudgetStore, useFormatAmount, useMonthlyBudget, useSpentThisMonth, useCurrentBalance, useTotalBillsDue, useCurrentSalary } from '@/lib/store';
+import { useBudgetStore, useFormatAmount, useSpentThisMonth, useCurrentBalance } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,12 +16,10 @@ export function MonthlyOverviewCardSkeleton() {
       <div className="flex flex-col md:flex-row justify-between items-start gap-6">
         <div className="flex-1 space-y-4 w-full">
           <div className="flex items-center gap-3"><Skeleton className="h-7 w-7" /><Skeleton className="h-8 w-1/2" /></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Skeleton className="h-20 rounded-lg" />
             <Skeleton className="h-20 rounded-lg" />
-            <Skeleton className="h-20 rounded-lg" />
-            <Skeleton className="h-20 rounded-lg" />
-            <div className="col-span-2 sm:col-span-3 md:col-span-5"><Skeleton className="h-20 rounded-lg" /></div>
+            <div className="col-span-1 sm:col-span-3"><Skeleton className="h-20 rounded-lg" /></div>
           </div>
           <div className="pt-2"><Skeleton className="h-3 w-full" /></div>
         </div>
@@ -33,21 +31,16 @@ export function MonthlyOverviewCardSkeleton() {
 export function MonthlyOverviewCard() {
   const transactions = useBudgetStore(state => state.transactions);
   const formatAmount = useFormatAmount();
-  const monthlyBudget = useMonthlyBudget();
   const spentThisMonth = useSpentThisMonth();
   const currentBalance = useCurrentBalance();
-  const currentSalary = useCurrentSalary();
-  const totalBillsDue = useTotalBillsDue();
-  const totalIncome = currentBalance + currentSalary + monthlyBudget;
-  const availableBalance = totalIncome - spentThisMonth - totalBillsDue;
-  const totalOutgoings = spentThisMonth + totalBillsDue;
+  const availableCash = currentBalance - spentThisMonth;
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
     transactions.forEach(t => { const day = format(parseISO(t.date), 'yyyy-MM-dd'); daily[day] = (daily[day] || 0) + t.amount; });
     return Array.from({ length: 30 }, (_, i) => { const date = subDays(now, 29 - i); const dayKey = format(date, 'yyyy-MM-dd'); return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 }; });
   }, [transactions]);
-  const percentage = totalIncome > 0 ? Math.min((totalOutgoings / totalIncome) * 100, 100) : 0;
+  const percentage = currentBalance > 0 ? Math.min((spentThisMonth / currentBalance) * 100, 100) : 0;
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';
     if (percentage > 70) return 'bg-amber-500';
@@ -66,17 +59,15 @@ export function MonthlyOverviewCard() {
       <div className="flex flex-col md:flex-row justify-between items-start gap-6">
         <div className="flex-1 space-y-4">
           <div className="flex items-center gap-3"><Calendar className="w-6 h-6 text-primary" /><h2 className="text-2xl font-bold text-foreground">Monthly Overview</h2></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-center md:text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center md:text-left">
             <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><Landmark className="w-4 h-4" /> Starting Balance</p><p className="text-xl font-bold text-foreground">{formatAmount(currentBalance)}</p></div>
-            <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><PiggyBank className="w-4 h-4" /> Monthly Salary</p><p className="text-xl font-bold text-foreground">{formatAmount(currentSalary)}</p></div>
-            <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><Banknote className="w-4 h-4" /> Monthly Budget</p><p className="text-xl font-bold text-foreground">{formatAmount(monthlyBudget)}</p></div>
-            <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><FileWarning className="w-4 h-4" /> Bills Due</p><p className="text-xl font-bold text-foreground">{formatAmount(totalBillsDue)}</p></div>
-            <div className="p-3 rounded-lg bg-muted/50 col-span-2 sm:col-span-3 md:col-span-5"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><TrendingUp className="w-4 h-4" /> Available Balance</p><p className={cn("text-2xl font-bold", availableBalance < 0 ? 'text-red-500' : 'text-emerald-500')}>{formatAmount(availableBalance)}</p></div>
+            <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><FileWarning className="w-4 h-4" /> Spent This Month</p><p className="text-xl font-bold text-foreground">{formatAmount(spentThisMonth)}</p></div>
+            <div className="p-3 rounded-lg bg-muted/50 col-span-1 sm:col-span-3"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><TrendingUp className="w-4 h-4" /> Available Cash</p><p className={cn("text-2xl sm:text-3xl font-bold", availableCash < 0 ? 'text-red-500' : 'text-emerald-500')}>{formatAmount(availableCash)}</p></div>
           </div>
           <div className="pt-2">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Total Income: {formatAmount(totalIncome)}</span>
-              <span>Total Outgoings: {formatAmount(totalOutgoings)}</span>
+              <span>Spent vs. Cash</span>
+              <span>{formatAmount(spentThisMonth)} of {formatAmount(currentBalance)}</span>
             </div>
             <Progress value={percentage} className={cn("h-3", getProgressColor())} />
           </div>
