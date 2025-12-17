@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, History, Settings, Wallet } from "lucide-react";
+import { Home, History, Settings, Wallet, Calendar } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/history", label: "History", icon: History },
+  { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 export function AppSidebar(): JSX.Element {

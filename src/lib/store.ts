@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { isToday, parseISO, isSameMonth, startOfMonth, endOfMonth } from 'date-fns';
+import { isToday, parseISO, isSameMonth, startOfMonth, endOfMonth, format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Scope, Transaction, Bill } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
@@ -194,3 +194,17 @@ export const useTotalBillsPaid = () => {
 };
 export const useCurrentBalance = () => useBudgetStore(s => s.currentBalance);
 export const useCurrentSalary = () => useBudgetStore(s => s.currentSalary);
+export const useDailyTotals = () => {
+  const transactions = useBudgetStore(state => state.transactions);
+  return useMemo(() => {
+    const now = new Date();
+    const monthTotals = new Map<string, number>();
+    transactions
+      .filter(t => isSameMonth(parseISO(t.date), now))
+      .forEach(t => {
+        const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
+        monthTotals.set(dayKey, (monthTotals.get(dayKey) || 0) + t.amount);
+      });
+    return monthTotals;
+  }, [transactions]);
+};
