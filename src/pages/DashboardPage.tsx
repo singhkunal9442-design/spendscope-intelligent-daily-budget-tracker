@@ -111,24 +111,21 @@ export function DashboardPage() {
       {/* Section-local FABs */}
       <AnimatePresence>
         {scopes.length > 0 && (
-          <>
-            {/* Monthly Grid FAB */}
-            <motion.div initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }} className="fixed bottom-[16.5rem] sm:bottom-64 right-6 z-20">
-              <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Category">
-                <LayoutGrid className="h-5 w-5" />
-              </Button>
-            </motion.div>
-            {/* Daily Grid FAB */}
-            <motion.div initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="fixed bottom-48 right-6 z-30">
-              <Button onClick={() => setIsAddDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Daily Expense">
-                <Plus className="h-5 w-5" />
-              </Button>
-            </motion.div>
-          </>
+          <motion.div key="monthly-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }} className="fixed bottom-[16.5rem] sm:bottom-64 right-6 z-20">
+            <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Category">
+              <LayoutGrid className="h-5 w-5" />
+            </Button>
+          </motion.div>
+        )}
+        {scopes.length > 0 && (
+          <motion.div key="daily-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="fixed bottom-48 right-6 z-30">
+            <Button onClick={() => setIsAddDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Daily Expense">
+              <Plus className="h-5 w-5" />
+            </Button>
+          </motion.div>
         )}
         {bills.length > 0 && (
-          /* Bills Grid FAB */
-          <motion.div initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }} className="fixed bottom-32 right-6 z-40">
+          <motion.div key="bills-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }} className="fixed bottom-32 right-6 z-40">
             <Button onClick={() => setIsAddBillDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Bill">
               <Receipt className="h-5 w-5" />
             </Button>
