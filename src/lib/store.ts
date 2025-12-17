@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { isToday, parseISO, isSameMonth } from 'date-fns';
+import { isToday, parseISO, isSameMonth, startOfMonth, endOfMonth } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Scope, Transaction, Bill } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useMemo, useCallback } from 'react';
-
 export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF', 'AED'];
 export const formatCurrencyAmount = (currency: string, amount: number, locale = navigator.language || 'en-US') => {
   try {
@@ -170,9 +169,14 @@ export const useSpentThisMonth = (scopeId?: string) => {
   const filtered = useMemo(() => transactions.filter(t => isSameMonth(parseISO(t.date), new Date())), [transactions]);
   return useMemo(() => { if (scopeId) { return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0); } return filtered.reduce((s, t) => s + t.amount, 0); }, [filtered, scopeId]);
 };
+export const useDaysInMonth = () => {
+    const now = new Date();
+    return endOfMonth(startOfMonth(now)).getDate();
+};
 export const useMonthlyBudget = () => {
   const scopes = useBudgetStore(state => state.scopes);
-  return useMemo(() => scopes.reduce((s, c) => s + (c.monthlyLimit ?? c.dailyLimit * 30), 0), [scopes]);
+  const daysInMonth = useDaysInMonth();
+  return useMemo(() => scopes.reduce((s, c) => s + (c.monthlyLimit ?? c.dailyLimit * daysInMonth), 0), [scopes, daysInMonth]);
 };
 export const useTransactionsForScope = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
