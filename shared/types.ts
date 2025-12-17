@@ -25,3 +25,17 @@ export interface Bill {
   amount: number;
   paid: boolean;
 }
+// Auth Types
+export interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+}
+export interface AuthCredentials {
+  email: string;
+  password: string;
+}
+export interface LoginResponse {
+  userId: string;
+  token: string;
+}

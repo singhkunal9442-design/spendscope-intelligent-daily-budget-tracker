@@ -1,9 +1,39 @@
 import { Hono } from "hono";
 import type { Env } from './core-utils';
-import { ScopeEntity, TransactionEntity, BillEntity } from "./entities";
+import { ScopeEntity, TransactionEntity, BillEntity, UserEntity, hashPassword } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import { Scope, Transaction, Bill } from "@shared/types";
+import { Scope, Transaction, Bill, AuthCredentials, LoginResponse, User } from "@shared/types";
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const inputHash = await hashPassword(password);
+  return inputHash === hash;
+}
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
+  // AUTH API
+  app.post('/api/auth/register', async (c) => {
+    const { email, password } = await c.req.json<AuthCredentials>();
+    if (!isStr(email) || !isStr(password)) return bad(c, 'Email and password are required.');
+    await UserEntity.ensureSeed(c.env);
+    const { items: users } = await UserEntity.list(c.env);
+    if (users.some(u => u.email === email)) {
+      return bad(c, 'An account with this email already exists.');
+    }
+    const passwordHash = await hashPassword(password);
+    const newUser: User = { id: crypto.randomUUID(), email, passwordHash };
+    const createdUser = await UserEntity.create(c.env, newUser);
+    return ok(c, { userId: createdUser.id });
+  });
+  app.post('/api/auth/login', async (c) => {
+    const { email, password } = await c.req.json<AuthCredentials>();
+    if (!isStr(email) || !isStr(password)) return bad(c, 'Email and password are required.');
+    await UserEntity.ensureSeed(c.env);
+    const { items: users } = await UserEntity.list(c.env);
+    const user = users.find(u => u.email === email);
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+      return bad(c, 'Invalid email or password.');
+    }
+    const token = crypto.randomUUID(); // Simple token for this phase
+    return ok(c, { userId: user.id, token } as LoginResponse);
+  });
   // SCOPES API
   app.get('/api/scopes', async (c) => {
     await ScopeEntity.ensureSeed(c.env);
