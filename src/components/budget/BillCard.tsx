@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useBudgetStore, useFormatAmount } from '@/lib/store';
 import { Bill } from '@shared/types';
-import { Banknote, CheckCircle2, Circle, Pencil } from 'lucide-react';
+import { Banknote, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 interface BillCardProps {
   bill: Bill;
@@ -45,8 +45,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "relative p-6 rounded-2xl overflow-hidden shadow-lg group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer",
-        "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
+        "relative p-6 rounded-2xl overflow-hidden shadow-lg group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
       )}
     >
       <div className="relative z-10 pointer-events-auto">
@@ -69,16 +68,16 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
               <p className="text-sm font-bold text-muted-foreground">{formatAmount(bill.amount)}</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-            <Checkbox id={`paid-${bill.id}`} checked={bill.paid} onCheckedChange={handlePaidToggle} className="h-6 w-6" />
-            <Label htmlFor={`paid-${bill.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              {bill.paid ? <CheckCircle2 className="text-emerald-500" /> : <Circle className="text-muted-foreground" />}
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <Checkbox id={`paid-${bill.id}`} checked={bill.paid} onCheckedChange={handlePaidToggle} className="h-5 w-5" />
+            <Label htmlFor={`paid-${bill.id}`} className="text-sm font-medium leading-tight cursor-pointer">
+              Paid
             </Label>
           </div>
         </div>
       </div>
       {bill.paid && (
-        <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px] rounded-2xl pointer-events-none" />
+        <div className="absolute inset-0 bg-background/20 backdrop-blur-sm rounded-2xl pointer-events-none z-0" />
       )}
     </motion.div>
   );
