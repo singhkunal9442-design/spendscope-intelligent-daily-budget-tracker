@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Wallet, Receipt, LayoutGrid } from 'lucide-react';
+import { Plus, Wallet } from 'lucide-react';
 import { useBudgetStore, ScopeWithIcon, useIsLoading, useFormatAmount, useBills } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
@@ -98,7 +98,7 @@ export function DashboardPage() {
                           <AnimatePresence>
                             <motion.div key="bills-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }} className="absolute bottom-4 right-4 z-[30]">
                               <Button onClick={() => setIsAddBillDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Bill">
-                                <Receipt className="h-5 w-5" />
+                                <Plus className="h-5 w-5" />
                               </Button>
                             </motion.div>
                           </AnimatePresence>
@@ -113,7 +113,7 @@ export function DashboardPage() {
                           <AnimatePresence>
                             <motion.div key="monthly-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }} className="absolute bottom-4 right-4 z-[10]">
                               <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Category">
-                                <LayoutGrid className="h-5 w-5" />
+                                <Plus className="h-5 w-5" />
                               </Button>
                             </motion.div>
                           </AnimatePresence>
