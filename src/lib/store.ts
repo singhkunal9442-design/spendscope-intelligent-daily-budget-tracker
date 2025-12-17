@@ -6,9 +6,10 @@ import { Scope, Transaction } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
-export const formatAmount = (amt: number) => `$${amt.toFixed(2)}`;
+export const formatAmount = (amt: number) => `${amt.toFixed(2)}`;
 export type ScopeWithIcon = Omit<Scope, 'icon'> & {
   icon: lucideIcons.LucideIcon;
+  monthlyLimit?: number;
 };
 interface BudgetState {
   scopes: ScopeWithIcon[];
@@ -195,17 +196,26 @@ export const useSpentToday = (scopeId: string) => {
     .filter(t => t.scopeId === scopeId && isToday(parseISO(t.date)))
     .reduce((sum, t) => sum + t.amount, 0);
 };
-export const useSpentThisMonth = () => {
+export const useSpentThisMonth = (scopeId?: string) => {
   const transactions = useBudgetStore(state => state.transactions);
-  return transactions
-    .filter(t => isSameMonth(parseISO(t.date), new Date()))
-    .reduce((sum, t) => sum + t.amount, 0);
+  const filtered = transactions.filter(t => isSameMonth(parseISO(t.date), new Date()));
+  if (scopeId) {
+    return filtered
+      .filter(t => t.scopeId === scopeId)
+      .reduce((sum, t) => sum + t.amount, 0);
+  }
+  return filtered.reduce((sum, t) => sum + t.amount, 0);
 };
 export const useMonthlyBudget = () => {
   const scopes = useBudgetStore(state => state.scopes);
-  return scopes.reduce((sum, s) => sum + s.dailyLimit * 30, 0);
+  return scopes.reduce((sum, s) => sum + (s.monthlyLimit ?? s.dailyLimit * 30), 0);
 };
-export const useMonthlyRemaining = () => {
+export const useMonthlyRemaining = (scopeId?: string) => {
+  if (scopeId) {
+    const scope = useBudgetStore(state => state.scopes.find(s => s.id === scopeId));
+    const spent = useSpentThisMonth(scopeId);
+    return (scope?.monthlyLimit ?? 0) - spent;
+  }
   const budget = useMonthlyBudget();
   const spent = useSpentThisMonth();
   return budget - spent;

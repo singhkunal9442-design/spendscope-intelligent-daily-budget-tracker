@@ -19,6 +19,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       id: crypto.randomUUID(),
       name: scopeData.name,
       dailyLimit: scopeData.dailyLimit,
+      monthlyLimit: typeof scopeData.monthlyLimit === 'number' ? scopeData.monthlyLimit : scopeData.dailyLimit * 30,
       icon: scopeData.icon,
       color: scopeData.color,
     };

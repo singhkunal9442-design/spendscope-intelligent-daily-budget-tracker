@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
+import { MonthlyScopeCard, MonthlyScopeCardSkeleton } from '@/components/budget/MonthlyScopeCard';
 export function DashboardPage() {
   const scopes = useBudgetStore(state => state.scopes);
   const loadData = useBudgetStore(state => state.loadData);
@@ -19,6 +20,13 @@ export function DashboardPage() {
     loadData();
   }, [loadData]);
   const totalLimit = scopes.reduce((sum, s) => sum + s.dailyLimit, 0);
+  const containerVariants = {
+    visible: { transition: { staggerChildren: 0.1 } },
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
   return (
     <div className="min-h-screen w-full bg-background text-foreground relative">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -26,7 +34,7 @@ export function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-16">
           <div className="text-center mb-12">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -34,7 +42,7 @@ export function DashboardPage() {
             >
               Daily SpendScope
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -48,16 +56,19 @@ export function DashboardPage() {
               <motion.div key="loader" exit={{ opacity: 0 }}>
                 <MonthlyOverviewCardSkeleton />
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[...Array(3)].map((_, i) => (
-                    <ScopeCardSkeleton key={i} />
-                  ))}
+                  {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={i} />)}
+                </div>
+                <div className="mt-16">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => <MonthlyScopeCardSkeleton key={i} />)}
+                  </div>
                 </div>
               </motion.div>
             ) : (
               <>
                 <MonthlyOverviewCard />
                 {scopes.length === 0 ? (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center py-20 px-4 border-2 border-dashed rounded-lg"
@@ -69,21 +80,37 @@ export function DashboardPage() {
                     </p>
                   </motion.div>
                 ) : (
-                  <motion.div
-                    key="scopes"
-                    initial="hidden"
-                    animate="visible"
-                    variants={{
-                      visible: { transition: { staggerChildren: 0.1 } },
-                    }}
-                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-                  >
-                    {scopes.map((scope) => (
-                      <motion.div key={scope.id} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                        <ScopeCard scope={scope} onEdit={setEditingScope} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  <>
+                    <motion.div
+                      key="scopes"
+                      initial="hidden"
+                      animate="visible"
+                      variants={containerVariants}
+                      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                    >
+                      {scopes.map((scope) => (
+                        <motion.div key={scope.id} variants={itemVariants}>
+                          <ScopeCard scope={scope} onEdit={setEditingScope} />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                    <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">
+                      Monthly Budget Overview
+                    </motion.h2>
+                    <motion.div
+                      key="monthly-scopes"
+                      initial="hidden"
+                      animate="visible"
+                      variants={containerVariants}
+                      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                    >
+                      {scopes.map((scope) => (
+                        <motion.div key={scope.id} variants={itemVariants}>
+                          <MonthlyScopeCard scope={scope} onEdit={setEditingScope} />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </>
                 )}
               </>
             )}
