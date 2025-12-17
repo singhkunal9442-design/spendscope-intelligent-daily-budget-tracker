@@ -19,3 +19,9 @@ export interface Transaction {
   description?: string;
   date: string; // ISO string for date
 }
+export interface Bill {
+  id: string;
+  name: string;
+  amount: number;
+  paid: boolean;
+}
