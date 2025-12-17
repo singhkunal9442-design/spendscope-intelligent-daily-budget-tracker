@@ -44,6 +44,13 @@ const HistorySkeleton = () => (
     ))}
   </div>
 );
+const shakeVariants = {
+  hover: {
+    scale: [1, 1.1, 0.9, 1.05, 1],
+    rotate: [0, 2, -2, 1, -1, 0],
+    transition: { duration: 0.4 }
+  }
+};
 export function HistoryPage() {
   const transactions = useBudgetStore(state => state.transactions);
   const scopes = useBudgetStore(state => state.scopes);
@@ -132,7 +139,7 @@ export function HistoryPage() {
                           const Icon = scope?.icon;
                           const color = scope?.color ?? 'gray';
                           return (
-                            <div key={tx.id} className="group flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors duration-200">
+                            <div key={tx.id} className="flex items-center justify-between p-3.5 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors duration-200">
                               <div className="flex items-center gap-4">
                                 {Icon && <div className={cn('p-1.5 rounded-md', `bg-${color}-100 dark:bg-${color}-900/50`)}><Icon className={cn('w-5 h-5', `text-${color}-600 dark:text-${color}-400`)} /></div>}
                                 <div>
@@ -142,14 +149,15 @@ export function HistoryPage() {
                               </div>
                               <div className="flex items-center gap-1">
                                 <p className="font-mono font-semibold mr-2">{formatAmount(tx.amount)}</p>
-                                <motion.div
-                                  whileHover={{ scale: 1.05, rotate: [0, 1, -1, 0] }}
-                                  className="ml-auto flex items-center gap-2 p-1 bg-muted/50 hover:bg-muted/80 backdrop-blur-sm rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all md:group-hover:scale-105"
-                                >
-                                  <Button variant="ghost" size="icon" className="h-10 w-10 min-w-[40px]" onClick={() => setEditingTransaction(tx)}><Edit className="w-4 h-4" /></Button>
+                                <div className="ml-auto flex items-center gap-2 p-2.5 bg-muted/50 backdrop-blur-xl rounded-xl shadow-sm border border-border/20 hover:shadow-md hover:bg-muted/60 transition-all opacity-100">
+                                  <motion.div whileHover={{ scale: 1.1, rotate: [0, 1, -1, 0] }}>
+                                    <Button variant="ghost" size="lg" className="h-12 w-12 min-w-[48px] rounded-xl" onClick={() => setEditingTransaction(tx)}><Edit className="w-5 h-5" /></Button>
+                                  </motion.div>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-10 w-10 min-w-[40px] text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></Button>
+                                      <motion.div variants={shakeVariants} whileHover="hover">
+                                        <Button variant="ghost" size="lg" className="h-12 w-12 min-w-[48px] rounded-xl text-destructive hover:text-destructive/80"><Trash2 className="w-5 h-5" /></Button>
+                                      </motion.div>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                       <AlertDialogHeader>
@@ -164,7 +172,7 @@ export function HistoryPage() {
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   </AlertDialog>
-                                </motion.div>
+                                </div>
                               </div>
                             </div>
                           );

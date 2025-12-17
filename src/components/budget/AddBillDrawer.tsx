@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useBudgetStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
 const billSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   amount: z.number().min(0.01, 'Amount must be positive'),
@@ -27,8 +26,8 @@ export function AddBillDrawer({ open, onOpenChange }: AddBillDrawerProps) {
       amount: 0,
     },
   });
-  const onSubmit = async (data: BillFormData) => {
-    await addBill({ name: data.name, amount: data.amount });
+  const onSubmit = (data: BillFormData) => {
+    addBill({ name: data.name, amount: data.amount });
     toast.success(`Bill "${data.name}" added.`);
     reset();
     onOpenChange(false);
@@ -38,38 +37,35 @@ export function AddBillDrawer({ open, onOpenChange }: AddBillDrawerProps) {
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
-            <DrawerTitle className="font-black tracking-tighter text-2xl">Quick Add Bill</DrawerTitle>
+            <DrawerTitle>Quick Add Bill</DrawerTitle>
             <DrawerDescription>Add a new recurring monthly bill.</DrawerDescription>
           </DrawerHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-0 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-label ml-1">Bill Name</Label>
+          <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-0 space-y-4">
+            <div>
+              <Label htmlFor="name">Bill Name</Label>
               <Controller
                 name="name"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="name" placeholder="e.g., Rent" className="h-12 rounded-2xl" />
+                  <Input {...field} id="name" placeholder="e.g., Internet" />
                 )}
               />
-              {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name.message}</p>}
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="text-label ml-1">Amount</Label>
+            <div>
+              <Label htmlFor="amount">Amount ($)</Label>
               <Controller
                 name="amount"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="amount" type="number" step="0.01" placeholder="0.00" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-12 rounded-2xl" />
+                  <Input {...field} id="amount" type="number" step="0.01" placeholder="e.g., 59.99" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                 )}
               />
-              {errors.amount && <p className="text-red-500 text-xs mt-1 ml-1">{errors.amount.message}</p>}
+              {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>}
             </div>
-            <DrawerFooter className="gap-2 px-0 pb-8 pt-4">
-              <Button type="submit" className="btn-premium h-14 w-full">
-                <Plus className="w-5 h-5 mr-2" />
-                Add Bill
-              </Button>
-              <DrawerClose asChild><Button variant="outline" className="rounded-2xl h-12">Cancel</Button></DrawerClose>
+            <DrawerFooter>
+              <Button type="submit" className="bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95">Add Bill</Button>
+              <DrawerClose asChild><Button variant="outline">Cancel</Button></DrawerClose>
             </DrawerFooter>
           </form>
         </div>

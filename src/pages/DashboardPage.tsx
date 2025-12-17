@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Wallet } from 'lucide-react';
+import { Plus, Wallet, Receipt } from 'lucide-react';
 import { useBudgetStore, ScopeWithIcon, useIsLoading, useFormatAmount, useBills } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
+import { AddBillDrawer } from '@/components/budget/AddBillDrawer';
 import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
 import { OnboardingModal } from '@/components/budget/OnboardingModal';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ export function DashboardPage() {
   const isLoading = useIsLoading();
   const formatAmount = useFormatAmount();
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
+  const [isAddBillDrawerOpen, setIsAddBillDrawerOpen] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
@@ -36,7 +38,7 @@ export function DashboardPage() {
   };
   const totalLimit = scopes.reduce((sum, s) => sum + s.dailyLimit, 0);
   const containerVariants = { visible: { transition: { staggerChildren: 0.08 } } };
-  const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } } };
+  const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100 } } };
   return (
     <div className="min-h-screen w-full bg-background text-foreground relative">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -79,6 +81,7 @@ export function DashboardPage() {
                     {bills.length > 0 && (
                       <>
                         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Fixed Monthly Bills</motion.h2>
+                        <Button onClick={() => setIsAddBillDrawerOpen(true)} className="fixed bottom-20 sm:bottom-16 left-6 h-14 w-14 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg z-40 border-2 border-border/30 backdrop-blur-sm" size="icon" aria-label="Add Bill"><Receipt className="h-6 w-6" /></Button>
                         <motion.div key="bills" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {bills.map((bill) => (<motion.div key={bill.id} variants={itemVariants}><BillCard bill={bill} onEdit={() => {}} /></motion.div>))}
                         </motion.div>
@@ -101,6 +104,7 @@ export function DashboardPage() {
       </main>
       <Button onClick={() => setIsAddDrawerOpen(true)} className="fixed bottom-8 sm:bottom-6 right-6 h-16 w-16 min-h-[64px] sm:h-14 sm:w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95 animate-pulse" size="icon"><Plus className="h-8 w-8" /><span className="sr-only">Add Expense</span></Button>
       <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
+      <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
       <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
       <Toaster richColors />
     </div>
