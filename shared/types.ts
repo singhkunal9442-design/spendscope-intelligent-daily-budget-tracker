@@ -8,6 +8,7 @@ export interface Scope {
   id: string;
   name: string;
   dailyLimit: number;
+  monthlyLimit?: number;
   icon: string; // Icon name from lucide-react
   color: string; // e.g., 'emerald', 'amber', 'rose'
 }

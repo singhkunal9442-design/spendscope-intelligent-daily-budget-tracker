@@ -23,6 +23,7 @@ const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cy
 const scopeSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   dailyLimit: z.number().min(0, 'Limit must be non-negative'),
+  monthlyLimit: z.number().min(0, 'Limit must be non-negative').optional(),
   icon: z.string().min(1, 'Icon is required'),
   color: z.string().min(1, 'Color is required'),
 });
@@ -123,11 +124,12 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
       reset({
         name: scope.name,
         dailyLimit: scope.dailyLimit,
+        monthlyLimit: scope.monthlyLimit ?? scope.dailyLimit * 30,
         icon: (scope.icon as any).displayName || 'Circle',
         color: scope.color,
       });
     } else {
-      reset({ name: '', dailyLimit: 0, icon: '', color: '' });
+      reset({ name: '', dailyLimit: 0, monthlyLimit: 0, icon: '', color: '' });
     }
   }, [scope, reset]);
   const onFullSubmit = (data: ScopeFormData) => {
@@ -245,12 +247,21 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                 <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} />} />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
               </div>
-              <div>
-                <Label htmlFor="dailyLimit">Daily Limit ($)</Label>
-                <Controller name="dailyLimit" control={control} render={({ field }) => (
-                    <Input {...field} id="dailyLimit" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
-                )} />
-                {errors.dailyLimit && <p className="text-red-500 text-sm mt-1">{errors.dailyLimit.message}</p>}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="dailyLimit">Daily Limit ($)</Label>
+                  <Controller name="dailyLimit" control={control} render={({ field }) => (
+                      <Input {...field} id="dailyLimit" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                  )} />
+                  {errors.dailyLimit && <p className="text-red-500 text-sm mt-1">{errors.dailyLimit.message}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="monthlyLimit">Monthly Limit ($)</Label>
+                  <Controller name="monthlyLimit" control={control} render={({ field }) => (
+                      <Input {...field} id="monthlyLimit" type="number" step="0.01" placeholder="e.g., 150" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                  )} />
+                  {errors.monthlyLimit && <p className="text-red-500 text-sm mt-1">{errors.monthlyLimit.message}</p>}
+                </div>
               </div>
               <div>
                 <Label htmlFor="icon">Icon</Label>
