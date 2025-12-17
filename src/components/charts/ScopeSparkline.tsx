@@ -8,7 +8,7 @@ interface ScopeSparklineProps {
 }
 export function ScopeSparkline({ data, color, isLoading }: ScopeSparklineProps) {
   if (isLoading) {
-    return <Skeleton className="h-full w-full" />;
+    return <div className="shimmer-bg h-full w-full rounded bg-muted/30"></div>;
   }
   const colorMap: Record<string, string> = {
     emerald: 'hsl(142.1 76.2% 36.3%)',

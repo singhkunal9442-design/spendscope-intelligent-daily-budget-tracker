@@ -7,6 +7,7 @@ import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useMemo, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF', 'AED'];
 export const formatCurrencyAmount = (currency: string, amount: number, locale = navigator.language || 'en-US') => {
   try {
@@ -178,7 +179,7 @@ export const useTransactionsForScope = (scopeId: string) => {
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId), [transactions, scopeId]);
 };
 // Bill Selectors
-export const useBills = () => useBudgetStore(s => s.bills);
+export const useBills = () => useBudgetStore(useShallow(s => s.bills));
 export const useTotalBillsDue = () => {
   const bills = useBudgetStore(s => s.bills);
   return useMemo(() => bills.filter(b => !b.paid).reduce((sum, b) => sum + b.amount, 0), [bills]);

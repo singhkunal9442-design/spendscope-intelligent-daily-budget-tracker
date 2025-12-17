@@ -5,13 +5,16 @@ Customizable "Scopes" (Categories) let users set daily spending limits. The dash
 ## Live Demo
 [A live demo will be available here upon deployment.]
 ## Features
-- **Smart Dashboard**: Glassmorphic cards for each category showing real-time remaining balance, spent amount, and animated progress bars.
-- **Monthly Overview**: An aggregate card showing total monthly budget, amount spent, and remaining funds with a 30-day spending sparkline.
+- **Smart Dashboard**: Glassmorphic cards for each category showing real-time remaining balance, spent amount, and animated progress bars for both daily and monthly views.
+- **Monthly Overview**: An aggregate card showing total monthly budget, salary, starting balance, bills due, and net remaining funds with a 30-day spending sparkline.
 - **Quick-Add Transaction Drawer**: A gesture-driven bottom sheet (mobile) or modal (desktop) for instant expense logging with category icons.
-- **Category Management**: A dedicated settings page to add, edit, and delete spending categories, including name, daily limit, icon, and color.
+- **Category Management**: A dedicated settings page to add, edit, and delete spending categories, including name, daily/monthly limits, icon, and color.
+- **Fixed Bill Management**: A settings section to manage recurring monthly bills, including name, amount, and a paid/unpaid toggle.
+- **Salary/Income Management**: Set your monthly salary to get a more accurate financial overview.
+- **Multi-Currency Support**: Select from 9 major currencies (USD, EUR, GBP, etc.) for all financial displays.
 - **Transaction History**: A chronological feed of all transactions, grouped by day, with a 30-day spending chart.
 - **Data Export**: Export all transaction data to CSV.
-- **Daily Reset Logic**: The UI automatically calculates spending for the current day, effectively resetting the "spent" amount daily.
+- **First-Time Onboarding**: A welcome modal to set initial balance and salary.
 - **Visual Analytics**: Sparklines and mini-charts for spending velocity.
 - **Responsive Design**: Flawless mobile-first UI with intuitive navigation.
 - **Persistent Storage**: Cloudflare Durable Objects for atomic, real-time data sync.
@@ -27,7 +30,6 @@ Customizable "Scopes" (Categories) let users set daily spending limits. The dash
 - **React Hook Form** + **Zod** for forms
 - **Vaul** for drawers/sheets, **Sonner** for toasts
 - **Recharts** for charts, **Lucide React** for icons
-- **@tanstack/react-query** for data fetching
 ### Backend
 - **Hono** for API routing
 - **Cloudflare Workers** with **Durable Objects** for stateful persistence
@@ -55,18 +57,19 @@ Customizable "Scopes" (Categories) let users set daily spending limits. The dash
 ## Usage
 - **Dashboard** (`/`): View category cards with remaining budgets and progress.
 - **Add Expense**: Click the FAB (+) to open the drawer, select category, enter amount.
-- **Settings** (`/settings`): Manage categories and their daily limits.
+- **Settings** (`/settings`): Manage categories, bills, and salary.
 - **History** (`/history`): View transaction feed and export data.
 All interactions use optimistic UI updates with real-time sync via Zustand + API.
-## Advanced Concepts & Troubleshooting
-### Optimistic UI
-When you add a transaction or update a category, the change appears instantly. This is an "optimistic update." The app sends the request to the server in the background. If the server request fails, the change is reverted, and a notification is shown. This makes the app feel incredibly fast.
+## Performance & Advanced Concepts
+### Performance
+The application is designed to be lightning-fast, achieving a consistent 60fps experience through several key strategies:
+- **Optimistic UI**: When you add a transaction or update a category, the change appears instantly. The app sends the request to the server in the background. If the server request fails, the change is reverted, and a notification is shown.
+- **Performant State Management**: Zustand is used for state management. We strictly follow best practices by selecting primitive state slices or using `useShallow` for non-primitives, which prevents unnecessary re-renders even with large datasets.
+- **Memoized Selectors**: Expensive calculations (like daily/monthly totals) are derived from state and memoized with `useMemo` to ensure they only re-run when their dependencies change.
 ### Daily Resets
 The "daily limit" is enforced on the client-side using `date-fns`. The application filters transactions to only include those from the current day (`isToday()`). There is no cron job; the view simply recalculates every time you open the app.
 ### Orphaned Transactions
 If you delete a category, any transactions associated with it are not deleted. In the History view, they will appear as "Uncategorized." This is by design to ensure your financial records remain complete.
-### Performance
-The app uses performant state management practices with Zustand, selecting only the necessary data to prevent unnecessary re-renders. Expensive calculations are memoized within components using `useMemo` to ensure a smooth UI.
 ## Deployment
 Deploy to Cloudflare Pages (frontend) + Workers (backend) in one command:
 ```bash
