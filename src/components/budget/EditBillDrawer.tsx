@@ -48,70 +48,77 @@ export function EditBillDrawer({ open, onOpenChange, bill }: EditBillDrawerProps
       reset({ name: '', amount: 0, paid: false });
     }
   }, [bill, reset]);
-  const onFullSubmit = async (data: BillFormData) => {
+  const onFullSubmit = (data: BillFormData) => {
     if (!bill) return;
-    await updateBill(bill.id, data);
+    updateBill(bill.id, data);
     toast.success(`Bill "${data.name}" updated.`);
     onOpenChange(false);
   };
-  const handleDeleteBill = async () => {
+  const handleDeleteBill = () => {
     if (!bill) return;
-    await deleteBill(bill.id);
+    deleteBill(bill.id);
     toast.success(`Bill "${bill.name}" deleted.`);
     onOpenChange(false);
   };
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      reset();
+    }
+    onOpenChange(isOpen);
+  };
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="h-full w-full max-w-sm mt-0 ml-auto rounded-none border-l border-border/20">
-        <div className="mx-auto w-full h-full flex flex-col bg-background">
+    <Drawer open={open} onOpenChange={handleOpenChange} direction="right">
+      <DrawerContent className="h-full w-full max-w-sm mt-0 ml-auto rounded-none">
+        <div className="mx-auto w-full h-full flex flex-col">
           <DrawerHeader className="flex-shrink-0">
-            <DrawerTitle className="font-black tracking-tighter text-2xl">Edit Bill</DrawerTitle>
+            <DrawerTitle>Edit Bill</DrawerTitle>
             <DrawerDescription>Update details for "{bill?.name || '...'}".</DrawerDescription>
           </DrawerHeader>
-          <form onSubmit={handleSubmit(onFullSubmit)} className="p-4 pt-0 flex-grow flex flex-col space-y-6 overflow-y-auto">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-label ml-1">Bill Name</Label>
-                <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} className="h-12 rounded-2xl" />} />
-                {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name.message}</p>}
+          <form onSubmit={handleSubmit(onFullSubmit)} className="p-4 pt-0 flex-grow flex flex-col space-y-4">
+            <div className="space-y-4 flex-grow overflow-y-auto pr-2">
+              <div>
+                <Label htmlFor="name">Bill Name</Label>
+                <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} />} />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-label ml-1">Monthly Amount</Label>
+              <div>
+                <Label htmlFor="amount">Amount</Label>
                 <Controller name="amount" control={control} render={({ field }) => (
-                  <Input {...field} id="amount" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-12 rounded-2xl" />
+                  <Input {...field} id="amount" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                 )} />
-                {errors.amount && <p className="text-red-500 text-xs mt-1 ml-1">{errors.amount.message}</p>}
+                {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>}
               </div>
-              <div className="flex items-center space-x-3 p-4 bg-muted/20 rounded-2xl border border-border/10">
+              <div className="flex items-center space-x-2">
                 <Controller name="paid" control={control} render={({ field }) => (
-                  <Checkbox id="paid" checked={field.value} onCheckedChange={field.onChange} className="h-5 w-5 rounded-lg" />
+                  <Checkbox id="paid" checked={field.value} onCheckedChange={field.onChange} />
                 )} />
-                <Label htmlFor="paid" className="text-sm font-bold cursor-pointer">Mark as settled for this month</Label>
+                <Label htmlFor="paid">Mark as paid for this month</Label>
               </div>
             </div>
-            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2 p-0 mt-auto pb-8">
+            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <motion.div variants={shakeVariants} whileHover="hover">
-                    <Button size="icon" variant="ghost" className="h-12 w-12 text-destructive hover:bg-red-500/10 rounded-2xl" type="button">
-                      <Trash2 className="w-6 h-6" />
+                  <motion.div variants={shakeVariants} whileHover="hover" className="mr-auto">
+                    <Button size="lg" variant="ghost" className="h-10 w-10 text-destructive hover:text-destructive/80" type="button">
+                      <Trash2 className="w-5 h-5" />
                     </Button>
                   </motion.div>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-[2.5rem] shadow-2xl">
+                <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="font-black tracking-tighter text-2xl">Delete Bill?</AlertDialogTitle>
-                    <AlertDialogDescription className="font-medium">
-                      This will permanently remove the "{bill?.name}" bill. History is kept for archives.
+                    <AlertDialogTitle>Delete Bill?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the "{bill?.name}" bill. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter className="gap-2 pt-4">
-                    <AlertDialogCancel className="rounded-2xl">Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteBill} className="bg-destructive hover:bg-destructive/90 rounded-2xl">Delete</AlertDialogAction>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteBill} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <Button type="submit" className="btn-premium flex-1 h-14 shadow-glow">
+              <DrawerClose asChild><Button variant="outline"><X className="w-4 h-4 mr-2" />Cancel</Button></DrawerClose>
+              <Button type="submit" className="bg-gradient-to-r from-primary to-slate-700 text-white hover:from-primary/90 transition-all hover:scale-105 active:scale-95">
                 <Save className="w-4 h-4 mr-2" />Save Changes
               </Button>
             </DrawerFooter>
