@@ -7,7 +7,7 @@ import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useMemo, useCallback } from 'react';
-export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF'];
+export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF', 'AED'];
 export const formatCurrencyAmount = (currency: string, amount: number, locale = navigator.language || 'en-US') => {
   try {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
@@ -67,11 +67,13 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         const userLocale = navigator.language;
         // A simple map to guess currency from locale, not exhaustive
         const localeCurrencyMap: Record<string, string> = {
-          'en-GB': 'GBP', 'en-IN': 'INR', 'ja-JP': 'JPY', 'en-CA': 'CAD', 'en-AU': 'AUD', 'de-CH': 'CHF',
+          'en-GB': 'GBP', 'en-IN': 'INR', 'ja-JP': 'JPY', 'en-CA': 'CAD', 'en-AU': 'AUD', 'de-CH': 'CHF', 'ar-AE': 'AED',
         };
         const region = userLocale.split('-')[1];
         if (region && localeCurrencyMap[`en-${region}`]) {
             set({ currentCurrency: localeCurrencyMap[`en-${region}`] });
+        } else if (localeCurrencyMap[userLocale]) {
+            set({ currentCurrency: localeCurrencyMap[userLocale] });
         }
       }
       set({ scopes: scopesWithIcons, transactions, initialized: true });
