@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useBudgetStore, useSpentThisMonth, useMonthlyRemaining, ScopeWithIcon } from '@/lib/store';
+import { useBudgetStore, useSpentThisMonth, useMonthlyRemaining, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Pencil } from 'lucide-react';
@@ -12,10 +12,6 @@ interface MonthlyScopeCardProps {
   onEdit: (scope: ScopeWithIcon) => void;
   isLoading?: boolean;
 }
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
 export function MonthlyScopeCardSkeleton() {
   return (
     <div className={cn(
@@ -52,6 +48,7 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
   const spentThisMonth = useSpentThisMonth(scope.id);
   const remaining = useMonthlyRemaining(scope.id);
   const transactions = useBudgetStore(state => state.transactions);
+  const formatAmount = useFormatAmount();
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -109,13 +106,13 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
             <h3 className="text-lg font-semibold text-foreground">{scope.name}</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Monthly Limit: {currencyFormatter.format(monthlyLimit)}
+            Monthly Limit: {formatAmount(monthlyLimit)}
           </p>
         </div>
         <div className="text-right">
           <p className="text-sm text-muted-foreground">Spent</p>
           <p className="text-lg font-bold text-foreground">
-            {currencyFormatter.format(spentThisMonth)}
+            {formatAmount(spentThisMonth)}
           </p>
         </div>
       </div>
@@ -128,7 +125,7 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
             transition={{ duration: 0.3 }}
             key={remaining}
           >
-            {currencyFormatter.format(remaining)}
+            {formatAmount(remaining)}
           </motion.span>
         </div>
         <Progress value={percentage} className={cn("h-2", getProgressColor())} />

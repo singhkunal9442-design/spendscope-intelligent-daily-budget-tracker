@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useBudgetStore, useSpentToday, ScopeWithIcon } from '@/lib/store';
+import { useBudgetStore, useSpentToday, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Pencil } from 'lucide-react';
@@ -12,10 +12,6 @@ interface ScopeCardProps {
   onEdit: (scope: ScopeWithIcon) => void;
   isLoading?: boolean;
 }
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
 export function ScopeCardSkeleton() {
   return (
     <div className={cn(
@@ -51,6 +47,7 @@ export function ScopeCardSkeleton() {
 export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   const spentToday = useSpentToday(scope.id);
   const transactions = useBudgetStore(state => state.transactions);
+  const formatAmount = useFormatAmount();
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -108,13 +105,13 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
             <h3 className="text-lg font-semibold text-foreground">{scope.name}</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Limit: {currencyFormatter.format(scope.dailyLimit)}
+            Limit: {formatAmount(scope.dailyLimit)}
           </p>
         </div>
         <div className="text-right">
           <p className="text-sm text-muted-foreground">Spent</p>
           <p className="text-lg font-bold text-foreground">
-            {currencyFormatter.format(spentToday)}
+            {formatAmount(spentToday)}
           </p>
         </div>
       </div>
@@ -127,7 +124,7 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
             transition={{ duration: 0.3 }}
             key={remaining}
           >
-            {currencyFormatter.format(remaining)}
+            {formatAmount(remaining)}
           </motion.span>
         </div>
         <Progress value={percentage} className={cn("h-2", getProgressColor())} />

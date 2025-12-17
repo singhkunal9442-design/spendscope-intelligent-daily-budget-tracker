@@ -5,12 +5,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface HistoryChartProps {
   data: { date: string; total: number }[];
   isLoading?: boolean;
+  currency?: string;
 }
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
-export function HistoryChart({ data, isLoading }: HistoryChartProps) {
+export function HistoryChart({ data, isLoading, currency = 'USD' }: HistoryChartProps) {
   const { isDark } = useTheme();
   if (isLoading) {
     return <Skeleton className="h-80 w-full" />;
@@ -49,7 +46,15 @@ export function HistoryChart({ data, isLoading }: HistoryChartProps) {
               borderColor: 'hsl(var(--border))',
               borderRadius: 'var(--radius)',
             }}
-            formatter={(value: number) => [currencyFormatter.format(value), 'Total Spent']}
+            formatter={(value: number) => {
+              const locale = navigator.language || 'en-US';
+              try {
+                const formattedValue = new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
+                return [formattedValue, 'Total Spent'];
+              } catch (e) {
+                return [`${value.toFixed(2)}`, 'Total Spent'];
+              }
+            }}
           />
           <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorTotal)" />
         </AreaChart>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Wallet } from 'lucide-react';
-import { useBudgetStore, ScopeWithIcon, useIsLoading } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon, useIsLoading, useFormatAmount } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
 import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
@@ -10,10 +10,12 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
 import { MonthlyScopeCard, MonthlyScopeCardSkeleton } from '@/components/budget/MonthlyScopeCard';
+import { CurrencySelector } from '@/components/CurrencySelector';
 export function DashboardPage() {
   const scopes = useBudgetStore(state => state.scopes);
   const loadData = useBudgetStore(state => state.loadData);
   const isLoading = useIsLoading();
+  const formatAmount = useFormatAmount();
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
   useEffect(() => {
@@ -31,6 +33,7 @@ export function DashboardPage() {
     <div className="min-h-screen w-full bg-background text-foreground relative">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
       <ThemeToggle className="fixed top-4 right-4 z-50" />
+      <CurrencySelector />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-16">
           <div className="text-center mb-12">
@@ -48,7 +51,7 @@ export function DashboardPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto"
             >
-              Your real-time guide to daily spending. Total daily budget: <span className="text-gradient font-bold">${totalLimit.toFixed(2)}</span>
+              Your real-time guide to daily spending. Total daily budget: <span className="text-gradient font-bold">{formatAmount(totalLimit)}</span>
             </motion.p>
           </div>
           <AnimatePresence>
