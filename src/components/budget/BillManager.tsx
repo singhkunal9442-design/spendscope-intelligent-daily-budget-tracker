@@ -91,17 +91,17 @@ export function BillManager() {
               editingBillId === bill.id ? (
                 <EditBillForm key={bill.id} bill={bill} onSave={(data) => handleSave(bill.id, data)} onCancel={() => setEditingBillId(null)} />
               ) : (
-                <div key={bill.id} className="group flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/60 backdrop-blur-sm rounded-lg transition-all duration-200 hover:scale-[1.02]">
+                <div key={bill.id} className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/60 backdrop-blur-sm rounded-lg transition-all duration-200 hover:scale-[1.02]">
                   <div>
                     <span className="font-medium">{bill.name}</span>
                     <p className="text-sm text-muted-foreground">{formatAmount(bill.amount)} / month</p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => setEditingBillId(bill.id)} className="hover:text-primary transition-colors"><Edit className="w-4 h-4" /></Button>
+                  <div className="flex items-center gap-1 opacity-100">
+                    <Button size="lg" variant="ghost" onClick={() => setEditingBillId(bill.id)} className="h-10 w-10 min-w-[40px] rounded-lg hover:text-primary transition-colors"><Edit className="w-4 h-4" /></Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <motion.div variants={shakeVariants} whileHover="hover">
-                          <Button size="lg" variant="ghost" className="h-10 w-10 rounded-lg text-red-500 hover:text-red-600 transition-colors"><Trash2 className="w-5 h-5" /></Button>
+                          <Button size="lg" variant="ghost" className="h-10 w-10 min-w-[40px] rounded-lg text-red-500 hover:text-red-600 transition-colors"><Trash2 className="w-5 h-5" /></Button>
                         </motion.div>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
