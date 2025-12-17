@@ -6,8 +6,20 @@ import { Scope, Transaction } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
-import { useMemo } from 'react';
-export const formatAmount = (amt: number) => `${amt.toFixed(2)}`;
+import { useMemo, useCallback } from 'react';
+export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF'];
+export const formatCurrencyAmount = (currency: string, amount: number, locale = navigator.language || 'en-US') => {
+  try {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  } catch (e) {
+    // Fallback for invalid currency codes
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  }
+};
+export const useFormatAmount = () => {
+  const currency = useBudgetStore(s => s.currentCurrency);
+  return useCallback((amt: number) => formatCurrencyAmount(currency, amt), [currency]);
+};
 export type ScopeWithIcon = Omit<Scope, 'icon'> & {
   icon: lucideIcons.LucideIcon;
   monthlyLimit?: number;
@@ -17,7 +29,9 @@ interface BudgetState {
   transactions: Transaction[];
   loading: boolean;
   initialized: boolean;
+  currentCurrency: string;
   loadData: () => Promise<void>;
+  setCurrency: (currency: string) => Promise<void>;
   addScope: (scope: Omit<Scope, 'id'>) => Promise<void>;
   updateScope: (id: string, dailyLimit: number) => Promise<void>;
   updateScopeFull: (id: string, data: Partial<Omit<Scope, 'id'>>) => Promise<void>;
@@ -35,6 +49,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   transactions: [],
   loading: false,
   initialized: false,
+  currentCurrency: 'USD',
   loadData: async () => {
     if (get().initialized || get().loading) return;
     set({ loading: true });
@@ -44,6 +59,21 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         api<Transaction[]>('/api/transactions'),
       ]);
       const scopesWithIcons = scopes.map(s => ({ ...s, icon: getIcon(s.icon) }));
+      const savedCurrency = localStorage.getItem('spendscope-currency');
+      if (savedCurrency && CURRENCY_PRESETS.includes(savedCurrency)) {
+        set({ currentCurrency: savedCurrency });
+      } else {
+        // Fallback to user's locale if possible
+        const userLocale = navigator.language;
+        // A simple map to guess currency from locale, not exhaustive
+        const localeCurrencyMap: Record<string, string> = {
+          'en-GB': 'GBP', 'en-IN': 'INR', 'ja-JP': 'JPY', 'en-CA': 'CAD', 'en-AU': 'AUD', 'de-CH': 'CHF',
+        };
+        const region = userLocale.split('-')[1];
+        if (region && localeCurrencyMap[`en-${region}`]) {
+            set({ currentCurrency: localeCurrencyMap[`en-${region}`] });
+        }
+      }
       set({ scopes: scopesWithIcons, transactions, initialized: true });
     } catch (error) {
       console.error("Failed to load data", error);
@@ -51,6 +81,11 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     } finally {
       set({ loading: false });
     }
+  },
+  setCurrency: async (currency: string) => {
+    if (!CURRENCY_PRESETS.includes(currency)) return;
+    localStorage.setItem('spendscope-currency', currency);
+    set({ currentCurrency: currency });
   },
   addScope: async (scope) => {
     try {
@@ -181,7 +216,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }));
     try {
       await api(`/api/transactions/${id}`, { method: 'DELETE' });
-      toast.success(`Deleted transaction of ${formatAmount(txToDelete.amount)}.`);
+      toast.success(`Deleted transaction of ${formatCurrencyAmount(get().currentCurrency, txToDelete.amount)}.`);
     } catch (error) {
       console.error("Failed to delete transaction", error);
       toast.error("Failed to delete transaction. Reverting.");

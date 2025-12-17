@@ -3,17 +3,13 @@ import { motion } from 'framer-motion';
 import { Calendar, TrendingUp, PiggyBank, Banknote } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useBudgetStore } from '@/lib/store';
+import { useBudgetStore, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO, isSameMonth } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Skeleton } from '@/components/ui/skeleton';
 interface MonthlyOverviewCardProps {
   isLoading?: boolean;
 }
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
 export function MonthlyOverviewCardSkeleton() {
   return (
     <div className={cn(
@@ -45,25 +41,20 @@ export function MonthlyOverviewCardSkeleton() {
   );
 }
 export function MonthlyOverviewCard({ isLoading }: MonthlyOverviewCardProps) {
-  // primitive selectors – hoisted before any conditional returns
   const scopes = useBudgetStore(state => state.scopes);
   const transactions = useBudgetStore(state => state.transactions);
-
-  // derived budget values
+  const formatAmount = useFormatAmount();
   const monthlyBudget = useMemo(
     () => scopes.reduce((sum, s) => sum + (s.monthlyLimit ?? s.dailyLimit * 30), 0),
     [scopes]
   );
-
   const spentThisMonth = useMemo(() => {
     const monthFiltered = transactions.filter(t =>
       isSameMonth(parseISO(t.date), new Date())
     );
     return monthFiltered.reduce((sum, t) => sum + t.amount, 0);
   }, [transactions]);
-
   const remainingThisMonth = monthlyBudget - spentThisMonth;
-
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -77,7 +68,6 @@ export function MonthlyOverviewCard({ isLoading }: MonthlyOverviewCardProps) {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [transactions]);
-
   if (isLoading) {
     return <MonthlyOverviewCardSkeleton />;
   }
@@ -106,15 +96,15 @@ export function MonthlyOverviewCard({ isLoading }: MonthlyOverviewCardProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center md:text-left">
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><PiggyBank className="w-4 h-4" /> Budget</p>
-              <p className="text-xl font-bold text-foreground">{currencyFormatter.format(monthlyBudget)}</p>
+              <p className="text-xl font-bold text-foreground">{formatAmount(monthlyBudget)}</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><Banknote className="w-4 h-4" /> Spent</p>
-              <p className="text-xl font-bold text-foreground">{currencyFormatter.format(spentThisMonth)}</p>
+              <p className="text-xl font-bold text-foreground">{formatAmount(spentThisMonth)}</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 col-span-2 sm:col-span-1">
               <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><TrendingUp className="w-4 h-4" /> Remaining</p>
-              <p className={cn("text-xl font-bold", remainingThisMonth < 0 ? 'text-red-500' : 'text-emerald-500')}>{currencyFormatter.format(remainingThisMonth)}</p>
+              <p className={cn("text-xl font-bold", remainingThisMonth < 0 ? 'text-red-500' : 'text-emerald-500')}>{formatAmount(remainingThisMonth)}</p>
             </div>
           </div>
           <div className="pt-2">

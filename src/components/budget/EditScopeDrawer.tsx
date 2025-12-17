@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBudgetStore, ScopeWithIcon } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { Save, X, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -38,11 +38,8 @@ interface EditScopeDrawerProps {
   onOpenChange: (open: boolean) => void;
   scope: ScopeWithIcon | null;
 }
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
 const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIcon; spentToday: number; spentAllTime: number; }) => {
+  const formatAmount = useFormatAmount();
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
   const allTimeSpent = spentAllTime;
@@ -58,20 +55,20 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
           <div>
             <div className="flex justify-between text-sm font-medium">
               <span className="text-muted-foreground">Spent Today</span>
-              <span className="font-bold text-foreground">{currencyFormatter.format(spentToday)} / {currencyFormatter.format(scope.dailyLimit)}</span>
+              <span className="font-bold text-foreground">{formatAmount(spentToday)} / {formatAmount(scope.dailyLimit)}</span>
             </div>
             <Progress value={percentage} className={cn("h-2 mt-1", getProgressColor(percentage))} />
             <div className="flex justify-between text-sm font-medium pt-1">
               <span className="text-muted-foreground">Remaining Today</span>
               <motion.span className={cn('font-bold', remaining < 0 ? 'text-red-500' : 'text-emerald-500')} animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 0.3 }} key={remaining}>
-                {currencyFormatter.format(remaining)}
+                {formatAmount(remaining)}
               </motion.span>
             </div>
           </div>
           <div className="border-t border-border/50 pt-2">
              <div className="flex justify-between text-xs font-medium text-muted-foreground">
                 <span>Lifetime Spent</span>
-                <span className="font-bold">{currencyFormatter.format(allTimeSpent)}</span>
+                <span className="font-bold">{formatAmount(allTimeSpent)}</span>
             </div>
           </div>
         </CardContent>
@@ -99,6 +96,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   const updateTransaction = useBudgetStore(state => state.updateTransaction);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
   const transactions = useBudgetStore(state => state.transactions);
+  const formatAmount = useFormatAmount();
   const recentTransactions = useMemo(() => {
     if (!scope?.id) return [];
     return transactions
@@ -163,7 +161,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
       setEditingTxId(null);
     } else {
       addTransaction({ ...data, scopeId: scope.id });
-      toast.success(`${currencyFormatter.format(data.amount)} added to ${scope.name}`);
+      toast.success(`${formatAmount(data.amount)} added to ${scope.name}`);
     }
     resetMiniForm();
   };
@@ -230,7 +228,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                         {recentTransactions.length > 0 ? recentTransactions.map(tx => (
                           <motion.div key={tx.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="group flex items-center justify-between p-2 bg-muted/50 rounded-lg">
                             <div>
-                              <p className="text-sm font-medium">{currencyFormatter.format(tx.amount)}</p>
+                              <p className="text-sm font-medium">{formatAmount(tx.amount)}</p>
                               <p className="text-xs text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
                             </div>
                             <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 bg-muted/50 rounded-md backdrop-blur transition-all">
@@ -244,7 +242,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                                   </motion.div>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
-                                  <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>Delete this transaction of {currencyFormatter.format(tx.amount)}?</AlertDialogDescription></AlertDialogHeader>
+                                  <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>Delete this transaction of {formatAmount(tx.amount)}?</AlertDialogDescription></AlertDialogHeader>
                                   <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
@@ -267,14 +265,14 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="dailyLimit">Daily Limit ($)</Label>
+                  <Label htmlFor="dailyLimit">Daily Limit</Label>
                   <Controller name="dailyLimit" control={control} render={({ field }) => (
                       <Input {...field} id="dailyLimit" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                   )} />
                   {errors.dailyLimit && <p className="text-red-500 text-sm mt-1">{errors.dailyLimit.message}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="monthlyLimit">Monthly Limit ($)</Label>
+                  <Label htmlFor="monthlyLimit">Monthly Limit</Label>
                   <Controller name="monthlyLimit" control={control} render={({ field }) => (
                       <Input {...field} id="monthlyLimit" type="number" step="0.01" placeholder="e.g., 150" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                   )} />

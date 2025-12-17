@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useBudgetStore, useIsLoading, formatAmount } from '@/lib/store';
+import { useBudgetStore, useIsLoading, useFormatAmount } from '@/lib/store';
 import { Transaction } from '@shared/types';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -12,10 +12,8 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TransactionEditDialog } from '@/components/budget/TransactionEditDialog';
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
+import { CurrencySelector } from '@/components/CurrencySelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
 const groupTransactionsByDay = (transactions: Transaction[]) => {
   return transactions.reduce((acc, tx) => {
     const date = parseISO(tx.date);
@@ -51,6 +49,8 @@ export function HistoryPage() {
   const scopes = useBudgetStore(state => state.scopes);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
   const isLoading = useIsLoading();
+  const formatAmount = useFormatAmount();
+  const currency = useBudgetStore(s => s.currentCurrency);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const scopesMap = React.useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
   const sortedTransactions = [...transactions].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
@@ -70,11 +70,13 @@ export function HistoryPage() {
     });
   }, [transactions]);
   const handleExport = () => {
-    const csv = generateCSV(transactions, scopes);
+    const csv = generateCSV(transactions, scopes, currency);
     downloadCSV(csv, `spendscope-export-${format(new Date(), 'yyyy-MM-dd')}.csv`);
   };
   return (
     <div className="py-8 md:py-10 lg:py-12">
+      <ThemeToggle className="fixed top-4 right-4" />
+      <CurrencySelector />
       <TransactionEditDialog
         transaction={editingTransaction}
         open={!!editingTransaction}
@@ -89,7 +91,7 @@ export function HistoryPage() {
         </p>
       </div>
       <div className="max-w-4xl mx-auto mb-12">
-        <HistoryChart data={dailyTotalsData} isLoading={isLoading} />
+        <HistoryChart data={dailyTotalsData} isLoading={isLoading} currency={currency} />
       </div>
       <div className="flex justify-center mb-8">
         <Button onClick={handleExport} variant="outline" disabled={transactions.length === 0 || isLoading}>
@@ -120,7 +122,7 @@ export function HistoryPage() {
                     <AccordionTrigger>
                       <div className="flex justify-between w-full pr-4">
                         <span className="font-semibold text-lg">{day}</span>
-                        <span className="font-mono text-muted-foreground">{currencyFormatter.format(dayTotal)}</span>
+                        <span className="font-mono text-muted-foreground">{formatAmount(dayTotal)}</span>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -139,7 +141,7 @@ export function HistoryPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-1">
-                                <p className="font-mono font-semibold mr-2">{currencyFormatter.format(tx.amount)}</p>
+                                <p className="font-mono font-semibold mr-2">{formatAmount(tx.amount)}</p>
                                 <motion.div
                                   whileHover={{ scale: 1.05, rotate: [0, 1, -1, 0] }}
                                   className="ml-auto flex items-center gap-2 p-1 bg-muted/50 hover:bg-muted/80 backdrop-blur-sm rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all md:group-hover:scale-105"
