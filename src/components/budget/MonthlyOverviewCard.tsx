@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { Calendar, TrendingUp, PiggyBank, Banknote } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useBudgetStore, useMonthlyBudget, useSpentThisMonth, useMonthlyRemaining } from '@/lib/store';
-import { subDays, format, parseISO } from 'date-fns';
+import { useBudgetStore } from '@/lib/store';
+import { subDays, format, parseISO, isSameMonth } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Skeleton } from '@/components/ui/skeleton';
 interface MonthlyOverviewCardProps {
@@ -45,10 +45,25 @@ export function MonthlyOverviewCardSkeleton() {
   );
 }
 export function MonthlyOverviewCard({ isLoading }: MonthlyOverviewCardProps) {
-  const monthlyBudget = useMonthlyBudget();
-  const spentThisMonth = useSpentThisMonth();
-  const remainingThisMonth = useMonthlyRemaining();
+  // primitive selectors – hoisted before any conditional returns
+  const scopes = useBudgetStore(state => state.scopes);
   const transactions = useBudgetStore(state => state.transactions);
+
+  // derived budget values
+  const monthlyBudget = useMemo(
+    () => scopes.reduce((sum, s) => sum + (s.monthlyLimit ?? s.dailyLimit * 30), 0),
+    [scopes]
+  );
+
+  const spentThisMonth = useMemo(() => {
+    const monthFiltered = transactions.filter(t =>
+      isSameMonth(parseISO(t.date), new Date())
+    );
+    return monthFiltered.reduce((sum, t) => sum + t.amount, 0);
+  }, [transactions]);
+
+  const remainingThisMonth = monthlyBudget - spentThisMonth;
+
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -62,6 +77,7 @@ export function MonthlyOverviewCard({ isLoading }: MonthlyOverviewCardProps) {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [transactions]);
+
   if (isLoading) {
     return <MonthlyOverviewCardSkeleton />;
   }

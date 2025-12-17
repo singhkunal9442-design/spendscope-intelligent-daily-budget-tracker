@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBudgetStore, ScopeWithIcon, useSpentToday, useSpentAllTime, useRecentTransactions } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon } from '@/lib/store';
 import { Save, X, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -17,7 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday } from 'date-fns';
 const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'CreditCard', 'DollarSign', 'Gift', 'Heart', 'Plane', 'BookOpen', 'Briefcase', 'Film', 'Gamepad2', 'Music'];
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cyan', 'fuchsia'];
 const scopeSchema = z.object({
@@ -42,11 +42,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
-const SpendingStats = ({ scope }: { scope: ScopeWithIcon }) => {
-  const spentToday = useSpentToday(scope.id);
-  const allTimeSpent = useSpentAllTime(scope.id);
+const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIcon; spentToday: number; spentAllTime: number; }) => {
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
+  const allTimeSpent = spentAllTime;
   const getProgressColor = (p: number) => {
     if (p > 90) return 'bg-red-500';
     if (p > 70) return 'bg-amber-500';
@@ -99,7 +98,26 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   const addTransaction = useBudgetStore(state => state.addTransaction);
   const updateTransaction = useBudgetStore(state => state.updateTransaction);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
-  const recentTransactions = useRecentTransactions(scope?.id || '', 5);
+  const transactions = useBudgetStore(state => state.transactions);
+  const recentTransactions = useMemo(() => {
+    if (!scope?.id) return [];
+    return transactions
+      .filter(t => t.scopeId === scope.id)
+      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+      .slice(0, 5);
+  }, [transactions, scope?.id]);
+  const spentToday = useMemo(() => {
+    if (!scope?.id) return 0;
+    return transactions
+      .filter(t => t.scopeId === scope.id && isToday(parseISO(t.date)))
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [transactions, scope?.id]);
+  const spentAllTime = useMemo(() => {
+    if (!scope?.id) return 0;
+    return transactions
+      .filter(t => t.scopeId === scope.id)
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [transactions, scope?.id]);
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<ScopeFormData>({
     resolver: zodResolver(scopeSchema),
@@ -166,7 +184,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
             <DrawerDescription>Update details for "{scope?.name || '...'}".</DrawerDescription>
           </DrawerHeader>
           <div className="p-4 pt-0 space-y-4">
-            {scope ? <SpendingStats scope={scope} /> : <SpendingStatsSkeleton />}
+            {scope ? <SpendingStats scope={scope} spentToday={spentToday} spentAllTime={spentAllTime} /> : <SpendingStatsSkeleton />}
             <Accordion type="multiple" className="w-full space-y-2">
               <AccordionItem value="add-edit-tx" className="border-none">
                 <Card className="backdrop-blur-xl bg-card/60 border-border/20">
