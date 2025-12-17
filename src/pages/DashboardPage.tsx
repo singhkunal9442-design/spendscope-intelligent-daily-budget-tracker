@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Wallet, Receipt } from 'lucide-react';
+import { Plus, Wallet, Receipt, LayoutGrid } from 'lucide-react';
 import { useBudgetStore, ScopeWithIcon, useIsLoading, useFormatAmount, useBills } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
 import { AddBillDrawer } from '@/components/budget/AddBillDrawer';
+import { AddScopeDrawer } from '@/components/budget/AddScopeDrawer';
 import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
 import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
 import { OnboardingModal } from '@/components/budget/OnboardingModal';
@@ -25,6 +26,7 @@ export function DashboardPage() {
   const formatAmount = useFormatAmount();
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
   const [isAddBillDrawerOpen, setIsAddBillDrawerOpen] = useState(false);
+  const [isAddScopeDrawerOpen, setIsAddScopeDrawerOpen] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -84,7 +86,6 @@ export function DashboardPage() {
                     {bills.length > 0 && (
                       <>
                         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Fixed Monthly Bills</motion.h2>
-                        <Button onClick={() => setIsAddBillDrawerOpen(true)} className="fixed bottom-24 right-6 h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg z-40 border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Quick Add Bill"><Plus className="h-5 w-5" /></Button>
                         <motion.div key="bills" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {bills.map((bill) => (<motion.div key={bill.id} variants={itemVariants}><BillCard bill={bill} onEdit={setEditingBill} /></motion.div>))}
                         </motion.div>
@@ -105,9 +106,38 @@ export function DashboardPage() {
           </AnimatePresence>
         </div>
       </main>
+      {/* Main FAB */}
       <Button onClick={() => setIsAddDrawerOpen(true)} className="fixed bottom-8 sm:bottom-6 right-6 h-16 w-16 min-h-[64px] sm:h-14 sm:w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95 animate-pulse" size="icon"><Plus className="h-8 w-8" /><span className="sr-only">Add Expense</span></Button>
+      {/* Section-local FABs */}
+      <AnimatePresence>
+        {scopes.length > 0 && (
+          <>
+            {/* Monthly Grid FAB */}
+            <motion.div initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }} className="fixed bottom-[16.5rem] sm:bottom-64 right-6 z-20">
+              <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Category">
+                <LayoutGrid className="h-5 w-5" />
+              </Button>
+            </motion.div>
+            {/* Daily Grid FAB */}
+            <motion.div initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="fixed bottom-48 right-6 z-30">
+              <Button onClick={() => setIsAddDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Daily Expense">
+                <Plus className="h-5 w-5" />
+              </Button>
+            </motion.div>
+          </>
+        )}
+        {bills.length > 0 && (
+          /* Bills Grid FAB */
+          <motion.div initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }} className="fixed bottom-32 right-6 z-40">
+            <Button onClick={() => setIsAddBillDrawerOpen(true)} className="h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Add Bill">
+              <Receipt className="h-5 w-5" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
       <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
+      <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
       <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
       <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
       <Toaster richColors />
