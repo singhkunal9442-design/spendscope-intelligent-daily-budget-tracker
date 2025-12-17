@@ -1,6 +1,7 @@
 import React from 'react';
 import { CategoryManager } from '@/components/budget/CategoryManager';
 import { BillManager } from '@/components/budget/BillManager';
+import { SalaryManager } from '@/components/budget/SalaryManager';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CurrencySelector } from '@/components/CurrencySelector';
 export function SettingsPage() {
@@ -16,17 +17,20 @@ export function SettingsPage() {
               Settings
             </h1>
             <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Manage your spending categories and fixed monthly bills.
+              Manage your spending categories, fixed bills, and monthly income.
             </p>
           </div>
           <div className="max-w-2xl mx-auto space-y-12">
             <CategoryManager />
             <BillManager />
+            <div className="pt-12 border-t border-border/20">
+              <SalaryManager />
+            </div>
           </div>
         </div>
       </main>
       <footer className="text-center py-8 w-full text-muted-foreground/80">
-        <p>Built with ❤️ at Cloudflare</p>
+        <p>Built with ��️ at Cloudflare</p>
       </footer>
     </div>
   );
