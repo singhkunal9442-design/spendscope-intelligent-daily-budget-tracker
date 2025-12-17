@@ -99,8 +99,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     localStorage.removeItem('spendscope-userid');
     set({ userId: undefined, token: undefined, scopes: [], transactions: [], bills: [], initialized: false });
     toast.info("You have been logged out.");
-    // Re-initialize to show login modal
-    setTimeout(() => set({ initialized: true }), 100);
   },
   loadData: async () => {
     if (!get().userId || get().loading) return;
