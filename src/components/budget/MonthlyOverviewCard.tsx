@@ -34,6 +34,7 @@ export function MonthlyOverviewCard() {
   const spentThisMonth = useSpentThisMonth();
   const currentBalance = useCurrentBalance();
   const availableCash = currentBalance - spentThisMonth;
+  const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -61,12 +62,12 @@ export function MonthlyOverviewCard() {
           <div className="flex items-center gap-3"><Calendar className="w-6 h-6 text-primary" /><h2 className="text-2xl font-bold text-foreground">Monthly Overview</h2></div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center md:text-left">
             <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><Landmark className="w-4 h-4" /> Starting Balance</p><p className="text-xl font-bold text-foreground">{formatAmount(currentBalance)}</p></div>
-            <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><FileWarning className="w-4 h-4" /> Spent This Month</p><p className="text-xl font-bold text-foreground">{formatAmount(spentThisMonth)}</p></div>
+            <div className="p-3 rounded-lg bg-muted/50"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><FileWarning className="w-4 h-4" /> Spent {currentMonth}</p><p className="text-xl font-bold text-foreground">{formatAmount(spentThisMonth)}</p></div>
             <div className="p-3 rounded-lg bg-muted/50 col-span-1 sm:col-span-3"><p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2"><TrendingUp className="w-4 h-4" /> Available Cash</p><p className={cn("text-2xl sm:text-3xl font-bold", availableCash < 0 ? 'text-red-500' : 'text-emerald-500')}>{formatAmount(availableCash)}</p></div>
           </div>
           <div className="pt-2">
-            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Spent vs. Cash</span>
+            <div className="flex justify-between text-sm text-muted-foreground mb-1">
+              <span>Spent vs. Cash ({currentMonth})</span>
               <span>{formatAmount(spentThisMonth)} of {formatAmount(currentBalance)}</span>
             </div>
             <Progress value={percentage} className={cn("h-3", getProgressColor())} />
