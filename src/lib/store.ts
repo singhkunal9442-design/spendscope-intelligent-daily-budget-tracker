@@ -42,15 +42,15 @@ interface BudgetState {
   setCurrency: (currency: string) => Promise<void>;
   setCurrentBalance: (balance: number) => void;
   setCurrentSalary: (salary: number) => void;
-  addScope: (scope: Omit<Scope, 'id'>) => Promise<void>;
+  addScope: (scope: Omit<Scope, 'id' | 'userId'>) => Promise<void>;
   updateScope: (id: string, dailyLimit: number) => Promise<void>;
-  updateScopeFull: (id: string, data: Partial<Omit<Scope, 'id'>>) => Promise<void>;
+  updateScopeFull: (id: string, data: Partial<Omit<Scope, 'id' | 'userId'>>) => Promise<void>;
   deleteScope: (id: string) => Promise<void>;
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<void>;
-  updateTransaction: (id: string, changes: Partial<Omit<Transaction, 'id'>>) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'userId'>) => Promise<void>;
+  updateTransaction: (id: string, changes: Partial<Omit<Transaction, 'id' | 'userId'>>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
-  addBill: (bill: Omit<Bill, 'id' | 'paid'>) => Promise<void>;
-  updateBill: (id: string, changes: Partial<Omit<Bill, 'id'>>) => Promise<void>;
+  addBill: (bill: Omit<Bill, 'id' | 'paid' | 'userId'>) => Promise<void>;
+  updateBill: (id: string, changes: Partial<Omit<Bill, 'id' | 'userId'>>) => Promise<void>;
   deleteBill: (id: string) => Promise<void>;
 }
 const getIcon = (iconName: string): lucideIcons.LucideIcon => {
@@ -97,17 +97,20 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('spendscope-token');
     localStorage.removeItem('spendscope-userid');
+    localStorage.removeItem('spendscope-onboarded');
     set({ userId: undefined, token: undefined, scopes: [], transactions: [], bills: [], initialized: false });
     toast.info("You have been logged out.");
   },
   loadData: async () => {
-    if (!get().userId || get().loading) return;
+    const userId = get().userId;
+    if (!userId || get().loading) return;
     set({ loading: true });
+    const headers = { 'X-User-Id': userId };
     try {
       const [scopes, transactions, bills] = await Promise.all([
-        api<Scope[]>('/api/scopes'),
-        api<Transaction[]>('/api/transactions'),
-        api<Bill[]>('/api/bills'),
+        api<Scope[]>('/api/scopes', { headers }),
+        api<Transaction[]>('/api/transactions', { headers }),
+        api<Bill[]>('/api/bills', { headers }),
       ]);
       const scopesWithIcons = scopes.map(s => ({ ...s, icon: getIcon(s.icon) }));
       const savedCurrency = localStorage.getItem('spendscope-currency');
@@ -144,56 +147,86 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     toast.success("Monthly salary has been updated.");
   },
   addScope: async (scope) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     try {
-      const newScope = await api<Scope>('/api/scopes', { method: 'POST', body: JSON.stringify(scope) });
+      const newScope = await api<Scope>('/api/scopes', { method: 'POST', headers, body: JSON.stringify(scope) });
       set(produce((state: BudgetState) => { state.scopes.push({ ...newScope, icon: getIcon(newScope.icon) }); }));
       toast.success(`Category "${newScope.name}" added.`);
     } catch (error) { console.error("Failed to add scope", error); toast.error("Failed to add new category."); }
   },
   updateScope: async (id, dailyLimit) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const originalScopes = get().scopes;
     set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) state.scopes[i].dailyLimit = dailyLimit; }));
-    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify({ dailyLimit }) }); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
+    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', headers, body: JSON.stringify({ dailyLimit }) }); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
   },
   updateScopeFull: async (id, data) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const originalScopes = get().scopes;
     set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { const u = { ...state.scopes[i], ...data }; const nI = data.icon ? getIcon(data.icon) : state.scopes[i].icon; state.scopes[i] = { ...u, icon: nI }; } }));
-    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(data) }); toast.success(`Category "${data.name || 'Category'}" updated.`); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
+    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', headers, body: JSON.stringify(data) }); toast.success(`Category "${data.name || 'Category'}" updated.`); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
   },
   deleteScope: async (id) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const oS = get().scopes; const sTD = oS.find(s => s.id === id); if (!sTD) return;
     set(produce((state: BudgetState) => { state.scopes = state.scopes.filter(s => s.id !== id); }));
-    try { await api(`/api/scopes/${id}`, { method: 'DELETE' }); toast.success(`Category "${sTD.name}" deleted.`); } catch (error) { console.error("Failed to delete scope", error); toast.error("Failed to delete. Reverting."); set({ scopes: oS }); }
+    try { await api(`/api/scopes/${id}`, { method: 'DELETE', headers }); toast.success(`Category "${sTD.name}" deleted.`); } catch (error) { console.error("Failed to delete scope", error); toast.error("Failed to delete. Reverting."); set({ scopes: oS }); }
   },
   addTransaction: async (transaction) => {
-    const tempId = uuidv4(); const newTx: Transaction = { ...transaction, id: tempId, date: new Date().toISOString() };
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
+    const tempId = uuidv4(); const newTx: Transaction = { ...transaction, id: tempId, userId, date: new Date().toISOString() };
     set(produce((state: BudgetState) => { state.transactions.push(newTx); }));
-    try { const savedTx = await api<Transaction>('/api/transactions', { method: 'POST', body: JSON.stringify(transaction) }); set(produce((state: BudgetState) => { const i = state.transactions.findIndex(t => t.id === tempId); if (i !== -1) state.transactions[i] = savedTx; })); } catch (error) { console.error("Failed to add transaction", error); toast.error("Tx failed to save. Removing."); set(produce((state: BudgetState) => { state.transactions = state.transactions.filter(t => t.id !== tempId); })); }
+    try { const savedTx = await api<Transaction>('/api/transactions', { method: 'POST', headers, body: JSON.stringify(transaction) }); set(produce((state: BudgetState) => { const i = state.transactions.findIndex(t => t.id === tempId); if (i !== -1) state.transactions[i] = savedTx; })); } catch (error) { console.error("Failed to add transaction", error); toast.error("Tx failed to save. Removing."); set(produce((state: BudgetState) => { state.transactions = state.transactions.filter(t => t.id !== tempId); })); }
   },
   updateTransaction: async (id, changes) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const oT = get().transactions;
     set(produce((state: BudgetState) => { const i = state.transactions.findIndex(t => t.id === id); if (i !== -1) state.transactions[i] = { ...state.transactions[i], ...changes }; }));
-    try { await api(`/api/transactions/${id}`, { method: 'PUT', body: JSON.stringify(changes) }); } catch (error) { console.error("Failed to update transaction", error); toast.error("Failed to update. Reverting."); set({ transactions: oT }); }
+    try { await api(`/api/transactions/${id}`, { method: 'PUT', headers, body: JSON.stringify(changes) }); } catch (error) { console.error("Failed to update transaction", error); toast.error("Failed to update. Reverting."); set({ transactions: oT }); }
   },
   deleteTransaction: async (id) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const oT = get().transactions; const tTD = oT.find(t => t.id === id); if (!tTD) return;
     set(produce((state: BudgetState) => { state.transactions = state.transactions.filter(t => t.id !== id); }));
-    try { await api(`/api/transactions/${id}`, { method: 'DELETE' }); toast.success(`Deleted transaction of ${formatCurrencyAmount(get().currentCurrency, tTD.amount)}.`); } catch (error) { console.error("Failed to delete transaction", error); toast.error("Failed to delete. Reverting."); set({ transactions: oT }); }
+    try { await api(`/api/transactions/${id}`, { method: 'DELETE', headers }); toast.success(`Deleted transaction of ${formatCurrencyAmount(get().currentCurrency, tTD.amount)}.`); } catch (error) { console.error("Failed to delete transaction", error); toast.error("Failed to delete. Reverting."); set({ transactions: oT }); }
   },
   addBill: async (bill) => {
-    const tempId = uuidv4(); const newBill: Bill = { ...bill, id: tempId, paid: false };
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
+    const tempId = uuidv4(); const newBill: Bill = { ...bill, id: tempId, userId, paid: false };
     set(produce((state: BudgetState) => { state.bills.push(newBill); }));
-    try { const savedBill = await api<Bill>('/api/bills', { method: 'POST', body: JSON.stringify(bill) }); set(produce((state: BudgetState) => { const i = state.bills.findIndex(b => b.id === tempId); if (i !== -1) state.bills[i] = savedBill; })); toast.success(`Bill "${savedBill.name}" added.`); } catch (error) { console.error("Failed to add bill", error); toast.error("Failed to add bill. Removing."); set(produce((state: BudgetState) => { state.bills = state.bills.filter(b => b.id !== tempId); })); }
+    try { const savedBill = await api<Bill>('/api/bills', { method: 'POST', headers, body: JSON.stringify(bill) }); set(produce((state: BudgetState) => { const i = state.bills.findIndex(b => b.id === tempId); if (i !== -1) state.bills[i] = savedBill; })); toast.success(`Bill "${savedBill.name}" added.`); } catch (error) { console.error("Failed to add bill", error); toast.error("Failed to add bill. Removing."); set(produce((state: BudgetState) => { state.bills = state.bills.filter(b => b.id !== tempId); })); }
   },
   updateBill: async (id, changes) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const oB = get().bills;
     set(produce((state: BudgetState) => { const i = state.bills.findIndex(b => b.id === id); if (i !== -1) state.bills[i] = { ...state.bills[i], ...changes }; }));
-    try { await api(`/api/bills/${id}`, { method: 'PUT', body: JSON.stringify(changes) }); } catch (error) { console.error("Failed to update bill", error); toast.error("Failed to update bill. Reverting."); set({ bills: oB }); }
+    try { await api(`/api/bills/${id}`, { method: 'PUT', headers, body: JSON.stringify(changes) }); } catch (error) { console.error("Failed to update bill", error); toast.error("Failed to update bill. Reverting."); set({ bills: oB }); }
   },
   deleteBill: async (id) => {
+    const userId = get().userId;
+    if (!userId) return;
+    const headers = { 'X-User-Id': userId };
     const oB = get().bills; const bTD = oB.find(b => b.id === id); if (!bTD) return;
     set(produce((state: BudgetState) => { state.bills = state.bills.filter(b => b.id !== id); }));
-    try { await api(`/api/bills/${id}`, { method: 'DELETE' }); toast.success(`Bill "${bTD.name}" deleted.`); } catch (error) { console.error("Failed to delete bill", error); toast.error("Failed to delete bill. Reverting."); set({ bills: oB }); }
+    try { await api(`/api/bills/${id}`, { method: 'DELETE', headers }); toast.success(`Bill "${bTD.name}" deleted.`); } catch (error) { console.error("Failed to delete bill", error); toast.error("Failed to delete bill. Reverting."); set({ bills: oB }); }
   },
 }));
 // Selectors
