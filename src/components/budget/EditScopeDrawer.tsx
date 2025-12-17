@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBudgetStore, ScopeWithIcon, useFormatAmount } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon, useFormatAmount, useTransactionsForScope } from '@/lib/store';
 import { Save, X, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -38,6 +38,13 @@ interface EditScopeDrawerProps {
   onOpenChange: (open: boolean) => void;
   scope: ScopeWithIcon | null;
 }
+const shakeVariants = {
+  hover: {
+    scale: [1, 1.1, 0.9, 1.05, 1],
+    rotate: [0, 2, -2, 1, -1, 0],
+    transition: { duration: 0.4 }
+  }
+};
 const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIcon; spentToday: number; spentAllTime: number; }) => {
   const formatAmount = useFormatAmount();
   const remaining = scope.dailyLimit - spentToday;
@@ -92,11 +99,14 @@ const SpendingStatsSkeleton = () => (
 );
 export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerProps) {
   const updateScopeFull = useBudgetStore(state => state.updateScopeFull);
+  const deleteScope = useBudgetStore(state => state.deleteScope);
   const addTransaction = useBudgetStore(state => state.addTransaction);
   const updateTransaction = useBudgetStore(state => state.updateTransaction);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
   const transactions = useBudgetStore(state => state.transactions);
   const formatAmount = useFormatAmount();
+  const transactionsForScope = useTransactionsForScope(scope?.id ?? '');
+  const txCount = transactionsForScope.length;
   const recentTransactions = useMemo(() => {
     if (!scope?.id) return [];
     return transactions
@@ -172,6 +182,12 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
       setEditingTxId(null);
     }
     onOpenChange(isOpen);
+  };
+  const handleDeleteScope = () => {
+    if (!scope) return;
+    deleteScope(scope.id);
+    toast.success(`Category "${scope.name}" deleted.`);
+    onOpenChange(false);
   };
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} direction="right">
@@ -300,11 +316,32 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                 {errors.color && <p className="text-red-500 text-sm mt-1">{errors.color.message}</p>}
               </div>
             </div>
-            <DrawerFooter className="flex-shrink-0">
+            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <motion.div variants={shakeVariants} whileHover="hover" className="mr-auto">
+                    <Button size="lg" variant="ghost" className="h-10 w-10 text-destructive hover:text-destructive/80" type="button">
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  </motion.div>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the "{scope?.name}" category. All {txCount} associated transaction(s) will be preserved but uncategorized.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteScope} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <DrawerClose asChild><Button variant="outline"><X className="w-4 h-4 mr-2" />Cancel</Button></DrawerClose>
               <Button type="submit" className="bg-gradient-to-r from-primary to-slate-700 text-white hover:from-primary/90 transition-all hover:scale-105 active:scale-95">
                 <Save className="w-4 h-4 mr-2" />Save Changes
               </Button>
-              <DrawerClose asChild><Button variant="outline"><X className="w-4 h-4 mr-2" />Cancel</Button></DrawerClose>
             </DrawerFooter>
           </form>
         </div>
