@@ -84,7 +84,7 @@ export function DashboardPage() {
                     {bills.length > 0 && (
                       <>
                         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Fixed Monthly Bills</motion.h2>
-                        <Button onClick={() => setIsAddBillDrawerOpen(true)} className="fixed bottom-20 sm:bottom-16 left-6 h-14 w-14 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg z-40 border-2 border-border/30 backdrop-blur-sm" size="icon" aria-label="Add Bill"><Receipt className="h-6 w-6" /></Button>
+                        <Button onClick={() => setIsAddBillDrawerOpen(true)} className="fixed bottom-24 right-6 h-12 w-12 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg z-40 border-2 border-border/30 backdrop-blur-sm hover:scale-105 active:scale-95 transition-all" size="icon" aria-label="Quick Add Bill"><Plus className="h-5 w-5" /></Button>
                         <motion.div key="bills" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {bills.map((bill) => (<motion.div key={bill.id} variants={itemVariants}><BillCard bill={bill} onEdit={setEditingBill} /></motion.div>))}
                         </motion.div>
