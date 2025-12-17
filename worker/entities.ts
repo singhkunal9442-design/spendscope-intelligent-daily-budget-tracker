@@ -1,5 +1,12 @@
-import { IndexedEntity } from "./core-utils";
-import type { Scope, Transaction, Bill } from "@shared/types";
+import { IndexedEntity, Env } from "./core-utils";
+import type { Scope, Transaction, Bill, User } from "@shared/types";
+// Password Hashing Helper
+export async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = await crypto.subtle.digest('SHA-256', encoder.encode(password));
+  // Convert ArrayBuffer to Base64 string for storage
+  return btoa(String.fromCharCode(...new Uint8Array(data)));
+}
 // SEED DATA
 const SEED_SCOPES: Scope[] = [
   { id: '1', name: 'Coffee', dailyLimit: 5, monthlyLimit: 150, icon: 'Coffee', color: 'emerald' },
@@ -13,6 +20,21 @@ const SEED_BILLS: Bill[] = [
     { id: 'b2', name: 'Utilities', amount: 200, paid: true },
     { id: 'b3', name: 'Internet', amount: 60, paid: false },
 ];
+// USER ENTITY: For authentication
+export class UserEntity extends IndexedEntity<User> {
+  static readonly entityName = "user";
+  static readonly indexName = "users";
+  static readonly initialState: User = { id: "", email: "", passwordHash: "" };
+  static async ensureSeed(env: Env): Promise<void> {
+    const idx = new IndexedEntity.Index<string>(env, this.indexName);
+    const ids = await idx.list();
+    if (ids.length === 0) {
+      const demoPassHash = await hashPassword('demo');
+      const demoUser: User = { id: 'demo-user', email: 'demo@demo.com', passwordHash: demoPassHash };
+      await this.create(env, demoUser);
+    }
+  }
+}
 // SCOPE ENTITY: one DO instance per scope/category
 export class ScopeEntity extends IndexedEntity<Scope> {
   static readonly entityName = "scope";

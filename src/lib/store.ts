@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { produce } from 'immer';
 import { isToday, parseISO, isSameMonth, startOfMonth, endOfMonth, format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
-import { Scope, Transaction, Bill } from '@shared/types';
+import { Scope, Transaction, Bill, AuthCredentials, LoginResponse } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -12,7 +12,6 @@ export const formatCurrencyAmount = (currency: string, amount: number, locale = 
   try {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   } catch (e) {
-    // Fallback for invalid currency codes
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   }
 };
@@ -33,6 +32,12 @@ interface BudgetState {
   loading: boolean;
   initialized: boolean;
   currentCurrency: string;
+  userId?: string;
+  token?: string;
+  initAuth: () => void;
+  login: (credentials: AuthCredentials) => Promise<void>;
+  register: (credentials: AuthCredentials) => Promise<void>;
+  logout: () => void;
   loadData: () => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
   setCurrentBalance: (balance: number) => void;
@@ -61,8 +66,44 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   loading: false,
   initialized: false,
   currentCurrency: 'USD',
+  userId: undefined,
+  token: undefined,
+  initAuth: () => {
+    const token = localStorage.getItem('spendscope-token');
+    const userId = localStorage.getItem('spendscope-userid');
+    if (token && userId) {
+      set({ token, userId });
+    }
+    set({ initialized: true });
+  },
+  login: async (credentials) => {
+    const response = await api<LoginResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    localStorage.setItem('spendscope-token', response.token);
+    localStorage.setItem('spendscope-userid', response.userId);
+    set({ userId: response.userId, token: response.token });
+    toast.success('Login successful!');
+    get().loadData();
+  },
+  register: async (credentials) => {
+    await api('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    await get().login(credentials);
+  },
+  logout: () => {
+    localStorage.removeItem('spendscope-token');
+    localStorage.removeItem('spendscope-userid');
+    set({ userId: undefined, token: undefined, scopes: [], transactions: [], bills: [], initialized: false });
+    toast.info("You have been logged out.");
+    // Re-initialize to show login modal
+    setTimeout(() => set({ initialized: true }), 100);
+  },
   loadData: async () => {
-    if (get().initialized || get().loading) return;
+    if (!get().userId || get().loading) return;
     set({ loading: true });
     try {
       const [scopes, transactions, bills] = await Promise.all([
@@ -81,7 +122,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         currentCurrency: savedCurrency && CURRENCY_PRESETS.includes(savedCurrency) ? savedCurrency : 'USD',
         currentBalance: savedBalance ? parseFloat(savedBalance) : 0,
         currentSalary: savedSalary ? parseFloat(savedSalary) : 0,
-        initialized: true,
       });
     } catch (error) {
       console.error("Failed to load data", error);
@@ -160,6 +200,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 }));
 // Selectors
 export const useIsLoading = () => useBudgetStore(state => state.loading && !state.initialized);
+export const useUserId = () => useBudgetStore(s => s.userId);
 export const useSpentToday = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId && isToday(parseISO(t.date))).reduce((s, t) => s + t.amount, 0), [transactions, scopeId]);
@@ -182,7 +223,6 @@ export const useTransactionsForScope = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId), [transactions, scopeId]);
 };
-// Bill Selectors
 export const useBills = () => useBudgetStore(s => s.bills);
 export const useTotalBillsDue = () => {
   const bills = useBudgetStore(s => s.bills);
