@@ -12,6 +12,7 @@ export const formatCurrencyAmount = (currency: string, amount: number, locale = 
   try {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   } catch (e) {
+    // Fallback to USD if the provided currency code is invalid
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   }
 };
@@ -85,7 +86,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     localStorage.setItem('spendscope-userid', response.userId);
     set({ userId: response.userId, token: response.token });
     toast.success('Login successful!');
-    get().loadData();
+    await get().loadData();
   },
   register: async (credentials) => {
     await api('/api/auth/register', {
@@ -98,7 +99,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     localStorage.removeItem('spendscope-token');
     localStorage.removeItem('spendscope-userid');
     localStorage.removeItem('spendscope-onboarded');
-    set({ userId: undefined, token: undefined, scopes: [], transactions: [], bills: [], initialized: false });
+    set({ userId: undefined, token: undefined, scopes: [], transactions: [], bills: [], initialized: false, currentBalance: 0, currentSalary: 0 });
     toast.info("You have been logged out.");
   },
   loadData: async () => {
@@ -238,8 +239,13 @@ export const useSpentToday = (scopeId: string) => {
 };
 export const useSpentThisMonth = (scopeId?: string) => {
   const transactions = useBudgetStore(state => state.transactions);
-  const filtered = useMemo(() => transactions.filter(t => isSameMonth(parseISO(t.date), new Date())), [transactions]);
-  return useMemo(() => { if (scopeId) { return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0); } return filtered.reduce((s, t) => s + t.amount, 0); }, [filtered, scopeId]);
+  return useMemo(() => {
+    const filtered = transactions.filter(t => isSameMonth(parseISO(t.date), new Date()));
+    if (scopeId) {
+      return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0);
+    }
+    return filtered.reduce((s, t) => s + t.amount, 0);
+  }, [transactions, scopeId]);
 };
 export const useDaysInMonth = () => {
     const now = new Date();
