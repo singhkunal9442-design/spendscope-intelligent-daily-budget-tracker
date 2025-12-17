@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { useBudgetStore, useDailyTotals, useFormatAmount } from '@/lib/store';
 import { Transaction } from '@shared/types';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isToday, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isToday, parseISO, addMonths, subMonths } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TransactionEditDialog } from '@/components/budget/TransactionEditDialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,6 +30,7 @@ export function CalendarGridSkeleton() {
   );
 }
 export function CalendarGrid() {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const transactions = useBudgetStore(state => state.transactions);
   const scopes = useBudgetStore(state => state.scopes);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
@@ -38,24 +39,26 @@ export function CalendarGrid() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const scopesMap = useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
   const { days, transactionsByDay, averageDailySpend } = useMemo(() => {
-    const now = new Date();
-    const start = startOfWeek(startOfMonth(now));
-    const end = endOfWeek(endOfMonth(now));
+    const start = startOfWeek(startOfMonth(currentMonth));
+    const end = endOfWeek(endOfMonth(currentMonth));
     const days = eachDayOfInterval({ start, end });
     const transactionsByDay = new Map<string, Transaction[]>();
-    transactions
-      .filter(t => isSameMonth(parseISO(t.date), now))
-      .forEach(t => {
-        const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
-        if (!transactionsByDay.has(dayKey)) {
-          transactionsByDay.set(dayKey, []);
-        }
-        transactionsByDay.get(dayKey)?.push(t);
-      });
-    const spentDays = Array.from(dailyTotals.values());
+    const monthTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), currentMonth));
+    monthTransactions.forEach(t => {
+      const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
+      if (!transactionsByDay.has(dayKey)) {
+        transactionsByDay.set(dayKey, []);
+      }
+      transactionsByDay.get(dayKey)?.push(t);
+    });
+    const spentDays = Array.from(dailyTotals.entries())
+      .filter(([dateStr]) => isSameMonth(parseISO(dateStr), currentMonth))
+      .map(([, total]) => total);
     const averageDailySpend = spentDays.length > 0 ? spentDays.reduce((a, b) => a + b, 0) / spentDays.length : 0;
     return { days, transactionsByDay, averageDailySpend };
-  }, [transactions, dailyTotals]);
+  }, [currentMonth, transactions, dailyTotals]);
+  const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return (
     <div className="w-full">
@@ -64,16 +67,34 @@ export function CalendarGrid() {
         open={!!editingTransaction}
         onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}
       />
+      <div className="flex justify-between items-center mb-4">
+        <Button variant="outline" size="sm" onClick={handlePrevMonth}>
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Prev
+        </Button>
+        <h3 className="text-xl font-bold text-foreground">{format(currentMonth, 'MMMM yyyy')}</h3>
+        <Button variant="outline" size="sm" onClick={handleNextMonth}>
+          Next
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
       <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-muted-foreground mb-2">
         {weekdays.map(day => <div key={day}>{day}</div>)}
       </div>
-      <div className="grid grid-cols-7 gap-2">
-        <AnimatePresence>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={format(currentMonth, 'yyyy-MM')}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-7 gap-2"
+        >
           {days.map((day, index) => {
             const dayKey = format(day, 'yyyy-MM-dd');
             const totalSpent = dailyTotals.get(dayKey) || 0;
             const dayTransactions = transactionsByDay.get(dayKey) || [];
-            const isCurrentMonth = isSameMonth(day, new Date());
+            const isCurrentMonth = isSameMonth(day, currentMonth);
             const isCurrentDay = isToday(day);
             const spendPercentage = averageDailySpend > 0 ? (totalSpent / averageDailySpend) * 100 : 0;
             const badgeColor =
@@ -140,8 +161,8 @@ export function CalendarGrid() {
               </motion.div>
             );
           })}
-        </AnimatePresence>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
