@@ -8,52 +8,41 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useBudgetStore } from '@/lib/store';
 import { PiggyBank } from 'lucide-react';
-const onboardingSchema = z.object({
+const balanceSchema = z.object({
   balance: z.number().min(0, 'Balance must be non-negative'),
-  salary: z.number().min(0, 'Salary must be non-negative'),
 });
-type OnboardingFormData = z.infer<typeof onboardingSchema>;
+type BalanceFormData = z.infer<typeof balanceSchema>;
 interface OnboardingModalProps {
   open: boolean;
   onClose: () => void;
 }
 export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   const setCurrentBalance = useBudgetStore(state => state.setCurrentBalance);
-  const setCurrentSalary = useBudgetStore(state => state.setCurrentSalary);
-  const { control, handleSubmit, formState: { errors } } = useForm<OnboardingFormData>({
-    resolver: zodResolver(onboardingSchema),
-    defaultValues: { balance: 0, salary: 0 },
+  const { control, handleSubmit, formState: { errors } } = useForm<BalanceFormData>({
+    resolver: zodResolver(balanceSchema),
+    defaultValues: { balance: 0 },
   });
-  const onSubmit = (data: OnboardingFormData) => {
+  const onSubmit = (data: BalanceFormData) => {
     setCurrentBalance(data.balance);
-    setCurrentSalary(data.salary);
-    localStorage.setItem('spendscope-onboarded', 'true');
     onClose();
   };
   const handleSkip = () => {
     setCurrentBalance(0);
-    setCurrentSalary(0);
-    localStorage.setItem('spendscope-onboarded', 'true');
     onClose();
   };
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSkip()}>
-      <DialogContent className="sm:max-w-md glass-dark border-white/10 text-white rounded-[2rem]" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-[425px] glassmorphic" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-3xl font-black tracking-tighter">
-            <div className="p-2 rounded-2xl bg-spendscope-500 shadow-glow">
-              <PiggyBank className="w-8 h-8 text-white" />
-            </div>
-            Welcome!
-          </DialogTitle>
-          <DialogDescription className="text-zinc-400 text-base font-medium mt-2">
-            Set your current financial baseline. This initializes your daily spending "Scope" for the month.
+          <DialogTitle className="flex items-center gap-2"><PiggyBank className="w-6 h-6 text-primary" /> Welcome to SpendScope!</DialogTitle>
+          <DialogDescription>
+            Set your starting monthly balance to get the most accurate overview. You can skip this and set it later.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-6">
-          <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="balance" className="text-zinc-300 font-black uppercase tracking-widest text-[10px] ml-1">Starting Balance</Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="balance" className="text-right">Balance</Label>
+            <div className="col-span-3">
               <Controller
                 name="balance"
                 control={control}
@@ -63,43 +52,19 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                     id="balance"
                     type="number"
                     step="0.01"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 h-14 rounded-2xl text-xl font-black tracking-tighter"
-                    placeholder="e.g. 1000"
+                    className="w-full"
+                    placeholder="e.g., 1000"
                     value={field.value || ''}
                     onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                 )}
               />
-              {errors.balance && <p className="text-red-400 text-sm mt-1">{errors.balance.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="salary" className="text-zinc-300 font-black uppercase tracking-widest text-[10px] ml-1">Monthly Salary</Label>
-              <Controller
-                name="salary"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    id="salary"
-                    type="number"
-                    step="0.01"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 h-14 rounded-2xl text-xl font-black tracking-tighter"
-                    placeholder="e.g. 3000"
-                    value={field.value || ''}
-                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                  />
-                )}
-              />
-              {errors.salary && <p className="text-red-400 text-sm mt-1">{errors.salary.message}</p>}
+              {errors.balance && <p className="text-red-500 text-sm mt-1 col-span-4 text-right">{errors.balance.message}</p>}
             </div>
           </div>
-          <DialogFooter className="pt-4 flex items-center justify-between gap-4">
-            <Button type="button" variant="ghost" onClick={handleSkip} className="text-zinc-400 hover:text-white hover:bg-white/5 rounded-2xl h-12 flex-1">
-              Skip
-            </Button>
-            <Button type="submit" className="btn-premium h-14 px-8 flex-[2] text-lg shadow-glow">
-              Get Started
-            </Button>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={handleSkip}>Skip</Button>
+            <Button type="submit">Save Balance</Button>
           </DialogFooter>
         </form>
       </DialogContent>
