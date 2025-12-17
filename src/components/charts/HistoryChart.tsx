@@ -2,6 +2,7 @@ import React from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useTheme } from '@/hooks/use-theme';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
 interface HistoryChartProps {
   data: { date: string; total: number }[];
   isLoading?: boolean;
@@ -48,11 +49,12 @@ export function HistoryChart({ data, isLoading, currency = 'USD' }: HistoryChart
             }}
             formatter={(value: number) => {
               const locale = navigator.language || 'en-US';
+              const month = format(new Date(), 'MMMM');
               try {
                 const formattedValue = new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
-                return [formattedValue, 'Total Spent'];
+                return [formattedValue, `Total Spent ${month}`];
               } catch (e) {
-                return [`${value.toFixed(2)}`, 'Total Spent'];
+                return [`${value.toFixed(2)}`, `Total Spent ${month}`];
               }
             }}
           />
