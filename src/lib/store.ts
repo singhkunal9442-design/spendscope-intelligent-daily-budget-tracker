@@ -6,6 +6,7 @@ import { Scope, Transaction } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
 export const formatAmount = (amt: number) => `${amt.toFixed(2)}`;
 export type ScopeWithIcon = Omit<Scope, 'icon'> & {
   icon: lucideIcons.LucideIcon;
@@ -192,47 +193,52 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 export const useIsLoading = () => useBudgetStore(state => state.loading && !state.initialized);
 export const useSpentToday = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
-  return transactions
+  return useMemo(() => transactions
     .filter(t => t.scopeId === scopeId && isToday(parseISO(t.date)))
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + t.amount, 0), [transactions, scopeId]);
 };
 export const useSpentThisMonth = (scopeId?: string) => {
   const transactions = useBudgetStore(state => state.transactions);
-  const filtered = transactions.filter(t => isSameMonth(parseISO(t.date), new Date()));
-  if (scopeId) {
-    return filtered
-      .filter(t => t.scopeId === scopeId)
-      .reduce((sum, t) => sum + t.amount, 0);
-  }
-  return filtered.reduce((sum, t) => sum + t.amount, 0);
+  const filtered = useMemo(() => transactions.filter(t => isSameMonth(parseISO(t.date), new Date())), [transactions]);
+  return useMemo(() => {
+    if (scopeId) {
+      return filtered
+        .filter(t => t.scopeId === scopeId)
+        .reduce((sum, t) => sum + t.amount, 0);
+    }
+    return filtered.reduce((sum, t) => sum + t.amount, 0);
+  }, [filtered, scopeId]);
 };
 export const useMonthlyBudget = () => {
   const scopes = useBudgetStore(state => state.scopes);
-  return scopes.reduce((sum, s) => sum + (s.monthlyLimit ?? s.dailyLimit * 30), 0);
+  return useMemo(() => scopes.reduce((sum, s) => sum + (s.monthlyLimit ?? s.dailyLimit * 30), 0), [scopes]);
 };
 export const useMonthlyRemaining = (scopeId?: string) => {
-  if (scopeId) {
-    const scope = useBudgetStore(state => state.scopes.find(s => s.id === scopeId));
-    const spent = useSpentThisMonth(scopeId);
-    return (scope?.monthlyLimit ?? 0) - spent;
-  }
-  const budget = useMonthlyBudget();
-  const spent = useSpentThisMonth();
-  return budget - spent;
+  const scopes = useBudgetStore(state => state.scopes);
+  const spentThisMonth = useSpentThisMonth(scopeId);
+  return useMemo(() => {
+    if (scopeId) {
+      const scope = scopes.find(s => s.id === scopeId);
+      const monthlyLimit = scope?.monthlyLimit ?? (scope?.dailyLimit ?? 0) * 30;
+      return monthlyLimit - spentThisMonth;
+    }
+    const totalBudget = scopes.reduce((sum, s) => sum + (s.monthlyLimit ?? s.dailyLimit * 30), 0);
+    return totalBudget - spentThisMonth;
+  }, [scopes, spentThisMonth, scopeId]);
 };
 export const useSpentAllTime = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
-  return transactions
+  return useMemo(() => transactions
     .filter(t => t.scopeId === scopeId)
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + t.amount, 0), [transactions, scopeId]);
 };
 export const useTransactionsForScope = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
-  return transactions.filter(t => t.scopeId === scopeId);
+  return useMemo(() => transactions.filter(t => t.scopeId === scopeId), [transactions, scopeId]);
 };
 export const useRecentTransactions = (scopeId: string, limit = 5) => {
   const transactions = useTransactionsForScope(scopeId);
-  return transactions
+  return useMemo(() => transactions
     .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
-    .slice(0, limit);
+    .slice(0, limit), [transactions, limit]);
 };
