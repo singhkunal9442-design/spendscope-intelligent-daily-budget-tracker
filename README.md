@@ -1,5 +1,8 @@
 # SpendScope - Intelligent Daily Budget Tracker
 <p align="center">
+  <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=for-the-badge" alt="Production Ready">
+</p>
+<p align="center">
   <a href="https://workers.cloudflare.com/" target="_blank">
     <img src="https://img.shields.io/badge/Built%20with-Cloudflare%20Workers-F38020?logo=cloudflare" alt="Built with Cloudflare Workers">
   </a>
@@ -78,7 +81,7 @@ All interactions use optimistic UI updates with real-time sync via Zustand + API
 ### Performance
 The application is designed to be lightning-fast, achieving a consistent 60fps experience through several key strategies:
 - **Optimistic UI**: When you add a transaction or update a category, the change appears instantly. The app sends the request to the server in the background. If the server request fails, the change is reverted, and a notification is shown.
-- **Performant State Management**: Zustand is used for state management. We strictly follow best practices by selecting primitive state slices, which prevents unnecessary re-renders even with large datasets.
+- **Performant State Management**: Zustand is used for state management. We strictly follow best practices by selecting primitive state slices (`useBudgetStore(s => s.primitive)`), which prevents unnecessary re-renders even with large datasets.
 - **Memoized Selectors**: Expensive calculations (like daily/monthly totals) are derived from state and memoized with `useMemo` to ensure they only re-run when their dependencies change.
 ### Daily Resets
 The "daily limit" is enforced on the client-side using `date-fns`. The application filters transactions to only include those from the current day (`isToday()`). There is no cron job; the view simply recalculates every time you open the app.
