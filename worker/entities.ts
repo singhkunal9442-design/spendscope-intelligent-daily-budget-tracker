@@ -1,4 +1,4 @@
-import { IndexedEntity, Env } from "./core-utils";
+import { IndexedEntity, Env, Index } from "./core-utils";
 import type { Scope, Transaction, Bill, User } from "@shared/types";
 // Password Hashing Helper
 export async function hashPassword(password: string): Promise<string> {
@@ -26,7 +26,8 @@ export class UserEntity extends IndexedEntity<User> {
   static readonly indexName = "users";
   static readonly initialState: User = { id: "", email: "", passwordHash: "" };
   static async ensureSeed(env: Env): Promise<void> {
-    const idx = new IndexedEntity.Index<string>(env, this.indexName);
+    // This custom seed method handles async password hashing.
+    const idx = new Index<string>(env, this.indexName);
     const ids = await idx.list();
     if (ids.length === 0) {
       const demoPassHash = await hashPassword('demo');
