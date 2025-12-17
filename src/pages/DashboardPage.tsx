@@ -6,6 +6,7 @@ import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
 import { AddBillDrawer } from '@/components/budget/AddBillDrawer';
 import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
+import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
 import { OnboardingModal } from '@/components/budget/OnboardingModal';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
@@ -14,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
 import { MonthlyScopeCard, MonthlyScopeCardSkeleton } from '@/components/budget/MonthlyScopeCard';
 import { CurrencySelector } from '@/components/CurrencySelector';
+import { Bill } from '@shared/types';
 export function DashboardPage() {
   const scopes = useBudgetStore(state => state.scopes);
   const bills = useBills();
@@ -24,6 +26,7 @@ export function DashboardPage() {
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
   const [isAddBillDrawerOpen, setIsAddBillDrawerOpen] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     const hasOnboarded = localStorage.getItem('spendscope-onboarded') === 'true';
@@ -83,7 +86,7 @@ export function DashboardPage() {
                         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Fixed Monthly Bills</motion.h2>
                         <Button onClick={() => setIsAddBillDrawerOpen(true)} className="fixed bottom-20 sm:bottom-16 left-6 h-14 w-14 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground shadow-lg z-40 border-2 border-border/30 backdrop-blur-sm" size="icon" aria-label="Add Bill"><Receipt className="h-6 w-6" /></Button>
                         <motion.div key="bills" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {bills.map((bill) => (<motion.div key={bill.id} variants={itemVariants}><BillCard bill={bill} onEdit={() => {}} /></motion.div>))}
+                          {bills.map((bill) => (<motion.div key={bill.id} variants={itemVariants}><BillCard bill={bill} onEdit={setEditingBill} /></motion.div>))}
                         </motion.div>
                       </>
                     )}
@@ -106,6 +109,7 @@ export function DashboardPage() {
       <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
       <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
       <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
+      <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
       <Toaster richColors />
     </div>
   );
