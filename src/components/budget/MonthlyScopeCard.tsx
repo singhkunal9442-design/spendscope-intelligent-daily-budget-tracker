@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useBudgetStore, useSpentThisMonth, useMonthlyRemaining, ScopeWithIcon, useFormatAmount } from '@/lib/store';
+import { useBudgetStore, useSpentThisMonth, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Pencil } from 'lucide-react';
@@ -46,7 +46,6 @@ export function MonthlyScopeCardSkeleton() {
 }
 export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardProps) {
   const spentThisMonth = useSpentThisMonth(scope.id);
-  const remaining = useMonthlyRemaining(scope.id);
   const transactions = useBudgetStore(state => state.transactions);
   const formatAmount = useFormatAmount();
   const sparkData = useMemo(() => {
@@ -68,6 +67,7 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
     return <MonthlyScopeCardSkeleton />;
   }
   const monthlyLimit = scope.monthlyLimit ?? scope.dailyLimit * 30;
+  const remaining = monthlyLimit - spentThisMonth;
   const percentage = monthlyLimit > 0 ? Math.min((spentThisMonth / monthlyLimit) * 100, 100) : 0;
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';
