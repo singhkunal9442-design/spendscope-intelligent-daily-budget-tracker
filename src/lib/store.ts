@@ -29,12 +29,14 @@ interface BudgetState {
   transactions: Transaction[];
   bills: Bill[];
   currentBalance: number;
+  currentSalary: number;
   loading: boolean;
   initialized: boolean;
   currentCurrency: string;
   loadData: () => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
   setCurrentBalance: (balance: number) => void;
+  setCurrentSalary: (salary: number) => void;
   addScope: (scope: Omit<Scope, 'id'>) => Promise<void>;
   updateScope: (id: string, dailyLimit: number) => Promise<void>;
   updateScopeFull: (id: string, data: Partial<Omit<Scope, 'id'>>) => Promise<void>;
@@ -55,6 +57,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   transactions: [],
   bills: [],
   currentBalance: 0,
+  currentSalary: 0,
   loading: false,
   initialized: false,
   currentCurrency: 'USD',
@@ -69,15 +72,15 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       ]);
       const scopesWithIcons = scopes.map(s => ({ ...s, icon: getIcon(s.icon) }));
       const savedCurrency = localStorage.getItem('spendscope-currency');
-      if (savedCurrency && CURRENCY_PRESETS.includes(savedCurrency)) {
-        set({ currentCurrency: savedCurrency });
-      }
       const savedBalance = localStorage.getItem('spendscope-balance');
+      const savedSalary = localStorage.getItem('spendscope-salary');
       set({
         scopes: scopesWithIcons,
         transactions,
         bills,
+        currentCurrency: savedCurrency && CURRENCY_PRESETS.includes(savedCurrency) ? savedCurrency : 'USD',
         currentBalance: savedBalance ? parseFloat(savedBalance) : 0,
+        currentSalary: savedSalary ? parseFloat(savedSalary) : 0,
         initialized: true,
       });
     } catch (error) {
@@ -96,6 +99,11 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     localStorage.setItem('spendscope-balance', balance.toString());
     set({ currentBalance: balance });
     toast.success("Starting balance has been set.");
+  },
+  setCurrentSalary: (salary: number) => {
+    localStorage.setItem('spendscope-salary', salary.toString());
+    set({ currentSalary: salary });
+    toast.success("Monthly salary has been updated.");
   },
   addScope: async (scope) => {
     try {
@@ -180,3 +188,4 @@ export const useTotalBillsPaid = () => {
   return useMemo(() => bills.filter(b => b.paid).reduce((sum, b) => sum + b.amount, 0), [bills]);
 };
 export const useCurrentBalance = () => useBudgetStore(s => s.currentBalance);
+export const useCurrentSalary = () => useBudgetStore(s => s.currentSalary);
