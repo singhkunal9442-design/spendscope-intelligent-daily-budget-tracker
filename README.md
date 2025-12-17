@@ -18,13 +18,8 @@
 </p>
 **SpendScope is a visually stunning, mobile-first daily budgeting application designed to give users immediate clarity on their financial health for the day.** Unlike traditional budgeting apps focused on monthly trends, SpendScope answers the critical question: *"How much can I spend on coffee, lunch, or groceries right now without breaking my budget?"*
 Customizable "Scopes" (Categories) let users set daily spending limits. The dashboard features elegant, gauge-like visualizations that fill as expenses are logged, shifting from a calming green (safe) to cautionary amber and critical red (over budget).
-## Multi-User & Demo Account
-The application is fully multi-tenant. You can either use the pre-seeded demo account or register a fresh account to start with a clean slate.
-- **Demo Email**: `demo@demo.com`
-- **Demo Password**: `demo`
-Registering a new account will trigger a first-time onboarding flow to set your initial balance and salary.
 ## Key Features
-The application is production-ready and exceeds all initial blueprint requirements.
+The application is production-ready and provides a complete, shared budgeting experience.
 - ✅ **Smart Dashboard**: Glassmorphic cards for each category showing real-time remaining balance, spent amount, and animated progress bars for both daily and monthly views.
 - ✅ **Monthly Overview**: An aggregate card showing total monthly budget, salary, starting balance, bills due, and net remaining funds with a 30-day spending sparkline.
 - ✅ **Quick-Add Transaction Drawer**: A gesture-driven bottom sheet (mobile) or modal (desktop) for instant expense logging with category icons.
@@ -35,8 +30,6 @@ The application is production-ready and exceeds all initial blueprint requiremen
 - ✅ **Transaction History**: A chronological feed of all transactions, grouped by day, with a 30-day spending chart.
 - ✅ **Calendar View**: A full-page calendar visualizing daily spending totals with interactive popovers for transaction details.
 - ✅ **Data Export**: Export all transaction data to CSV.
-- ✅ **First-Time Onboarding**: A welcome modal to set initial balance and salary.
-- ✅ **Full User Authentication**: Secure registration and login system.
 - ✅ **Responsive Design**: Flawless mobile-first UI with intuitive navigation.
 - ✅ **Persistent Storage**: Cloudflare Durable Objects for atomic, real-time data sync.
 - ✅ **Optimistic UI**: State updates are applied instantly on the client for a snappy user experience.
@@ -61,7 +54,7 @@ The application is production-ready and exceeds all initial blueprint requiremen
 The application is designed to be lightning-fast, achieving a consistent 60fps experience through several key strategies:
 - **Optimistic UI**: When you add a transaction or update a category, the change appears instantly. The app sends the request to the server in the background. If the server request fails, the change is reverted, and a notification is shown.
 - **Performant State Management**: Zustand is used for state management. We strictly follow best practices by selecting primitive state slices (`useBudgetStore(s => s.primitive)`), which prevents unnecessary re-renders even with large datasets. Expensive calculations are memoized with `useMemo`.
-- **Per-User Data Isolation**: The backend API uses a `X-User-Id` header to filter all data (scopes, transactions, bills) at the Durable Object level. This ensures complete data privacy between users.
+- **Global Shared Data**: The backend API provides a single, shared data store for all users, seeded with demo data. All changes are persistent and visible to anyone using the application.
 - **Client-Side Daily Resets**: The "daily limit" is enforced on the client-side using `date-fns`. The application filters transactions to only include those from the current day. There is no cron job; the view simply recalculates every time you open the app, ensuring accuracy across all timezones.
 ## Deployment
 Deploy to Cloudflare Pages (frontend) + Workers (backend) in one command:

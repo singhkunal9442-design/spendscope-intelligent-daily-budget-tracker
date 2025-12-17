@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Wallet, LogOut } from 'lucide-react';
-import { useBudgetStore, ScopeWithIcon, useIsLoading, useFormatAmount, useBills, useUserId } from '@/lib/store';
+import { Plus, Wallet } from 'lucide-react';
+import { useBudgetStore, ScopeWithIcon, useIsLoading, useFormatAmount, useBills } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
@@ -8,8 +8,6 @@ import { AddBillDrawer } from '@/components/budget/AddBillDrawer';
 import { AddScopeDrawer } from '@/components/budget/AddScopeDrawer';
 import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
 import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
-import { OnboardingModal } from '@/components/budget/OnboardingModal';
-import { LoginGate } from '@/components/budget/LoginGate';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -21,44 +19,17 @@ import { Bill } from '@shared/types';
 export function DashboardPage() {
   const scopes = useBudgetStore(state => state.scopes);
   const bills = useBills();
-  const initialized = useBudgetStore(state => state.initialized);
-  const initAuth = useBudgetStore(state => state.initAuth);
   const loadData = useBudgetStore(state => state.loadData);
-  const logout = useBudgetStore(state => state.logout);
   const isLoading = useIsLoading();
   const formatAmount = useFormatAmount();
-  const userId = useUserId();
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
   const [isAddBillDrawerOpen, setIsAddBillDrawerOpen] = useState(false);
   const [isAddScopeDrawerOpen, setIsAddScopeDrawerOpen] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
-    if (!initialized) {
-      initAuth();
-    }
-  }, [initialized, initAuth]);
-  useEffect(() => {
-    if (userId) {
-      const hasOnboarded = localStorage.getItem('spendscope-onboarded') === 'true';
-      if (!hasOnboarded) {
-        setShowOnboarding(true);
-      }
-      loadData();
-    }
-  }, [userId, loadData]);
-  const handleOnboardingClose = () => {
-    localStorage.setItem('spendscope-onboarded', 'true');
-    setShowOnboarding(false);
-  };
-  if (!initialized) {
-    // Render a minimal loading state while checking auth, prevents flicker
-    return <div className="min-h-screen w-full bg-background" />;
-  }
-  if (!userId) {
-    return <LoginGate />;
-  }
+    loadData();
+  }, [loadData]);
   const totalLimit = scopes.reduce((sum, s) => sum + s.dailyLimit, 0);
   const containerVariants = { visible: { transition: { staggerChildren: 0.08 } } };
   const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100 } } };
@@ -67,10 +38,6 @@ export function DashboardPage() {
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
       <ThemeToggle className="fixed top-4 right-4 z-50" />
       <CurrencySelector className="fixed top-4 right-20 z-50" />
-      <Button onClick={logout} variant="ghost" size="icon" title="Logout" className="fixed top-4 right-44 sm:right-48 z-50">
-        <LogOut className="h-5 w-5" />
-      </Button>
-      <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-16">
           <div className="text-center mb-12">
