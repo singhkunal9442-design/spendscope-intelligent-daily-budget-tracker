@@ -13,6 +13,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import { SettingsPage } from '@/pages/SettingsPage';
+import { CalendarPage } from '@/pages/CalendarPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 const queryClient = new QueryClient();
@@ -30,6 +31,11 @@ const router = createBrowserRouter([
   {
     path: "/history",
     element: <AppLayout container><HistoryPage /></AppLayout>,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/calendar",
+    element: <AppLayout container><CalendarPage /></AppLayout>,
     errorElement: <RouteErrorBoundary />,
   },
 ]);
