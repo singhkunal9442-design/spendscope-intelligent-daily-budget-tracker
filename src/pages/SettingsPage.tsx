@@ -2,6 +2,7 @@ import React from 'react';
 import { CategoryManager } from '@/components/budget/CategoryManager';
 import { BillManager } from '@/components/budget/BillManager';
 import { SalaryManager } from '@/components/budget/SalaryManager';
+import { BalanceManager } from '@/components/budget/BalanceManager';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CurrencySelector } from '@/components/CurrencySelector';
 export function SettingsPage() {
@@ -25,6 +26,9 @@ export function SettingsPage() {
             <BillManager />
             <div className="pt-12 border-t border-border/20">
               <SalaryManager />
+            </div>
+            <div className="pt-12 border-t border-border/20">
+              <BalanceManager />
             </div>
           </div>
         </div>
