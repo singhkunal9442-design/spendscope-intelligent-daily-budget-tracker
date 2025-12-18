@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env } from './core-utils';
 import { ScopeEntity, TransactionEntity, BillEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import { Scope, Transaction, Bill } from "@shared/types";
+import { Scope, Transaction, Bill } from "../shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // SCOPES API
   app.get('/api/scopes', async (c) => {
