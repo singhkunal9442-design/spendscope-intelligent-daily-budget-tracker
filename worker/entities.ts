@@ -1,5 +1,5 @@
 import { IndexedEntity, Env } from "./core-utils";
-import type { Scope, Transaction, Bill } from "@shared/types";
+import type { Scope, Transaction, Bill } from "../shared/types";
 // SEED DATA
 const SEED_SCOPES: Scope[] = [
   { id: '1', name: 'Coffee', dailyLimit: 5, monthlyLimit: 150, icon: 'Coffee', color: 'emerald' },
@@ -14,8 +14,8 @@ const SEED_BILLS: Bill[] = [
     { id: 'b3', name: 'Internet', amount: 60, paid: false },
 ];
 const SEED_TRANSACTIONS: Transaction[] = [
-    { id: 't1', scopeId: '1', amount: 4.50, description: 'Morning Latte', date: new Date().toISOString() },
-    { id: 't2', scopeId: '3', amount: 15.75, description: 'Team Lunch', date: new Date().toISOString() },
+    { id: 't1', scopeId: '1', amount: 4.50, description: 'Morning Latte', date: '2025-12-18T10:00:00.000Z' },
+    { id: 't2', scopeId: '3', amount: 15.75, description: 'Team Lunch', date: '2025-12-18T18:30:00.000Z' },
 ];
 // SCOPE ENTITY: one DO instance per scope/category
 export class ScopeEntity extends IndexedEntity<Scope> {
