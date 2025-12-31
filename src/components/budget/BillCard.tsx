@@ -13,13 +13,10 @@ interface BillCardProps {
 }
 export function BillCardSkeleton() {
   return (
-    <div className={cn(
-      "relative p-6 rounded-2xl overflow-hidden",
-      "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
-    )}>
+    <div className="relative p-6 rounded-[2rem] overflow-hidden glass shadow-glass">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-10 w-10 rounded-xl" />
           <div className="space-y-2">
             <Skeleton className="h-5 w-24" />
             <Skeleton className="h-4 w-16" />
@@ -40,44 +37,49 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
     <motion.div
       layout
       onClick={() => onEdit(bill)}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      className={cn(
-        "relative p-6 rounded-2xl overflow-hidden shadow-lg group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-      )}
+      whileHover={{ scale: 1.02 }}
+      className="relative p-6 rounded-[2rem] overflow-hidden glass shadow-soft group hover:shadow-glow transition-all duration-300 cursor-pointer"
     >
-      <div className="relative z-10 pointer-events-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 0, scale: 0 }}
-          whileHover={{ opacity: 1, scale: 1 }}
-          className="absolute -top-3 -right-3 bg-primary/90 text-primary-foreground px-2 py-1 rounded-full text-xs font-medium shadow-lg flex items-center gap-1 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100"
-        >
-          <Pencil className="w-3 h-3" />
-          Edit
-        </motion.div>
+      <div className="relative z-10">
+        <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+           <div className="p-2 glass rounded-xl text-muted-foreground hover:text-foreground">
+            <Pencil className="w-4 h-4" />
+          </div>
+        </div>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className={cn('p-2 rounded-lg', bill.paid ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-rose-100 dark:bg-rose-900/50')}>
-              <Banknote className={cn('w-6 h-6', bill.paid ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')} />
+            <div className={cn(
+              'p-3 rounded-2xl transition-colors', 
+              bill.paid ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-spendscope-50 dark:bg-spendscope-500/10'
+            )}>
+              <Banknote className={cn(
+                'w-6 h-6', 
+                bill.paid ? 'text-emerald-600 dark:text-emerald-400' : 'text-spendscope-500'
+              )} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">{bill.name}</h3>
-              <p className="text-sm font-bold text-muted-foreground">{formatAmount(bill.amount)}</p>
+              <h3 className="text-lg font-bold text-foreground">{bill.name}</h3>
+              <p className="text-sm font-black text-muted-foreground">{formatAmount(bill.amount)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Checkbox id={`paid-${bill.id}`} checked={bill.paid} onCheckedChange={handlePaidToggle} className="h-5 w-5" />
-            <Label htmlFor={`paid-${bill.id}`} className="text-sm font-medium leading-tight cursor-pointer">
+          <div 
+            className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-2xl" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Checkbox 
+              id={`paid-${bill.id}`} 
+              checked={bill.paid} 
+              onCheckedChange={handlePaidToggle} 
+              className="h-5 w-5 border-2 border-spendscope-500 data-[state=checked]:bg-spendscope-500" 
+            />
+            <Label htmlFor={`paid-${bill.id}`} className="text-sm font-bold cursor-pointer">
               Paid
             </Label>
           </div>
         </div>
       </div>
       {bill.paid && (
-        <div className="absolute inset-0 bg-background/20 backdrop-blur-sm rounded-2xl pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-emerald-500/5 backdrop-blur-[2px] rounded-[2rem] pointer-events-none z-0" />
       )}
     </motion.div>
   );

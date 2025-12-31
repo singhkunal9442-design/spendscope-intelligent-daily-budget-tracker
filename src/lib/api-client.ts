@@ -7,11 +7,17 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   };
-  const res = await fetch(path, mergedInit);
-  const json = (await res.json()) as ApiResponse<T>
-  if (!res.ok || !json.success || json.data === undefined) {
-    console.error('API Error:', json.error || 'Request failed');
-    throw new Error(json.error || 'Request failed');
+  try {
+    const res = await fetch(path, mergedInit);
+    const json = (await res.json()) as ApiResponse<T>;
+    if (!res.ok || !json.success || json.data === undefined) {
+      const errorMsg = json.error || `HTTP ${res.status}: Request failed`;
+      console.error(`[API ERROR] ${mergedInit.method || 'GET'} ${path}:`, errorMsg);
+      throw new Error(errorMsg);
+    }
+    return json.data;
+  } catch (error) {
+    console.error(`[API FETCH FAILED] ${mergedInit.method || 'GET'} ${path}:`, error);
+    throw error;
   }
-  return json.data;
 }

@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { isToday, parseISO, isSameMonth, startOfMonth, endOfMonth, format } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
+import { isToday, parseISO, isSameMonth, endOfMonth, format } from 'date-fns';
 import { Scope, Transaction, Bill } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
@@ -95,24 +94,35 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         currentSalary: savedSalary ? parseFloat(savedSalary) : 3000,
       });
     } catch (error) {
+      console.error('[STORE] loadData failed:', error);
       toast.error("Could not load your budget data.");
     } finally {
       set({ loading: false });
     }
   },
   login: async (email, password) => {
-    const res = await api<any>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-    localStorage.setItem('spendscope-token', res.token);
-    localStorage.setItem('spendscope-user', JSON.stringify(res.user));
-    set({ user: res.user, token: res.token });
-    toast.success("Welcome back!");
+    try {
+      const res = await api<any>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      localStorage.setItem('spendscope-token', res.token);
+      localStorage.setItem('spendscope-user', JSON.stringify(res.user));
+      set({ user: res.user, token: res.token });
+      toast.success("Welcome back!");
+    } catch (error) {
+      console.error('[STORE] Login failed:', error);
+      throw error;
+    }
   },
   register: async (email, password) => {
-    const res = await api<any>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
-    localStorage.setItem('spendscope-token', res.token);
-    localStorage.setItem('spendscope-user', JSON.stringify(res.user));
-    set({ user: res.user, token: res.token });
-    toast.success("Account created successfully!");
+    try {
+      const res = await api<any>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
+      localStorage.setItem('spendscope-token', res.token);
+      localStorage.setItem('spendscope-user', JSON.stringify(res.user));
+      set({ user: res.user, token: res.token });
+      toast.success("Account created successfully!");
+    } catch (error) {
+      console.error('[STORE] Register failed:', error);
+      throw error;
+    }
   },
   logout: () => {
     localStorage.removeItem('spendscope-token');
@@ -181,20 +191,25 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     try { await api(`/api/bills/${id}`, { method: 'DELETE' }); } catch (e) { set({ bills: oB }); }
   },
 }));
-// Selectors
+// Strictly Individual Selectors
 export const useIsLoading = () => useBudgetStore(state => state.loading);
 export const useAuthToken = () => useBudgetStore(state => state.token);
 export const useAuthUser = () => useBudgetStore(state => state.user);
+export const useScopes = () => useBudgetStore(state => state.scopes);
+export const useTransactions = () => useBudgetStore(state => state.transactions);
+export const useBills = () => useBudgetStore(state => state.bills);
+export const useCurrentBalance = () => useBudgetStore(state => state.currentBalance);
+export const useCurrentSalary = () => useBudgetStore(state => state.currentSalary);
 export const useTransactionsForScope = (scopeId: string) => {
-  const transactions = useBudgetStore(state => state.transactions);
+  const transactions = useTransactions();
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId), [transactions, scopeId]);
 };
 export const useSpentToday = (scopeId: string) => {
-  const transactions = useBudgetStore(state => state.transactions);
+  const transactions = useTransactions();
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId && isToday(parseISO(t.date))).reduce((s, t) => s + t.amount, 0), [transactions, scopeId]);
 };
 export const useSpentThisMonth = (scopeId?: string) => {
-  const transactions = useBudgetStore(state => state.transactions);
+  const transactions = useTransactions();
   return useMemo(() => {
     const filtered = transactions.filter(t => isSameMonth(parseISO(t.date), new Date()));
     if (scopeId) return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0);
@@ -202,7 +217,7 @@ export const useSpentThisMonth = (scopeId?: string) => {
   }, [transactions, scopeId]);
 };
 export const useMonthlyRemaining = (scopeId: string) => {
-  const scopes = useBudgetStore(state => state.scopes);
+  const scopes = useScopes();
   const spentThisMonth = useSpentThisMonth(scopeId);
   return useMemo(() => {
     const scope = scopes.find(s => s.id === scopeId);
@@ -211,17 +226,13 @@ export const useMonthlyRemaining = (scopeId: string) => {
     return limit - spentThisMonth;
   }, [scopes, spentThisMonth, scopeId]);
 };
-export const useDaysInMonth = () => endOfMonth(new Date()).getDate();
 export const useMonthlyBudget = () => {
-  const scopes = useBudgetStore(state => state.scopes);
-  const daysInMonth = useDaysInMonth();
+  const scopes = useScopes();
+  const daysInMonth = endOfMonth(new Date()).getDate();
   return useMemo(() => scopes.reduce((s, c) => s + (c.monthlyLimit ?? c.dailyLimit * daysInMonth), 0), [scopes, daysInMonth]);
 };
-export const useBills = () => useBudgetStore(s => s.bills);
-export const useCurrentBalance = () => useBudgetStore(s => s.currentBalance);
-export const useCurrentSalary = () => useBudgetStore(s => s.currentSalary);
 export const useDailyTotals = () => {
-  const transactions = useBudgetStore(state => state.transactions);
+  const transactions = useTransactions();
   return useMemo(() => {
     const now = new Date();
     const monthTotals = new Map<string, number>();
