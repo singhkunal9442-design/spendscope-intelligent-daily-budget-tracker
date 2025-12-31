@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBudgetStore } from '@/lib/store';
 interface ProtectedRouteProps {
@@ -7,14 +7,33 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const token = useBudgetStore(s => s.token);
+  const [authorized, setAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) {
-      navigate('/login', { state: { from: location }, replace: true });
-    }
-  }, [token, navigate, location]);
+    const checkAuth = () => {
+      const token = useBudgetStore.getState().token;
+      if (!token) {
+        navigate('/login', { state: { from: location.pathname }, replace: true });
+        setAuthorized(false);
+        setIsLoading(false);
+        return;
+      }
+      setAuthorized(true);
+      setIsLoading(false);
+    };
 
-  return <>{children}</>;
+    checkAuth();
+
+    // Subscribe to store changes
+    const unsubscribe = useBudgetStore.subscribe(checkAuth);
+    return unsubscribe;
+  }, [navigate, location.pathname]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return authorized ? <>{children}</> : null;
 }
 export default ProtectedRoute;
