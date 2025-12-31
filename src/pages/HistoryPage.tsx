@@ -55,9 +55,9 @@ export function HistoryPage() {
   const transactions = useBudgetStore(state => state.transactions);
   const scopes = useBudgetStore(state => state.scopes);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
-  const isLoading = useIsLoading();
+  const currentCurrency = useBudgetStore(state => state.currentCurrency);
+  const loading = useBudgetStore(state => state.loading);
   const formatAmount = useFormatAmount();
-  const currency = useBudgetStore(s => s.currentCurrency);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const scopesMap = React.useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
   const sortedTransactions = [...transactions].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
@@ -77,11 +77,11 @@ export function HistoryPage() {
     });
   }, [transactions]);
   const handleExport = () => {
-    const csv = generateCSV(transactions, scopes, currency);
+    const csv = generateCSV(transactions, scopes, currentCurrency);
     downloadCSV(csv, `spendscope-export-${format(new Date(), 'yyyy-MM-dd')}.csv`);
   };
   return (
-    <div className="py-8 md:py-10 lg:py-12">
+    <>
       <ThemeToggle className="fixed top-4 right-4" />
       <CurrencySelector />
       <TransactionEditDialog
@@ -98,15 +98,15 @@ export function HistoryPage() {
         </p>
       </div>
       <div className="max-w-4xl mx-auto mb-12">
-        <HistoryChart data={dailyTotalsData} isLoading={isLoading} currency={currency} />
+        <HistoryChart data={dailyTotalsData} isLoading={loading} currency={currentCurrency} />
       </div>
       <div className="flex justify-center mb-8">
-        <Button onClick={handleExport} variant="outline" disabled={transactions.length === 0 || isLoading}>
-          {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+        <Button onClick={handleExport} variant="outline" disabled={transactions.length === 0 || loading}>
+          {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
           Export as CSV
         </Button>
       </div>
-      {isLoading ? (
+      {loading ? (
         <HistorySkeleton />
       ) : transactions.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
@@ -186,6 +186,6 @@ export function HistoryPage() {
           </AnimatePresence>
         </Accordion>
       )}
-    </div>
+    </>
   );
 }
