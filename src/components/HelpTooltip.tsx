@@ -14,25 +14,18 @@ interface HelpTooltipProps {
 }
 export function HelpTooltip({ message, children, className }: HelpTooltipProps) {
   return (
-    <TooltipProvider delayDuration={400}>
+    <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center text-muted-foreground/60 hover:text-spendscope-500 transition-all duration-200 outline-none hover:scale-110",
-              className
-            )}
+          <button 
+            type="button" 
+            className={cn("inline-flex items-center text-muted-foreground hover:text-foreground transition-colors outline-none", className)}
           >
-            {children || <HelpCircle className="h-5 w-5" />}
+            {children || <HelpCircle className="h-4 w-4" />}
           </button>
         </TooltipTrigger>
-        <TooltipContent 
-          className="glass-dark text-white text-xs font-bold p-3 max-w-[220px] text-center border-white/20 rounded-2xl" 
-          side="top"
-          sideOffset={8}
-        >
-          <p className="leading-relaxed">{message}</p>
+        <TooltipContent className="glass text-xs p-2 max-w-[200px] text-center" side="top">
+          <p>{message}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

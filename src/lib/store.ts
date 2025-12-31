@@ -24,6 +24,8 @@ export type ScopeWithIcon = Omit<Scope, 'icon'> & {
   monthlyLimit?: number;
 };
 interface BudgetState {
+  user: { id: string; email: string } | null;
+  token: string | null;
   scopes: ScopeWithIcon[];
   transactions: Transaction[];
   bills: Bill[];
@@ -45,12 +47,19 @@ interface BudgetState {
   addBill: (bill: Omit<Bill, 'id' | 'paid'>) => Promise<void>;
   updateBill: (id: string, changes: Partial<Omit<Bill, 'id'>>) => Promise<void>;
   deleteBill: (id: string) => Promise<void>;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string) => Promise<void>;
+  logout: () => void;
 }
 const getIcon = (iconName: string): lucideIcons.LucideIcon => {
   const Icon = (lucideIcons as any)[iconName];
   return Icon || lucideIcons.Circle;
 };
+const savedToken = localStorage.getItem('spendscope-token');
+const savedUser = localStorage.getItem('spendscope-user');
 export const useBudgetStore = create<BudgetState>((set, get) => ({
+  user: savedUser ? JSON.parse(savedUser) : null,
+  token: savedToken,
   scopes: [],
   transactions: [],
   bills: [],
@@ -59,7 +68,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   loading: true,
   currentCurrency: 'USD',
   loadData: async () => {
-    if (get().loading === false) set({ loading: true });
+    set({ loading: true });
     try {
       const [scopes, transactions, bills] = await Promise.all([
         api<Scope[]>('/api/scopes'),
@@ -75,91 +84,100 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         transactions,
         bills,
         currentCurrency: savedCurrency && CURRENCY_PRESETS.includes(savedCurrency) ? savedCurrency : 'USD',
-        currentBalance: savedBalance ? parseFloat(savedBalance) : 5000, // Default balance
-        currentSalary: savedSalary ? parseFloat(savedSalary) : 3000, // Default salary
+        currentBalance: savedBalance ? parseFloat(savedBalance) : 5000,
+        currentSalary: savedSalary ? parseFloat(savedSalary) : 3000,
       });
     } catch (error) {
-      console.error("Failed to load data", error);
       toast.error("Could not load your budget data.");
     } finally {
       set({ loading: false });
     }
   },
+  login: async (email, password) => {
+    const res = await api<any>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    localStorage.setItem('spendscope-token', res.token);
+    localStorage.setItem('spendscope-user', JSON.stringify(res.user));
+    set({ user: res.user, token: res.token });
+    toast.success("Welcome back!");
+  },
+  register: async (email, password) => {
+    const res = await api<any>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
+    localStorage.setItem('spendscope-token', res.token);
+    localStorage.setItem('spendscope-user', JSON.stringify(res.user));
+    set({ user: res.user, token: res.token });
+    toast.success("Account created successfully!");
+  },
+  logout: () => {
+    localStorage.removeItem('spendscope-token');
+    localStorage.removeItem('spendscope-user');
+    set({ user: null, token: null, scopes: [], transactions: [], bills: [] });
+    toast.info("Logged out.");
+  },
   setCurrency: async (currency: string) => {
-    if (!CURRENCY_PRESETS.includes(currency)) return;
     localStorage.setItem('spendscope-currency', currency);
     set({ currentCurrency: currency });
   },
   setCurrentBalance: (balance: number) => {
     localStorage.setItem('spendscope-balance', balance.toString());
     set({ currentBalance: balance });
-    toast.success("Starting balance has been set.");
   },
   setCurrentSalary: (salary: number) => {
     localStorage.setItem('spendscope-salary', salary.toString());
     set({ currentSalary: salary });
-    toast.success("Monthly salary has been updated.");
   },
   addScope: async (scope) => {
-    try {
-      const newScope = await api<Scope>('/api/scopes', { method: 'POST', body: JSON.stringify(scope) });
-      set(produce((state: BudgetState) => { state.scopes.push({ ...newScope, icon: getIcon(newScope.icon) }); }));
-      toast.success(`Category "${newScope.name}" added.`);
-    } catch (error) { console.error("Failed to add scope", error); toast.error("Failed to add new category."); }
+    const newScope = await api<Scope>('/api/scopes', { method: 'POST', body: JSON.stringify(scope) });
+    set(produce((state: BudgetState) => { state.scopes.push({ ...newScope, icon: getIcon(newScope.icon) }); }));
   },
   updateScope: async (id, dailyLimit) => {
     const originalScopes = get().scopes;
     const syncedData = { dailyLimit, monthlyLimit: dailyLimit * 30 };
-    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { state.scopes[i].dailyLimit = syncedData.dailyLimit; state.scopes[i].monthlyLimit = syncedData.monthlyLimit; } }));
-    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(syncedData) }); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
+    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { state.scopes[i].dailyLimit = dailyLimit; state.scopes[i].monthlyLimit = dailyLimit * 30; } }));
+    try { await api(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(syncedData) }); } catch (e) { set({ scopes: originalScopes }); }
   },
   updateScopeFull: async (id, data) => {
     const originalScopes = get().scopes;
-    const syncedData = { ...data };
-    if (typeof syncedData.dailyLimit === 'number' && (syncedData.monthlyLimit === undefined || syncedData.monthlyLimit == null)) {
-      syncedData.monthlyLimit = syncedData.dailyLimit * 30;
-    }
-    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { const u = { ...state.scopes[i], ...syncedData }; const nI = syncedData.icon ? getIcon(syncedData.icon) : state.scopes[i].icon; state.scopes[i] = { ...u, icon: nI }; } }));
-    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(syncedData) }); toast.success(`Category "${syncedData.name || 'Category'}" updated.`); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
+    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { state.scopes[i] = { ...state.scopes[i], ...data, icon: data.icon ? getIcon(data.icon as any) : state.scopes[i].icon }; } }));
+    try { await api(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(data) }); } catch (e) { set({ scopes: originalScopes }); }
   },
   deleteScope: async (id) => {
-    const oS = get().scopes; const sTD = oS.find(s => s.id === id); if (!sTD) return;
+    const oS = get().scopes;
     set(produce((state: BudgetState) => { state.scopes = state.scopes.filter(s => s.id !== id); }));
-    try { await api(`/api/scopes/${id}`, { method: 'DELETE' }); toast.success(`Category "${sTD.name}" deleted.`); } catch (error) { console.error("Failed to delete scope", error); toast.error("Failed to delete. Reverting."); set({ scopes: oS }); }
+    try { await api(`/api/scopes/${id}`, { method: 'DELETE' }); } catch (e) { set({ scopes: oS }); }
   },
   addTransaction: async (transaction) => {
-    const tempId = uuidv4(); const newTx: Transaction = { ...transaction, id: tempId, date: new Date().toISOString() };
-    set(produce((state: BudgetState) => { state.transactions.push(newTx); }));
-    try { const savedTx = await api<Transaction>('/api/transactions', { method: 'POST', body: JSON.stringify(transaction) }); set(produce((state: BudgetState) => { const i = state.transactions.findIndex(t => t.id === tempId); if (i !== -1) state.transactions[i] = savedTx; })); } catch (error) { console.error("Failed to add transaction", error); toast.error("Tx failed to save. Removing."); set(produce((state: BudgetState) => { state.transactions = state.transactions.filter(t => t.id !== tempId); })); }
+    const res = await api<Transaction>('/api/transactions', { method: 'POST', body: JSON.stringify(transaction) });
+    set(produce((state: BudgetState) => { state.transactions.push(res); }));
   },
   updateTransaction: async (id, changes) => {
     const oT = get().transactions;
     set(produce((state: BudgetState) => { const i = state.transactions.findIndex(t => t.id === id); if (i !== -1) state.transactions[i] = { ...state.transactions[i], ...changes }; }));
-    try { await api(`/api/transactions/${id}`, { method: 'PUT', body: JSON.stringify(changes) }); } catch (error) { console.error("Failed to update transaction", error); toast.error("Failed to update. Reverting."); set({ transactions: oT }); }
+    try { await api(`/api/transactions/${id}`, { method: 'PUT', body: JSON.stringify(changes) }); } catch (e) { set({ transactions: oT }); }
   },
   deleteTransaction: async (id) => {
-    const oT = get().transactions; const tTD = oT.find(t => t.id === id); if (!tTD) return;
+    const oT = get().transactions;
     set(produce((state: BudgetState) => { state.transactions = state.transactions.filter(t => t.id !== id); }));
-    try { await api(`/api/transactions/${id}`, { method: 'DELETE' }); toast.success(`Deleted transaction of ${formatCurrencyAmount(get().currentCurrency, tTD.amount)}.`); } catch (error) { console.error("Failed to delete transaction", error); toast.error("Failed to delete. Reverting."); set({ transactions: oT }); }
+    try { await api(`/api/transactions/${id}`, { method: 'DELETE' }); } catch (e) { set({ transactions: oT }); }
   },
   addBill: async (bill) => {
-    const tempId = uuidv4(); const newBill: Bill = { ...bill, id: tempId, paid: false };
-    set(produce((state: BudgetState) => { state.bills.push(newBill); }));
-    try { const savedBill = await api<Bill>('/api/bills', { method: 'POST', body: JSON.stringify(bill) }); set(produce((state: BudgetState) => { const i = state.bills.findIndex(b => b.id === tempId); if (i !== -1) state.bills[i] = savedBill; })); toast.success(`Bill "${savedBill.name}" added.`); } catch (error) { console.error("Failed to add bill", error); toast.error("Failed to add bill. Removing."); set(produce((state: BudgetState) => { state.bills = state.bills.filter(b => b.id !== tempId); })); }
+    const res = await api<Bill>('/api/bills', { method: 'POST', body: JSON.stringify(bill) });
+    set(produce((state: BudgetState) => { state.bills.push(res); }));
   },
   updateBill: async (id, changes) => {
     const oB = get().bills;
     set(produce((state: BudgetState) => { const i = state.bills.findIndex(b => b.id === id); if (i !== -1) state.bills[i] = { ...state.bills[i], ...changes }; }));
-    try { await api(`/api/bills/${id}`, { method: 'PUT', body: JSON.stringify(changes) }); } catch (error) { console.error("Failed to update bill", error); toast.error("Failed to update bill. Reverting."); set({ bills: oB }); }
+    try { await api(`/api/bills/${id}`, { method: 'PUT', body: JSON.stringify(changes) }); } catch (e) { set({ bills: oB }); }
   },
   deleteBill: async (id) => {
-    const oB = get().bills; const bTD = oB.find(b => b.id === id); if (!bTD) return;
+    const oB = get().bills;
     set(produce((state: BudgetState) => { state.bills = state.bills.filter(b => b.id !== id); }));
-    try { await api(`/api/bills/${id}`, { method: 'DELETE' }); toast.success(`Bill "${bTD.name}" deleted.`); } catch (error) { console.error("Failed to delete bill", error); toast.error("Failed to delete bill. Reverting."); set({ bills: oB }); }
+    try { await api(`/api/bills/${id}`, { method: 'DELETE' }); } catch (e) { set({ bills: oB }); }
   },
 }));
 // Selectors
 export const useIsLoading = () => useBudgetStore(state => state.loading);
+export const useAuthToken = () => useBudgetStore(state => state.token);
+export const useAuthUser = () => useBudgetStore(state => state.user);
 export const useSpentToday = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId && isToday(parseISO(t.date))).reduce((s, t) => s + t.amount, 0), [transactions, scopeId]);
@@ -168,34 +186,17 @@ export const useSpentThisMonth = (scopeId?: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return useMemo(() => {
     const filtered = transactions.filter(t => isSameMonth(parseISO(t.date), new Date()));
-    if (scopeId) {
-      return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0);
-    }
+    if (scopeId) return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0);
     return filtered.reduce((s, t) => s + t.amount, 0);
   }, [transactions, scopeId]);
 };
-export const useDaysInMonth = () => {
-    const now = new Date();
-    return endOfMonth(startOfMonth(now)).getDate();
-};
+export const useDaysInMonth = () => endOfMonth(new Date()).getDate();
 export const useMonthlyBudget = () => {
   const scopes = useBudgetStore(state => state.scopes);
   const daysInMonth = useDaysInMonth();
   return useMemo(() => scopes.reduce((s, c) => s + (c.monthlyLimit ?? c.dailyLimit * daysInMonth), 0), [scopes, daysInMonth]);
 };
-export const useTransactionsForScope = (scopeId: string) => {
-  const transactions = useBudgetStore(state => state.transactions);
-  return useMemo(() => transactions.filter(t => t.scopeId === scopeId), [transactions, scopeId]);
-};
 export const useBills = () => useBudgetStore(s => s.bills);
-export const useTotalBillsDue = () => {
-  const bills = useBudgetStore(s => s.bills);
-  return useMemo(() => bills.filter(b => !b.paid).reduce((sum, b) => sum + b.amount, 0), [bills]);
-};
-export const useTotalBillsPaid = () => {
-  const bills = useBudgetStore(s => s.bills);
-  return useMemo(() => bills.filter(b => b.paid).reduce((sum, b) => sum + b.amount, 0), [bills]);
-};
 export const useCurrentBalance = () => useBudgetStore(s => s.currentBalance);
 export const useCurrentSalary = () => useBudgetStore(s => s.currentSalary);
 export const useDailyTotals = () => {
@@ -203,12 +204,10 @@ export const useDailyTotals = () => {
   return useMemo(() => {
     const now = new Date();
     const monthTotals = new Map<string, number>();
-    transactions
-      .filter(t => isSameMonth(parseISO(t.date), now))
-      .forEach(t => {
+    transactions.filter(t => isSameMonth(parseISO(t.date), now)).forEach(t => {
         const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
         monthTotals.set(dayKey, (monthTotals.get(dayKey) || 0) + t.amount);
-      });
+    });
     return monthTotals;
   }, [transactions]);
 };

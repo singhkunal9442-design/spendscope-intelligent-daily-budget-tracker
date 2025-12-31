@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
 import { MonthlyScopeCard, MonthlyScopeCardSkeleton } from '@/components/budget/MonthlyScopeCard';
 import { CurrencySelector } from '@/components/CurrencySelector';
+import { HelpTooltip } from '@/components/HelpTooltip';
 import { Bill } from '@shared/types';
 export function DashboardPage() {
   const scopes = useBudgetStore(state => state.scopes);
@@ -41,8 +42,13 @@ export function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-16">
           <div className="text-center mb-12">
-            <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">Daily SpendScope</motion.h1>
-            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">Your real-time guide to daily spending. Total daily budget: <span className="text-gradient font-bold">{formatAmount(totalLimit)}</span></motion.p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center items-center gap-2 mb-2">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">Daily SpendScope</h1>
+              <HelpTooltip message="Your dashboard shows how much you can spend in real-time. Categories reset at midnight." />
+            </motion.div>
+            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Total daily budget: <span className="text-gradient font-bold">{formatAmount(totalLimit)}</span>
+            </motion.p>
           </div>
           <AnimatePresence>
             {isLoading ? (
@@ -65,47 +71,24 @@ export function DashboardPage() {
                   <>
                     {scopes.length > 0 && (
                       <>
-                        <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Daily Budgets</motion.h2>
+                        <motion.div className="flex justify-center items-center gap-2 mb-8 mt-16">
+                          <h2 className="text-3xl font-bold text-foreground text-center">Daily Budgets</h2>
+                          <HelpTooltip message="Cards turn yellow and red as you approach your daily limit." />
+                        </motion.div>
                         <motion.div key="scopes" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {scopes.map((scope) => (<motion.div key={scope.id} variants={itemVariants}><ScopeCard scope={scope} onEdit={setEditingScope} /></motion.div>))}
                         </motion.div>
-                        <div className="flex flex-col xs:flex-row gap-3 md:justify-end mt-6 md:mt-8 lg:mt-10 items-end">
-                            <motion.div key="daily-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="h-14 w-14 md:h-12 md:w-12">
-                              <Button onClick={() => setIsAddDrawerOpen(true)} className="h-full w-full rounded-full bg-secondary/80 hover:bg-secondary/90 text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-300" size="lg" aria-label="Add Daily Expense">
-                                <Plus className="h-5 w-5" />
-                              </Button>
-                            </motion.div>
-                        </div>
                       </>
                     )}
                     {bills.length > 0 && (
                       <>
-                        <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Fixed Monthly Bills</motion.h2>
+                        <motion.div className="flex justify-center items-center gap-2 mb-8 mt-16">
+                          <h2 className="text-3xl font-bold text-foreground text-center">Fixed Monthly Bills</h2>
+                          <HelpTooltip message="Recurring monthly expenses. Tap the checkbox to mark as paid." />
+                        </motion.div>
                         <motion.div key="bills" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {bills.map((bill) => (<motion.div key={bill.id} variants={itemVariants}><BillCard bill={bill} onEdit={setEditingBill} /></motion.div>))}
                         </motion.div>
-                        <div className="flex flex-col xs:flex-row gap-3 md:justify-end mt-6 md:mt-8 lg:mt-10 items-end">
-                            <motion.div key="bills-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }} className="h-14 w-14 md:h-12 md:w-12">
-                              <Button onClick={() => setIsAddBillDrawerOpen(true)} className="h-full w-full rounded-full bg-secondary/80 hover:bg-secondary/90 text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-300" size="lg" aria-label="Add Bill">
-                                <Plus className="h-5 w-5" />
-                              </Button>
-                            </motion.div>
-                        </div>
-                      </>
-                    )}
-                    {scopes.length > 0 && (
-                      <>
-                        <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-3xl font-bold text-foreground mb-8 mt-16 text-center">Monthly Budget Overview</motion.h2>
-                        <motion.div key="monthly-scopes" initial="hidden" animate="visible" variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {scopes.map((scope) => (<motion.div key={scope.id} variants={itemVariants}><MonthlyScopeCard scope={scope} onEdit={setEditingScope} /></motion.div>))}
-                        </motion.div>
-                        <div className="flex flex-col xs:flex-row gap-3 md:justify-end mt-6 md:mt-8 lg:mt-10 items-end">
-                            <motion.div key="monthly-fab" initial={{ scale: 0, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }} className="h-14 w-14 md:h-12 md:w-12">
-                              <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="h-full w-full rounded-full bg-secondary/80 hover:bg-secondary/90 text-secondary-foreground shadow-lg border-2 border-border/30 backdrop-blur-sm hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-300" size="lg" aria-label="Add Category">
-                                <Plus className="h-5 w-5" />
-                              </Button>
-                            </motion.div>
-                        </div>
                       </>
                     )}
                   </>
@@ -115,7 +98,14 @@ export function DashboardPage() {
           </AnimatePresence>
         </div>
       </main>
-      <Button onClick={() => setIsAddDrawerOpen(true)} className="fixed bottom-8 sm:bottom-6 right-6 h-16 w-16 min-h-[64px] sm:h-14 sm:w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95 animate-pulse" size="icon"><Plus className="h-8 w-8" /><span className="sr-only">Add Expense</span></Button>
+      <Button 
+        onClick={() => setIsAddDrawerOpen(true)} 
+        className="fixed bottom-8 sm:bottom-6 right-6 h-16 w-16 min-h-[64px] sm:h-14 sm:w-14 rounded-full shadow-glow z-50 bg-primary hover:bg-primary/90 transition-transform hover:scale-110 active:scale-95" 
+        size="icon"
+      >
+        <Plus className="h-8 w-8" />
+        <span className="sr-only">Add Expense</span>
+      </Button>
       <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
       <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
       <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
