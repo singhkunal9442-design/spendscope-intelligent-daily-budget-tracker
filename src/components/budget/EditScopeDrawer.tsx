@@ -12,7 +12,7 @@ import { Save, X, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, getScopeColorClasses } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,12 +47,13 @@ const shakeVariants = {
 };
 const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIcon; spentToday: number; spentAllTime: number; }) => {
   const formatAmount = useFormatAmount();
+  const colors = getScopeColorClasses(scope.color);
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
-  const getProgressColor = (p: number) => {
+  const getProgressColorClass = (p: number) => {
     if (p > 90) return 'bg-red-500';
     if (p > 70) return 'bg-amber-500';
-    return 'bg-emerald-500';
+    return colors.bg;
   };
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -63,7 +64,7 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
               <span className="text-muted-foreground">Spent Today</span>
               <span className="font-bold text-foreground">{formatAmount(spentToday)} / {formatAmount(scope.dailyLimit)}</span>
             </div>
-            <Progress value={percentage} className={cn("h-2 mt-1", getProgressColor(percentage))} />
+            <Progress value={percentage} className={cn("h-2 mt-1", getProgressColorClass(percentage))} />
             <div className="flex justify-between text-sm font-medium pt-1">
               <span className="text-muted-foreground">Remaining Today</span>
               <motion.span className={cn('font-bold', remaining < 0 ? 'text-red-500' : 'text-emerald-500')} animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 0.3 }} key={remaining}>
@@ -182,8 +183,8 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   };
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} direction="right">
-      <DrawerContent className="h-full w-full max-w-sm mt-0 ml-auto rounded-none">
-        <div className="mx-auto w-full h-full flex flex-col">
+      <DrawerContent className="h-full w-full max-w-sm mt-0 ml-auto rounded-none border-l border-border/20">
+        <div className="mx-auto w-full h-full flex flex-col bg-background">
           <DrawerHeader className="flex-shrink-0">
             <DrawerTitle>Edit Category</DrawerTitle>
             <DrawerDescription>Update details for "{scope?.name || '...'}".</DrawerDescription>
@@ -234,9 +235,9 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                       <AnimatePresence>
                         {recentTransactions.length > 0 ? recentTransactions.map(tx => (
                           <motion.div key={tx.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="group flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                            <div>
+                            <div className="min-w-0 pr-2">
                               <p className="text-sm font-medium">{formatAmount(tx.amount)}</p>
-                              <p className="text-xs text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
+                              <p className="text-xs text-muted-foreground truncate">{tx.description || format(parseISO(tx.date), 'p')}</p>
                             </div>
                             <div className="flex items-center gap-1 opacity-100 p-1 bg-muted/50 rounded-md backdrop-blur transition-all">
                               <motion.div whileHover={{ scale: 1.1, rotate: [0, 2, -2, 0] }}>
@@ -307,7 +308,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                 {errors.color && <p className="text-red-500 text-sm mt-1">{errors.color.message}</p>}
               </div>
             </div>
-            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2">
+            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2 pt-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <motion.div variants={shakeVariants} whileHover="hover" className="mr-auto">

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { cn, getScopeColorClasses } from '@/lib/utils';
 import { useTransactions, useSpentToday, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
@@ -34,6 +34,7 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   const spentToday = useSpentToday(scope.id);
   const transactions = useTransactions();
   const formatAmount = useFormatAmount();
+  const colors = getScopeColorClasses(scope.color);
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -55,7 +56,7 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]';
     if (percentage > 70) return 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]';
-    return `bg-${scope.color}-500 shadow-[0_0_8px_rgba(var(--${scope.color}-rgb),0.3)]`;
+    return cn(colors.bg, colors.glow);
   };
   const Icon = scope.icon;
   return (
@@ -72,11 +73,8 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
       </div>
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
-          <div className={cn(
-            'p-3.5 rounded-2xl shadow-sm border border-border/10',
-            `bg-${scope.color}-50/50 dark:bg-${scope.color}-950/30`
-          )}>
-            <Icon className={cn('w-6 h-6', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />
+          <div className={cn('p-3.5 rounded-2xl shadow-sm border border-border/10', colors.lightBg)}>
+            <Icon className={cn('w-6 h-6', colors.text)} />
           </div>
           <div>
             <h3 className="font-black text-xl text-foreground tracking-tighter leading-none mb-1.5">{scope.name}</h3>
