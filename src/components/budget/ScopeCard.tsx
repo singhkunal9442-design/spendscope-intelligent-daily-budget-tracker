@@ -66,11 +66,6 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
       whileHover={{ scale: 1.01, y: -2 }}
       className="group relative p-8 rounded-3xl bg-card border border-border/40 shadow-glass hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
     >
-      <div className="absolute top-6 right-6 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="p-2 bg-muted/80 backdrop-blur rounded-xl text-muted-foreground hover:text-foreground border border-border/20 shadow-sm">
-          <Pencil className="w-4 h-4" />
-        </div>
-      </div>
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
           <div className={cn('p-3.5 rounded-2xl shadow-sm border border-border/10', colors.lightBg)}>
@@ -84,7 +79,7 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
             </div>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right pr-12 mr-auto">
           <p className="text-label mb-1">Spent Today</p>
           <p className="font-black text-xl tracking-tighter text-foreground">{formatAmount(spentToday)}</p>
         </div>
