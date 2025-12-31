@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Wallet } from 'lucide-react';
+import { Plus, Wallet, PlusCircle } from 'lucide-react';
 import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, type ScopeWithIcon } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
@@ -8,6 +8,7 @@ import { AddBillDrawer } from '@/components/budget/AddBillDrawer';
 import { AddScopeDrawer } from '@/components/budget/AddScopeDrawer';
 import { EditScopeDrawer } from '@/components/budget/EditScopeDrawer';
 import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
+import { OnboardingModal } from '@/components/budget/OnboardingModal';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -27,19 +28,24 @@ export function DashboardPage() {
   const [isAddScopeDrawerOpen, setIsAddScopeDrawerOpen] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeWithIcon | null>(null);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     loadData();
+    const onboarded = localStorage.getItem('spendscope-onboarded');
+    if (!onboarded) {
+      setShowOnboarding(true);
+    }
   }, [loadData]);
-  const totalLimit = React.useMemo(() => 
+  const totalLimit = React.useMemo(() =>
     scopes.reduce((sum, s) => sum + s.dailyLimit, 0),
   [scopes]);
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { 
-        staggerChildren: 0.1, 
-        delayChildren: 0.2 
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
       }
     }
   };
@@ -48,10 +54,10 @@ export function DashboardPage() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { 
-        type: 'spring', 
-        damping: 20, 
-        stiffness: 100 
+      transition: {
+        type: 'spring',
+        damping: 20,
+        stiffness: 100
       } as const
     }
   };
@@ -81,7 +87,7 @@ export function DashboardPage() {
           </motion.div>
           <AnimatePresence mode="wait">
             {isLoading ? (
-              <motion.div key="loader" exit={{ opacity: 0 }}>
+              <motion.div key="loader" exit={{ opacity: 0 }} className="space-y-12">
                 <MonthlyOverviewCardSkeleton />
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-16">
                   {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={i} />)}
@@ -92,7 +98,7 @@ export function DashboardPage() {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col gap-16"
+                className="flex flex-col gap-20"
               >
                 <motion.div variants={itemVariants}>
                   <MonthlyOverviewCard />
@@ -111,36 +117,52 @@ export function DashboardPage() {
                   </motion.div>
                 ) : (
                   <>
-                    {scopes.length > 0 && (
-                      <div className="flex flex-col gap-8">
+                    <div className="flex flex-col gap-8">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <h2 className="text-3xl font-black text-foreground">Daily Budgets</h2>
+                          <h2 className="text-3xl font-black text-foreground tracking-tight">Daily Budgets</h2>
                           <HelpTooltip message="Manage your daily category limits. Cards turn amber and red as you reach your limit." />
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                          {scopes.map((scope) => (
-                            <motion.div key={scope.id} variants={itemVariants}>
-                              <ScopeCard scope={scope} onEdit={(s) => setEditingScope(s)} />
-                            </motion.div>
-                          ))}
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => setIsAddScopeDrawerOpen(true)}
+                          className="text-spendscope-600 dark:text-spendscope-400 hover:bg-spendscope-500/10 font-bold"
+                        >
+                          <PlusCircle className="w-5 h-5 mr-2" />
+                          New Category
+                        </Button>
                       </div>
-                    )}
-                    {bills.length > 0 && (
-                      <div className="flex flex-col gap-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                        {scopes.map((scope) => (
+                          <motion.div key={scope.id} variants={itemVariants}>
+                            <ScopeCard scope={scope} onEdit={(s) => setEditingScope(s)} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-8">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <h2 className="text-3xl font-black text-foreground text-center">Fixed Monthly Bills</h2>
+                          <h2 className="text-3xl font-black text-foreground tracking-tight">Monthly Bills</h2>
                           <HelpTooltip message="Recurring monthly expenses. Mark them as paid to clear your monthly overview." />
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                          {bills.map((bill) => (
-                            <motion.div key={bill.id} variants={itemVariants}>
-                              <BillCard bill={bill} onEdit={setEditingBill} />
-                            </motion.div>
-                          ))}
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => setIsAddBillDrawerOpen(true)}
+                          className="text-spendscope-600 dark:text-spendscope-400 hover:bg-spendscope-500/10 font-bold"
+                        >
+                          <PlusCircle className="w-5 h-5 mr-2" />
+                          New Bill
+                        </Button>
                       </div>
-                    )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                        {bills.map((bill) => (
+                          <motion.div key={bill.id} variants={itemVariants}>
+                            <BillCard bill={bill} onEdit={setEditingBill} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
                   </>
                 )}
               </motion.div>
@@ -161,6 +183,7 @@ export function DashboardPage() {
       <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
       <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
       <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
+      <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
       <Toaster richColors position="top-center" />
     </div>
   );

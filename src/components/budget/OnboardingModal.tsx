@@ -27,26 +27,31 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   const onSubmit = (data: OnboardingFormData) => {
     setCurrentBalance(data.balance);
     setCurrentSalary(data.salary);
+    localStorage.setItem('spendscope-onboarded', 'true');
     onClose();
   };
   const handleSkip = () => {
     setCurrentBalance(0);
     setCurrentSalary(0);
+    localStorage.setItem('spendscope-onboarded', 'true');
     onClose();
   };
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSkip()}>
-      <DialogContent className="sm:max-w-md glassmorphic" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-md glass-dark border-white/10 text-white" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><PiggyBank className="w-6 h-6 text-primary" /> Welcome to SpendScope!</DialogTitle>
-          <DialogDescription>
-            Set your starting balance and monthly salary for the most accurate overview. You can skip this and set it later in Settings.
+          <DialogTitle className="flex items-center gap-2 text-2xl font-black tracking-tight">
+            <PiggyBank className="w-8 h-8 text-spendscope-500" /> 
+            Welcome to SpendScope!
+          </DialogTitle>
+          <DialogDescription className="text-zinc-400 text-base">
+            Set your starting balance and monthly salary for the most accurate overview. You can change this later in Settings.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="balance">Starting Balance</Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-6">
+          <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="balance" className="text-zinc-200 font-bold">Starting Balance</Label>
               <Controller
                 name="balance"
                 control={control}
@@ -56,16 +61,17 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                     id="balance"
                     type="number"
                     step="0.01"
+                    className="bg-zinc-900/50 border-white/10 text-white placeholder:text-zinc-600 h-12 text-lg"
                     placeholder="e.g., 1000"
                     value={field.value || ''}
                     onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                 )}
               />
-              {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance.message}</p>}
+              {errors.balance && <p className="text-red-400 text-sm mt-1">{errors.balance.message}</p>}
             </div>
-            <div>
-              <Label htmlFor="salary">Monthly Salary</Label>
+            <div className="space-y-2">
+              <Label htmlFor="salary" className="text-zinc-200 font-bold">Monthly Salary</Label>
               <Controller
                 name="salary"
                 control={control}
@@ -75,18 +81,23 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                     id="salary"
                     type="number"
                     step="0.01"
+                    className="bg-zinc-900/50 border-white/10 text-white placeholder:text-zinc-600 h-12 text-lg"
                     placeholder="e.g., 3000"
                     value={field.value || ''}
                     onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                 )}
               />
-              {errors.salary && <p className="text-red-500 text-sm mt-1">{errors.salary.message}</p>}
+              {errors.salary && <p className="text-red-400 text-sm mt-1">{errors.salary.message}</p>}
             </div>
           </div>
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={handleSkip}>Skip</Button>
-            <Button type="submit">Save and Continue</Button>
+          <DialogFooter className="pt-4 flex items-center justify-between w-full">
+            <Button type="button" variant="ghost" onClick={handleSkip} className="text-zinc-400 hover:text-white hover:bg-white/5">
+              Skip for now
+            </Button>
+            <Button type="submit" className="btn-spendscope px-8">
+              Save and Get Started
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
