@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthUser } from '@/lib/store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoginForm, SignupForm } from '@/components/auth/AuthForms';
 import { Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 export function AuthPage() {
+  const navigate = useNavigate();
+  const user = useAuthUser();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-background">
       <div className="absolute inset-0 -z-10 bg-gradient-mesh opacity-20" />

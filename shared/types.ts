@@ -35,3 +35,6 @@ export interface Bill {
   amount: number;
   paid: boolean;
 }
+
+export type UserPublic = Pick<User, 'id' | 'email'>;
+export type AuthResponseData = { user: UserPublic; token: string; };

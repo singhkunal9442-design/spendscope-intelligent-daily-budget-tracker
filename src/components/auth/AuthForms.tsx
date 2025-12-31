@@ -24,7 +24,6 @@ export function LoginForm() {
     try {
       await login(data.email, data.password);
     } catch (e) {
-      // toast handled in store
     } finally {
       setLoading(false);
     }
@@ -69,7 +68,6 @@ export function SignupForm() {
     try {
       await registerAction(data.email, data.password);
     } catch (e) {
-      // toast handled in store
     } finally {
       setLoading(false);
     }
