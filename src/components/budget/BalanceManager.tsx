@@ -49,14 +49,14 @@ export function BalanceManager() {
                         {...field}
                         value={field.value ?? 0}
                         onChange={(e) => field.onChange(Number(e.target.value) || 0)}
-                        className="pl-10"
+                        className="pl-10 h-12 rounded-2xl"
                       />
                     </div>
                   )}
                 />
                 {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance.message}</p>}
               </div>
-              <Button type="submit" className="w-full sm:w-auto bg-gradient-to-r from-primary to-slate-700 text-white hover:from-primary/90 transition-all hover:scale-105 active:scale-95">
+              <Button type="submit" className="w-full sm:w-auto btn-premium h-12">
                 <Save className="w-4 h-4 mr-2" />
                 Update Balance
               </Button>

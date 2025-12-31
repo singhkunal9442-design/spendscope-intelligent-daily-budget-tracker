@@ -82,6 +82,11 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   loading: true,
   currentCurrency: 'USD',
   loadData: async () => {
+    const token = get().token;
+    if (!token) {
+      set({ loading: false });
+      return;
+    }
     set({ loading: true });
     try {
       const [scopes, transactions, bills, settings] = await Promise.all([
@@ -101,7 +106,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       });
     } catch (error) {
       console.error('[STORE] loadData failed:', error);
-      toast.error("Could not load your budget data.");
     } finally {
       set({ loading: false });
     }
@@ -116,6 +120,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       toast.success("Welcome back!");
     } catch (error: any) {
       toast.error(error.message || "Login failed");
+      throw error;
     }
   },
   register: async (email, password) => {
@@ -128,6 +133,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       toast.success("Account created successfully!");
     } catch (error: any) {
       toast.error(error.message || "Registration failed");
+      throw error;
     }
   },
   logout: () => {

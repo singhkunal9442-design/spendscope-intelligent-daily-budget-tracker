@@ -98,7 +98,7 @@ export function DashboardPage() {
                     <Wallet className="mx-auto h-16 w-16 text-muted-foreground/30 mb-6" />
                     <h3 className="text-2xl font-black mb-3">Initialize Your Scope</h3>
                     <p className="text-muted-foreground mb-8 max-w-xs mx-auto">Create your first category to start tracking your daily spending limits.</p>
-                    <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="btn-spendscope">
+                    <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="btn-premium">
                       New Category
                     </Button>
                   </motion.div>
@@ -168,7 +168,7 @@ export function DashboardPage() {
       </main>
       <Button
         onClick={() => setIsAddDrawerOpen(true)}
-        className="fixed bottom-10 right-10 h-16 w-16 rounded-full bg-spendscope-500 hover:bg-spendscope-600 text-white shadow-2xl shadow-spendscope-500/40 z-50 transition-transform active:scale-90"
+        className="fixed bottom-10 right-10 h-16 w-16 btn-premium z-50 p-0"
         size="icon"
       >
         <Plus className="h-8 w-8" />
