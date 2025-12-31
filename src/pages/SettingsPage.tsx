@@ -3,14 +3,10 @@ import { CategoryManager } from '@/components/budget/CategoryManager';
 import { BillManager } from '@/components/budget/BillManager';
 import { SalaryManager } from '@/components/budget/SalaryManager';
 import { BalanceManager } from '@/components/budget/BalanceManager';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { CurrencySelector } from '@/components/CurrencySelector';
 export function SettingsPage() {
   return (
     <div className="min-h-screen w-full bg-background text-foreground relative">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:16px_16px]"></div>
-      <ThemeToggle className="fixed top-4 right-4" />
-      <CurrencySelector />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-16">
           <div className="text-center mb-12">
@@ -34,7 +30,7 @@ export function SettingsPage() {
         </div>
       </main>
       <footer className="text-center py-8 w-full text-muted-foreground/80">
-        <p>Built with ��️ at Cloudflare</p>
+        <p>Built with ❤️ at Cloudflare</p>
       </footer>
     </div>
   );

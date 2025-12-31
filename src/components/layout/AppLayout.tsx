@@ -17,8 +17,8 @@ export function AppLayout({ children, container = false, className, contentClass
       <AppSidebar />
       <SidebarInset className={cn("bg-background relative transition-all duration-300", className)}>
         {/* Fixed trigger ensuring it's never obscured by headers */}
-        <div className="fixed left-4 top-4 z-[60] md:left-6">
-          <SidebarTrigger className="h-10 w-10 shadow-glass bg-background/50 backdrop-blur-lg border border-border/20 rounded-xl hover:bg-background/80" />
+        <div className="fixed left-4 top-4 z-[60] md:left-6 transition-transform">
+          <SidebarTrigger className="h-10 w-10 shadow-glass bg-background/50 backdrop-blur-lg border border-border/20 rounded-xl hover:bg-background/80 hover:scale-105 active:scale-95" />
         </div>
         {container ? (
           <div className={cn(
@@ -28,7 +28,7 @@ export function AppLayout({ children, container = false, className, contentClass
             {children}
           </div>
         ) : (
-          <div className={cn("w-full", contentClassName)}>
+          <div className={cn("w-full pt-10 md:pt-12 lg:pt-16", contentClassName)}>
             {children}
           </div>
         )}

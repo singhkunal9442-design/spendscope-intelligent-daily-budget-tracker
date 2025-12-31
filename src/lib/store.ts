@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
 import { isToday, parseISO, isSameMonth, endOfMonth, format } from 'date-fns';
-import { Scope, Transaction, Bill, AuthResponseData } from '@shared/types';
+import { Scope, Transaction, Bill, AuthResponseData, UserSettings } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -10,14 +10,14 @@ export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD'
 export const formatCurrencyAmount = (currency: string, amount: number, locale = 'en-US') => {
   const safeLocale = typeof navigator !== 'undefined' ? navigator.language || locale : locale;
   try {
-    return new Intl.NumberFormat(safeLocale, { 
-      style: 'currency', 
-      currency: currency || 'USD' 
+    return new Intl.NumberFormat(safeLocale, {
+      style: 'currency',
+      currency: currency || 'USD'
     }).format(amount);
   } catch (e) {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: 'USD' 
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
     }).format(amount);
   }
 };
@@ -83,23 +83,25 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   loadData: async () => {
     set({ loading: true });
     try {
-      const [scopes, transactions, bills] = await Promise.all([
+      const [scopes, transactions, bills, settings] = await Promise.all([
         api<Scope[]>('/api/scopes'),
         api<Transaction[]>('/api/transactions'),
         api<Bill[]>('/api/bills'),
+        api<UserSettings>('/api/user-settings'),
       ]);
       const scopesWithIcons = scopes.map(s => ({ ...s, icon: getIcon(s.icon) }));
-      const savedCurrency = getSafeStorage('spendscope-currency');
-      const savedBalance = getSafeStorage('spendscope-balance');
-      const savedSalary = getSafeStorage('spendscope-salary');
       set({
         scopes: scopesWithIcons,
         transactions,
         bills,
-        currentCurrency: savedCurrency && (CURRENCY_PRESETS as unknown as string[]).includes(savedCurrency) ? savedCurrency : 'USD',
-        currentBalance: savedBalance ? parseFloat(savedBalance) : 5000,
-        currentSalary: savedSalary ? parseFloat(savedSalary) : 3000,
+        currentCurrency: settings.currentCurrency || 'USD',
+        currentBalance: settings.currentBalance || 0,
+        currentSalary: settings.currentSalary || 0,
       });
+      // Local Fallback Sync
+      localStorage.setItem('spendscope-currency', settings.currentCurrency);
+      localStorage.setItem('spendscope-balance', settings.currentBalance.toString());
+      localStorage.setItem('spendscope-salary', settings.currentSalary.toString());
     } catch (error) {
       console.error('[STORE] loadData failed:', error);
       toast.error("Could not load your budget data.");
@@ -112,16 +114,15 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     const prevToken = get().token;
     const tempUser = { id: 'temp', email } as { id: string; email: string };
     const tempToken = 'temp';
-
     localStorage.setItem('spendscope-token', tempToken);
     localStorage.setItem('spendscope-user', JSON.stringify(tempUser));
     set({ user: tempUser, token: tempToken });
-    
     try {
       const res = await api<AuthResponseData>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
       localStorage.setItem('spendscope-token', res.token);
       localStorage.setItem('spendscope-user', JSON.stringify(res.user));
       set({ user: res.user, token: res.token });
+      await get().loadData();
       toast.success("Welcome back!");
     } catch (error: any) {
       localStorage.setItem('spendscope-token', prevToken || '');
@@ -136,16 +137,15 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     const prevToken = get().token;
     const tempUser = { id: 'temp', email } as { id: string; email: string };
     const tempToken = 'temp';
-
     localStorage.setItem('spendscope-token', tempToken);
     localStorage.setItem('spendscope-user', JSON.stringify(tempUser));
     set({ user: tempUser, token: tempToken });
-    
     try {
       const res = await api<AuthResponseData>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
       localStorage.setItem('spendscope-token', res.token);
       localStorage.setItem('spendscope-user', JSON.stringify(res.user));
       set({ user: res.user, token: res.token });
+      await get().loadData();
       toast.success("Account created successfully!");
     } catch (error: any) {
       localStorage.setItem('spendscope-token', prevToken || '');
@@ -158,20 +158,50 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('spendscope-token');
     localStorage.removeItem('spendscope-user');
-    set({ user: null, token: null, scopes: [], transactions: [], bills: [] });
+    set({ 
+      user: null, 
+      token: null, 
+      scopes: [], 
+      transactions: [], 
+      bills: [],
+      currentBalance: 0,
+      currentSalary: 0,
+      currentCurrency: 'USD'
+    });
     toast.info("Logged out.");
   },
   setCurrency: async (currency: string) => {
-    localStorage.setItem('spendscope-currency', currency);
+    const prev = get().currentCurrency;
     set({ currentCurrency: currency });
+    localStorage.setItem('spendscope-currency', currency);
+    try {
+      await api('/api/user-settings', { method: 'PUT', body: JSON.stringify({ currentCurrency: currency }) });
+    } catch (e) {
+      set({ currentCurrency: prev });
+      toast.error("Failed to sync currency.");
+    }
   },
-  setCurrentBalance: (balance: number) => {
-    localStorage.setItem('spendscope-balance', balance.toString());
+  setCurrentBalance: async (balance: number) => {
+    const prev = get().currentBalance;
     set({ currentBalance: balance });
+    localStorage.setItem('spendscope-balance', balance.toString());
+    try {
+      await api('/api/user-settings', { method: 'PUT', body: JSON.stringify({ currentBalance: balance }) });
+    } catch (e) {
+      set({ currentBalance: prev });
+      toast.error("Failed to sync balance.");
+    }
   },
-  setCurrentSalary: (salary: number) => {
-    localStorage.setItem('spendscope-salary', salary.toString());
+  setCurrentSalary: async (salary: number) => {
+    const prev = get().currentSalary;
     set({ currentSalary: salary });
+    localStorage.setItem('spendscope-salary', salary.toString());
+    try {
+      await api('/api/user-settings', { method: 'PUT', body: JSON.stringify({ currentSalary: salary }) });
+    } catch (e) {
+      set({ currentSalary: prev });
+      toast.error("Failed to sync salary.");
+    }
   },
   addScope: async (scope) => {
     const newScope = await api<Scope>('/api/scopes', { method: 'POST', body: JSON.stringify(scope) });

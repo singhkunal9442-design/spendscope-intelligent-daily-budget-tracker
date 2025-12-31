@@ -12,15 +12,15 @@ export function CurrencySelector({ className }: CurrencySelectorProps) {
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className={cn("fixed top-4 right-20 z-50", className)}
+      className={cn(className)}
     >
       <Select onValueChange={setCurrency} value={currentCurrency}>
-        <SelectTrigger className="w-[80px] glass shadow-md border-border/30">
-          <SelectValue placeholder="Currency" />
+        <SelectTrigger className="w-[80px] h-9 glass shadow-sm border-border/30 rounded-xl text-xs font-bold">
+          <SelectValue placeholder="USD" />
         </SelectTrigger>
-        <SelectContent className="glass">
+        <SelectContent className="glass rounded-xl">
           {CURRENCY_PRESETS.map(currency => (
-            <SelectItem key={currency} value={currency}>
+            <SelectItem key={currency} value={currency} className="text-xs font-bold">
               {currency}
             </SelectItem>
           ))}

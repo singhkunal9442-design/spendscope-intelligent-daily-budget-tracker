@@ -1,10 +1,16 @@
 import { Hono } from "hono";
 import type { Env } from './core-utils';
-import { ScopeEntity, TransactionEntity, BillEntity, UserEntity } from "./entities";
+import { ScopeEntity, TransactionEntity, BillEntity, UserEntity, UserSettingsEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import { Scope, Transaction, Bill, User } from "../shared/types";
+import { Scope, Transaction, Bill, User, UserSettings } from "../shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   try {
+    // Helper to get User ID from header (tk_userId)
+    const getUserId = (c: any) => {
+      const auth = c.req.header('Authorization');
+      if (auth?.startsWith('Bearer tk_')) return auth.replace('Bearer tk_', '');
+      return null;
+    };
     // AUTH API
     app.post('/api/auth/register', async (c) => {
       const { email, password } = await c.req.json();
@@ -14,7 +20,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       const newUser: User = {
         id: crypto.randomUUID(),
         email,
-        passwordHash: `hash:${password}` // Simplified for demo
+        passwordHash: `hash:${password}`
       };
       await UserEntity.create(c.env, newUser);
       return ok(c, { user: { id: newUser.id, email: newUser.email }, token: `tk_${newUser.id}` });
@@ -26,6 +32,21 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       const user = users.find(u => u.email === email && (u.passwordHash === `hash:${password}` || u.passwordHash === `pbkdf2:${password}`));
       if (!user) return bad(c, 'Invalid credentials');
       return ok(c, { user: { id: user.id, email: user.email }, token: `tk_${user.id}` });
+    });
+    // USER SETTINGS API
+    app.get('/api/user-settings', async (c) => {
+      const userId = getUserId(c);
+      if (!userId) return bad(c, 'Unauthorized');
+      const settings = new UserSettingsEntity(c.env, userId);
+      return ok(c, await settings.getState());
+    });
+    app.put('/api/user-settings', async (c) => {
+      const userId = getUserId(c);
+      if (!userId) return bad(c, 'Unauthorized');
+      const partial = await c.req.json();
+      const settings = new UserSettingsEntity(c.env, userId);
+      await settings.patch(partial);
+      return ok(c, await settings.getState());
     });
     // SCOPES API
     app.get('/api/scopes', async (c) => {

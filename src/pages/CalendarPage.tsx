@@ -1,8 +1,6 @@
 import React from 'react';
 import { useBudgetStore } from '@/lib/store';
 import { CalendarGrid, CalendarGridSkeleton } from '@/components/budget/CalendarGrid';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { CurrencySelector } from '@/components/CurrencySelector';
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon } from 'lucide-react';
 export function CalendarPage() {
@@ -11,8 +9,6 @@ export function CalendarPage() {
   const hasTransactions = transactions.length > 0;
   return (
     <>
-      <ThemeToggle className="fixed top-4 right-4" />
-      <CurrencySelector />
       <div className="text-center mb-12">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
