@@ -56,8 +56,8 @@ const EditScopeForm = ({ scope, onSave, onCancel }: { scope: ScopeWithIcon, onSa
         )} />
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}><X className="w-4 h-4 mr-1" />Cancel</Button>
-        <Button type="submit" size="sm" className="bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95"><Save className="w-4 h-4 mr-1" />Save Changes</Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="rounded-xl"><X className="w-4 h-4 mr-1" />Cancel</Button>
+        <Button type="submit" size="sm" className="btn-premium h-9 px-4"><Save className="w-4 h-4 mr-1" />Save Changes</Button>
       </div>
     </form>
   );
@@ -103,7 +103,7 @@ export function CategoryManager() {
                 <SelectContent>{colorPresets.map(color => <SelectItem key={color} value={color}>{color}</SelectItem>)}</SelectContent>
               </Select>
             )} />
-            <Button type="submit" className="md:col-span-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95"><PlusCircle className="w-4 h-4 mr-2" />Add Category</Button>
+            <Button type="submit" className="md:col-span-2 btn-premium h-12 w-full"><PlusCircle className="w-5 h-5 mr-2" />Add Category</Button>
           </form>
         </CardContent>
       </Card>
@@ -126,7 +126,7 @@ export function CategoryManager() {
               return editingScopeId === scope.id ? (
                 <EditScopeForm key={scope.id} scope={scope} onSave={(data) => handleSave(scope.id, data)} onCancel={() => setEditingScopeId(null)} />
               ) : (
-                <div key={scope.id} className="group flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/60 backdrop-blur-sm rounded-lg transition-all duration-200 hover:scale-[1.02]">
+                <div key={scope.id} className="group flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/60 backdrop-blur-sm rounded-lg transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <div className={cn('p-1.5 rounded-md', colors.lightBg)}>
                       <scope.icon className={cn('w-5 h-5', colors.text)} />
@@ -137,23 +137,23 @@ export function CategoryManager() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => setEditingScopeId(scope.id)} className="hover:text-primary transition-colors"><Edit className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setEditingScopeId(scope.id)} className="h-10 w-10 rounded-lg hover:text-primary transition-colors"><Edit className="w-4 h-4" /></Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <motion.div variants={shakeVariants} whileHover="hover">
-                          <Button size="lg" variant="ghost" className="h-10 w-10 rounded-lg text-red-500 hover:text-red-600 transition-colors"><Trash2 className="w-5 h-5" /></Button>
+                          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-lg text-red-500 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></Button>
                         </motion.div>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="rounded-2xl">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently delete the "{scope.name}" category. This affects {txCount} transaction(s), which will be preserved but uncategorized.
+                            This will permanently delete the "{scope.name}" category.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteScope(scope.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                          <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteScope(scope.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

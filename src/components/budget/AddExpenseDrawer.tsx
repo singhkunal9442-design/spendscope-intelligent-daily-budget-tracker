@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useBudgetStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
 const expenseSchema = z.object({
   scopeId: z.string().min(1, 'Please select a category'),
   amount: z.number().min(0.01, 'Amount must be positive'),
@@ -33,7 +34,7 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
   const onSubmit = (data: ExpenseFormData) => {
     addTransaction(data);
     const scopeName = scopes.find(s => s.id === data.scopeId)?.name || 'Category';
-    toast.success(`$${data.amount.toFixed(2)} added to ${scopeName}${data.description ? ` - ${data.description}` : ''}`);
+    toast.success(`${data.amount.toFixed(2)} added to ${scopeName}${data.description ? ` - ${data.description}` : ''}`);
     reset();
     onOpenChange(false);
   };
@@ -61,12 +62,12 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
               {errors.scopeId && <p className="text-red-500 text-sm mt-1">{errors.scopeId.message}</p>}
             </div>
             <div>
-              <Label htmlFor="amount">Amount ($)</Label>
+              <Label htmlFor="amount">Amount</Label>
               <Controller
                 name="amount"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="amount" type="number" step="0.01" placeholder="e.g., 12.50" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                  <Input {...field} id="amount" type="number" step="0.01" placeholder="0.00" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                 )}
               />
               {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>}
@@ -77,13 +78,16 @@ export function AddExpenseDrawer({ open, onOpenChange }: AddExpenseDrawerProps) 
                 name="description"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="description" placeholder="e.g., Morning latte" value={field.value || ''} />
+                  <Input {...field} id="description" placeholder="e.g., Lunch" value={field.value || ''} />
                 )}
               />
             </div>
-            <DrawerFooter>
-              <Button type="submit">Add Transaction</Button>
-              <DrawerClose asChild><Button variant="outline">Cancel</Button></DrawerClose>
+            <DrawerFooter className="gap-2">
+              <Button type="submit" className="btn-premium h-12 w-full">
+                <Plus className="w-5 h-5 mr-2" />
+                Add Transaction
+              </Button>
+              <DrawerClose asChild><Button variant="outline" className="rounded-2xl h-12">Cancel</Button></DrawerClose>
             </DrawerFooter>
           </form>
         </div>

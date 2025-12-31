@@ -49,7 +49,7 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full bg-spendscope-500 hover:bg-spendscope-600 text-white" disabled={loading}>
+          <Button type="submit" className="w-full btn-premium" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
@@ -94,7 +94,7 @@ export function SignupForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full bg-spendscope-500 hover:bg-spendscope-600 text-white" disabled={loading}>
+          <Button type="submit" className="w-full btn-premium" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Get Started
           </Button>

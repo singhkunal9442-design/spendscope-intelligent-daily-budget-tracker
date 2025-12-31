@@ -67,6 +67,9 @@
   .shadow-glass {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
   }
+  .shadow-glow {
+    box-shadow: 0 10px 15px -3px rgba(243, 128, 32, 0.3), 0 4px 6px -4px rgba(16, 185, 129, 0.3);
+  }
   .bg-gradient-spendscope {
     background: linear-gradient(135deg, #F38020 0%, #E55A1B 100%);
   }
@@ -75,6 +78,9 @@
   }
   .btn-spendscope {
     @apply bg-gradient-spendscope text-white hover:opacity-90 active:scale-95 transition-all duration-200 font-bold px-6 py-3 rounded-2xl shadow-lg shadow-spendscope-500/20;
+  }
+  .btn-premium {
+    @apply bg-gradient-to-r from-spendscope-500 to-emerald-500 hover:from-spendscope-600 hover:to-emerald-600 text-white font-bold rounded-2xl border-none shadow-glow transition-all duration-300 active:scale-95 hover:scale-[1.02] flex items-center justify-center gap-2;
   }
   .text-label {
     @apply text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground leading-none;

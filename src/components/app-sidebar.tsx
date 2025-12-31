@@ -36,11 +36,11 @@ export function AppSidebar(): JSX.Element {
   return (
     <Sidebar className="bg-background/80 backdrop-blur-2xl border-r border-border/40 shadow-glass">
       <SidebarHeader className="border-b border-border/5">
-        <div className="flex items-center gap-3 px-6 py-8">
-          <div className="p-2.5 rounded-2xl bg-spendscope-500 shadow-xl shadow-spendscope-500/30">
+        <div className="flex items-center gap-6 px-8 py-8">
+          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-spendscope-500 to-emerald-500 shadow-xl shadow-spendscope-500/30">
             <Wallet className="w-6 h-6 text-white" />
           </div>
-          <span className="text-2xl font-black tracking-tighter">SpendScope</span>
+          <span className="text-2xl font-black tracking-tighter whitespace-nowrap">SpendScope</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="p-4">
@@ -60,7 +60,10 @@ export function AppSidebar(): JSX.Element {
                   )}
                 >
                   <Link to={item.href} className="flex items-center gap-4">
-                    <item.icon className={cn("w-5 h-5 transition-transform", isActive ? "text-spendscope-500 scale-110" : "text-muted-foreground/60 group-hover:scale-110")} />
+                    {React.createElement(item.icon, {
+                      key: "icon",
+                      className: cn("w-5 h-5 transition-transform", isActive ? "text-spendscope-500 scale-110" : "text-muted-foreground/60 group-hover:scale-110")
+                    })}
                     <span className="text-sm tracking-tight">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>

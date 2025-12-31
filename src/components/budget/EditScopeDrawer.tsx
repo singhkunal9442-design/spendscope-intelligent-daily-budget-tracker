@@ -57,7 +57,7 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
   };
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Card className={cn("relative p-4 rounded-xl overflow-hidden shadow-md", "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20")}>
+      <Card className={cn("relative p-4 rounded-2xl overflow-hidden shadow-md", "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20")}>
         <CardContent className="p-0 space-y-3">
           <div>
             <div className="flex justify-between text-sm font-medium">
@@ -83,20 +83,6 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
     </motion.div>
   );
 };
-const SpendingStatsSkeleton = () => (
-  <Card className={cn("relative p-4 rounded-xl overflow-hidden", "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20")}>
-    <CardContent className="p-0 space-y-3">
-      <div className="space-y-1">
-        <div className="flex justify-between"><Skeleton className="h-4 w-20" /><Skeleton className="h-4 w-24" /></div>
-        <Skeleton className="h-2 w-full" />
-        <div className="flex justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-16" /></div>
-      </div>
-      <div className="border-t border-border/50 pt-2 mt-3">
-        <div className="flex justify-between"><Skeleton className="h-3 w-16" /><Skeleton className="h-3 w-20" /></div>
-      </div>
-    </CardContent>
-  </Card>
-);
 export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerProps) {
   const updateScopeFull = useBudgetStore(state => state.updateScopeFull);
   const deleteScope = useBudgetStore(state => state.deleteScope);
@@ -190,10 +176,10 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
             <DrawerDescription>Update details for "{scope?.name || '...'}".</DrawerDescription>
           </DrawerHeader>
           <div className="p-4 pt-0 space-y-4">
-            {scope ? <SpendingStats scope={scope} spentToday={spentToday} spentAllTime={spentAllTime} /> : <SpendingStatsSkeleton />}
+            {scope ? <SpendingStats scope={scope} spentToday={spentToday} spentAllTime={spentAllTime} /> : <div className="h-24 w-full bg-muted animate-pulse rounded-2xl" />}
             <Accordion type="multiple" className="w-full space-y-2">
               <AccordionItem value="add-edit-tx" className="border-none">
-                <Card className="backdrop-blur-xl bg-card/60 border-border/20">
+                <Card className="backdrop-blur-xl bg-card/60 border-border/20 rounded-2xl">
                   <AccordionTrigger className="p-3 text-sm font-medium hover:no-underline">
                     <div className="flex items-center gap-2">
                       {editingTxId ? <Edit className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
@@ -204,59 +190,52 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                     <form onSubmit={miniHandleSubmit(onMiniSubmit)} className="space-y-3">
                       <div className="grid sm:grid-cols-2 gap-3">
                         <div>
-                          <Label htmlFor="mini-amount" className="sr-only">Amount</Label>
                           <Controller name="amount" control={miniControl} render={({ field }) => (
-                              <Input {...field} id="mini-amount" type="number" step="0.01" placeholder="Amount" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                              <Input {...field} id="mini-amount" type="number" step="0.01" placeholder="Amount" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-10 rounded-xl" />
                           )} />
-                          {miniErrors.amount && <p className="text-red-500 text-xs mt-1">{miniErrors.amount.message}</p>}
                         </div>
                         <div>
-                          <Label htmlFor="mini-desc" className="sr-only">Description</Label>
                           <Controller name="description" control={miniControl} render={({ field }) => (
-                              <Input {...field} id="mini-desc" placeholder="Description (opt.)" value={field.value || ''} />
+                              <Input {...field} id="mini-desc" placeholder="Note" value={field.value || ''} className="h-10 rounded-xl" />
                           )} />
                         </div>
                       </div>
-                      <Button type="submit" size="sm" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 transition-all hover:scale-105 active:scale-95">{editingTxId ? 'Update Expense' : 'Add Expense'}</Button>
-                      {editingTxId && <Button type="button" size="sm" variant="ghost" className="w-full" onClick={() => setEditingTxId(null)}>Cancel Edit</Button>}
+                      <Button type="submit" size="sm" className="btn-premium w-full h-10">
+                        {editingTxId ? 'Update Expense' : 'Add Expense'}
+                      </Button>
+                      {editingTxId && <Button type="button" size="sm" variant="ghost" className="w-full mt-2 rounded-xl" onClick={() => setEditingTxId(null)}>Cancel Edit</Button>}
                     </form>
                   </AccordionContent>
                 </Card>
               </AccordionItem>
               <AccordionItem value="recent-tx" className="border-none">
-                <Card className="backdrop-blur-xl bg-card/60 border-border/20">
+                <Card className="backdrop-blur-xl bg-card/60 border-border/20 rounded-2xl">
                   <AccordionTrigger className="p-3 text-sm font-medium hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <span>Recent Transactions</span>
-                    </div>
+                    <span>Recent Transactions</span>
                   </AccordionTrigger>
                   <AccordionContent className="p-4 pt-0">
                     <div className="space-y-2">
                       <AnimatePresence>
                         {recentTransactions.length > 0 ? recentTransactions.map(tx => (
-                          <motion.div key={tx.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="group flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                          <motion.div key={tx.id} layout className="group flex items-center justify-between p-2 bg-muted/50 rounded-xl">
                             <div className="min-w-0 pr-2">
                               <p className="text-sm font-medium">{formatAmount(tx.amount)}</p>
-                              <p className="text-xs text-muted-foreground truncate">{tx.description || format(parseISO(tx.date), 'p')}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{tx.description || format(parseISO(tx.date), 'p')}</p>
                             </div>
-                            <div className="flex items-center gap-1 opacity-100 p-1 bg-muted/50 rounded-md backdrop-blur transition-all">
-                              <motion.div whileHover={{ scale: 1.1, rotate: [0, 2, -2, 0] }}>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTxId(tx.id)}><Edit className="w-4 h-4" /></Button>
-                              </motion.div>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setEditingTxId(tx.id)}><Edit className="w-4 h-4" /></Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <motion.div whileHover={{ scale: 1.1, rotate: [0, 2, -2, 0] }}>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></Button>
-                                  </motion.div>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive rounded-lg"><Trash2 className="w-4 h-4" /></Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>Delete this transaction of {formatAmount(tx.amount)}?</AlertDialogDescription></AlertDialogHeader>
-                                  <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+                                <AlertDialogContent className="rounded-2xl">
+                                  <AlertDialogHeader><AlertDialogTitle>Delete?</AlertDialogTitle><AlertDialogDescription>Delete this {formatAmount(tx.amount)} expense?</AlertDialogDescription></AlertDialogHeader>
+                                  <AlertDialogFooter><AlertDialogCancel className="rounded-xl">No</AlertDialogCancel><AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl">Yes</AlertDialogAction></AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
                           </motion.div>
-                        )) : <p className="text-xs text-muted-foreground text-center py-2">No recent transactions.</p>}
+                        )) : <p className="text-xs text-muted-foreground text-center py-2">Empty.</p>}
                       </AnimatePresence>
                     </div>
                   </AccordionContent>
@@ -268,71 +247,68 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
             <div className="space-y-4 flex-grow overflow-y-auto pr-2">
               <div>
                 <Label htmlFor="name">Category Name</Label>
-                <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} />} />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} className="rounded-xl" />} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="dailyLimit">Daily Limit</Label>
                   <Controller name="dailyLimit" control={control} render={({ field }) => (
-                      <Input {...field} id="dailyLimit" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                      <Input {...field} id="dailyLimit" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="rounded-xl" />
                   )} />
-                  {errors.dailyLimit && <p className="text-red-500 text-sm mt-1">{errors.dailyLimit.message}</p>}
                 </div>
                 <div>
                   <Label htmlFor="monthlyLimit">Monthly Limit</Label>
                   <Controller name="monthlyLimit" control={control} render={({ field }) => (
-                      <Input {...field} id="monthlyLimit" type="number" step="0.01" placeholder="e.g., 150" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                      <Input {...field} id="monthlyLimit" type="number" step="0.01" value={field.value ?? ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="rounded-xl" />
                   )} />
-                  {errors.monthlyLimit && <p className="text-red-500 text-sm mt-1">{errors.monthlyLimit.message}</p>}
                 </div>
               </div>
-              <div>
-                <Label htmlFor="icon">Icon</Label>
-                <Controller name="icon" control={control} render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger><SelectValue placeholder="Select Icon" /></SelectTrigger>
-                    <SelectContent>{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                {errors.icon && <p className="text-red-500 text-sm mt-1">{errors.icon.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="color">Color</Label>
-                <Controller name="color" control={control} render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger><SelectValue placeholder="Select Color" /></SelectTrigger>
-                    <SelectContent>{colorPresets.map(color => <SelectItem key={color} value={color}>{color}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                {errors.color && <p className="text-red-500 text-sm mt-1">{errors.color.message}</p>}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="icon">Icon</Label>
+                  <Controller name="icon" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Icon" /></SelectTrigger>
+                      <SelectContent className="rounded-xl">{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label htmlFor="color">Color</Label>
+                  <Controller name="color" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Color" /></SelectTrigger>
+                      <SelectContent className="rounded-xl">{colorPresets.map(color => <SelectItem key={color} value={color}>{color}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )} />
+                </div>
               </div>
             </div>
-            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2 pt-4">
+            <DrawerFooter className="flex-shrink-0 flex-row items-center gap-2 pt-4 border-t border-border/10">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <motion.div variants={shakeVariants} whileHover="hover" className="mr-auto">
-                    <Button size="lg" variant="ghost" className="h-10 w-10 text-destructive hover:text-destructive/80" type="button">
+                    <Button size="icon" variant="ghost" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl" type="button">
                       <Trash2 className="w-5 h-5" />
                     </Button>
                   </motion.div>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="rounded-2xl">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Category?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete the "{scope?.name}" category. All {transactionsForScope.length} associated transaction(s) will be preserved but uncategorized.
+                      Delete "{scope?.name}"? Transactions will be preserved.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteScope} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteScope} className="bg-destructive hover:bg-destructive/90 rounded-xl">Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <DrawerClose asChild><Button variant="outline"><X className="w-4 h-4 mr-2" />Cancel</Button></DrawerClose>
-              <Button type="submit" className="bg-gradient-to-r from-primary to-slate-700 text-white hover:from-primary/90 transition-all hover:scale-105 active:scale-95">
-                <Save className="w-4 h-4 mr-2" />Save Changes
+              <DrawerClose asChild><Button variant="outline" className="rounded-xl">Cancel</Button></DrawerClose>
+              <Button type="submit" className="btn-premium h-11 px-6">
+                <Save className="w-4 h-4 mr-2" />Save
               </Button>
             </DrawerFooter>
           </form>
