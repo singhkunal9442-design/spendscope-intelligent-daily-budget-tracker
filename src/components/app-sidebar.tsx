@@ -32,34 +32,34 @@ export function AppSidebar(): JSX.Element {
     navigate('/login');
   };
   return (
-    <Sidebar className="bg-background/60 backdrop-blur-xl border-r border-border/40 shadow-xl">
-      <SidebarHeader className="border-b border-border/10">
-        <div className="flex items-center gap-3 px-4 py-6">
-          <div className="p-2 rounded-xl bg-spendscope-500 shadow-glow">
+    <Sidebar className="bg-background/80 backdrop-blur-2xl border-r border-border/40 shadow-glass">
+      <SidebarHeader className="border-b border-border/5">
+        <div className="flex items-center gap-3 px-6 py-8">
+          <div className="p-2.5 rounded-2xl bg-spendscope-500 shadow-xl shadow-spendscope-500/30">
             <Wallet className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-black tracking-tighter">SpendScope</span>
+          <span className="text-2xl font-black tracking-tighter">SpendScope</span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-3">
-        <SidebarMenu className="gap-1">
+      <SidebarContent className="p-4">
+        <SidebarMenu className="gap-1.5">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton 
-                  asChild 
+                <SidebarMenuButton
+                  asChild
                   isActive={isActive}
                   className={cn(
-                    "transition-all duration-200 py-6 rounded-xl",
-                    isActive 
-                      ? "bg-spendscope-500/10 text-spendscope-600 dark:text-spendscope-400 font-bold border-l-4 border-spendscope-500" 
-                      : "hover:bg-muted/50"
+                    "transition-all duration-300 py-7 rounded-2xl px-4",
+                    isActive
+                      ? "bg-spendscope-500/10 text-spendscope-600 dark:text-spendscope-400 font-black shadow-inner shadow-spendscope-500/5"
+                      : "hover:bg-muted/50 text-muted-foreground/80 hover:text-foreground"
                   )}
                 >
-                  <Link to={item.href} className="flex items-center gap-3">
-                    <item.icon className={cn("w-5 h-5", isActive ? "text-spendscope-500" : "text-muted-foreground")} />
-                    <span className="text-sm">{item.label}</span>
+                  <Link to={item.href} className="flex items-center gap-4">
+                    <item.icon className={cn("w-5 h-5 transition-transform", isActive ? "text-spendscope-500 scale-110" : "text-muted-foreground/60 group-hover:scale-110")} />
+                    <span className="text-sm tracking-tight">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -68,13 +68,13 @@ export function AppSidebar(): JSX.Element {
         </SidebarMenu>
       </SidebarContent>
       {user && (
-        <SidebarFooter className="p-4 border-t border-border/10 bg-muted/20">
+        <SidebarFooter className="p-6 border-t border-border/5 bg-muted/5">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 text-sm font-semibold text-muted-foreground hover:text-red-500 transition-all p-3 rounded-xl hover:bg-red-500/10"
+            className="flex w-full items-center gap-4 text-sm font-black text-muted-foreground/60 hover:text-red-500 transition-all p-4 rounded-2xl hover:bg-red-500/10"
           >
             <LogOut className="h-5 w-5" />
-            <span>Sign Out</span>
+            <span className="tracking-tight">Sign Out</span>
           </button>
         </SidebarFooter>
       )}
