@@ -109,13 +109,18 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   },
   updateScope: async (id, dailyLimit) => {
     const originalScopes = get().scopes;
-    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) state.scopes[i].dailyLimit = dailyLimit; }));
-    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify({ dailyLimit }) }); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
+    const syncedData = { dailyLimit, monthlyLimit: dailyLimit * 30 };
+    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { state.scopes[i].dailyLimit = syncedData.dailyLimit; state.scopes[i].monthlyLimit = syncedData.monthlyLimit; } }));
+    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(syncedData) }); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
   },
   updateScopeFull: async (id, data) => {
     const originalScopes = get().scopes;
-    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { const u = { ...state.scopes[i], ...data }; const nI = data.icon ? getIcon(data.icon) : state.scopes[i].icon; state.scopes[i] = { ...u, icon: nI }; } }));
-    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(data) }); toast.success(`Category "${data.name || 'Category'}" updated.`); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
+    const syncedData = { ...data };
+    if (typeof syncedData.dailyLimit === 'number' && (syncedData.monthlyLimit === undefined || syncedData.monthlyLimit == null)) {
+      syncedData.monthlyLimit = syncedData.dailyLimit * 30;
+    }
+    set(produce((state: BudgetState) => { const i = state.scopes.findIndex(s => s.id === id); if (i !== -1) { const u = { ...state.scopes[i], ...syncedData }; const nI = syncedData.icon ? getIcon(syncedData.icon) : state.scopes[i].icon; state.scopes[i] = { ...u, icon: nI }; } }));
+    try { await api<Scope>(`/api/scopes/${id}`, { method: 'PUT', body: JSON.stringify(syncedData) }); toast.success(`Category "${syncedData.name || 'Category'}" updated.`); } catch (error) { console.error("Failed to update scope", error); toast.error("Failed to save. Reverting."); set({ scopes: originalScopes }); }
   },
   deleteScope: async (id) => {
     const oS = get().scopes; const sTD = oS.find(s => s.id === id); if (!sTD) return;
