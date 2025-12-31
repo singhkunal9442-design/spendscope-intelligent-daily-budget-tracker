@@ -49,7 +49,6 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
   const formatAmount = useFormatAmount();
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
-  const allTimeSpent = spentAllTime;
   const getProgressColor = (p: number) => {
     if (p > 90) return 'bg-red-500';
     if (p > 70) return 'bg-amber-500';
@@ -75,7 +74,7 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
           <div className="border-t border-border/50 pt-2">
              <div className="flex justify-between text-xs font-medium text-muted-foreground">
                 <span>Lifetime Spent</span>
-                <span className="font-bold">{formatAmount(allTimeSpent)}</span>
+                <span className="font-bold">{formatAmount(spentAllTime)}</span>
             </div>
           </div>
         </CardContent>
@@ -103,29 +102,21 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   const addTransaction = useBudgetStore(state => state.addTransaction);
   const updateTransaction = useBudgetStore(state => state.updateTransaction);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
-  const transactions = useBudgetStore(state => state.transactions);
   const formatAmount = useFormatAmount();
   const transactionsForScope = useTransactionsForScope(scope?.id ?? '');
-  const txCount = transactionsForScope.length;
   const recentTransactions = useMemo(() => {
-    if (!scope?.id) return [];
-    return transactions
-      .filter(t => t.scopeId === scope.id)
+    return [...transactionsForScope]
       .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
       .slice(0, 5);
-  }, [transactions, scope?.id]);
+  }, [transactionsForScope]);
   const spentToday = useMemo(() => {
-    if (!scope?.id) return 0;
-    return transactions
-      .filter(t => t.scopeId === scope.id && isToday(parseISO(t.date)))
+    return transactionsForScope
+      .filter(t => isToday(parseISO(t.date)))
       .reduce((sum, t) => sum + t.amount, 0);
-  }, [transactions, scope?.id]);
+  }, [transactionsForScope]);
   const spentAllTime = useMemo(() => {
-    if (!scope?.id) return 0;
-    return transactions
-      .filter(t => t.scopeId === scope.id)
-      .reduce((sum, t) => sum + t.amount, 0);
-  }, [transactions, scope?.id]);
+    return transactionsForScope.reduce((sum, t) => sum + t.amount, 0);
+  }, [transactionsForScope]);
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<ScopeFormData>({
     resolver: zodResolver(scopeSchema),
@@ -247,7 +238,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                               <p className="text-sm font-medium">{formatAmount(tx.amount)}</p>
                               <p className="text-xs text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
                             </div>
-                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 bg-muted/50 rounded-md backdrop-blur transition-all">
+                            <div className="flex items-center gap-1 opacity-100 p-1 bg-muted/50 rounded-md backdrop-blur transition-all">
                               <motion.div whileHover={{ scale: 1.1, rotate: [0, 2, -2, 0] }}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTxId(tx.id)}><Edit className="w-4 h-4" /></Button>
                               </motion.div>
@@ -329,7 +320,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Category?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete the "{scope?.name}" category. All {txCount} associated transaction(s) will be preserved but uncategorized.
+                      This will permanently delete the "{scope?.name}" category. All {transactionsForScope.length} associated transaction(s) will be preserved but uncategorized.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

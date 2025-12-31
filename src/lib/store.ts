@@ -55,8 +55,15 @@ const getIcon = (iconName: string): lucideIcons.LucideIcon => {
   const Icon = (lucideIcons as any)[iconName];
   return Icon || lucideIcons.Circle;
 };
-const savedToken = localStorage.getItem('spendscope-token');
-const savedUser = localStorage.getItem('spendscope-user');
+const getSafeStorage = (key: string) => {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+};
+const savedToken = getSafeStorage('spendscope-token');
+const savedUser = getSafeStorage('spendscope-user');
 export const useBudgetStore = create<BudgetState>((set, get) => ({
   user: savedUser ? JSON.parse(savedUser) : null,
   token: savedToken,
@@ -76,9 +83,9 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         api<Bill[]>('/api/bills'),
       ]);
       const scopesWithIcons = scopes.map(s => ({ ...s, icon: getIcon(s.icon) }));
-      const savedCurrency = localStorage.getItem('spendscope-currency');
-      const savedBalance = localStorage.getItem('spendscope-balance');
-      const savedSalary = localStorage.getItem('spendscope-salary');
+      const savedCurrency = getSafeStorage('spendscope-currency');
+      const savedBalance = getSafeStorage('spendscope-balance');
+      const savedSalary = getSafeStorage('spendscope-salary');
       set({
         scopes: scopesWithIcons,
         transactions,
@@ -178,6 +185,10 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 export const useIsLoading = () => useBudgetStore(state => state.loading);
 export const useAuthToken = () => useBudgetStore(state => state.token);
 export const useAuthUser = () => useBudgetStore(state => state.user);
+export const useTransactionsForScope = (scopeId: string) => {
+  const transactions = useBudgetStore(state => state.transactions);
+  return useMemo(() => transactions.filter(t => t.scopeId === scopeId), [transactions, scopeId]);
+};
 export const useSpentToday = (scopeId: string) => {
   const transactions = useBudgetStore(state => state.transactions);
   return useMemo(() => transactions.filter(t => t.scopeId === scopeId && isToday(parseISO(t.date))).reduce((s, t) => s + t.amount, 0), [transactions, scopeId]);
@@ -189,6 +200,16 @@ export const useSpentThisMonth = (scopeId?: string) => {
     if (scopeId) return filtered.filter(t => t.scopeId === scopeId).reduce((s, t) => s + t.amount, 0);
     return filtered.reduce((s, t) => s + t.amount, 0);
   }, [transactions, scopeId]);
+};
+export const useMonthlyRemaining = (scopeId: string) => {
+  const scopes = useBudgetStore(state => state.scopes);
+  const spentThisMonth = useSpentThisMonth(scopeId);
+  return useMemo(() => {
+    const scope = scopes.find(s => s.id === scopeId);
+    if (!scope) return 0;
+    const limit = scope.monthlyLimit ?? (scope.dailyLimit * 30);
+    return limit - spentThisMonth;
+  }, [scopes, spentThisMonth, scopeId]);
 };
 export const useDaysInMonth = () => endOfMonth(new Date()).getDate();
 export const useMonthlyBudget = () => {
