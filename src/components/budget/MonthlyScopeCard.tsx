@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
-import { useBudgetStore, useSpentThisMonth, ScopeWithIcon, useFormatAmount } from '@/lib/store';
+import { cn, getScopeColorClasses } from '@/lib/utils';
+import { useTransactions, useSpentThisMonth, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Pencil } from 'lucide-react';
@@ -14,8 +14,8 @@ interface MonthlyScopeCardProps {
 }
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { type: 'spring', damping: 20 } as const
   },
@@ -52,8 +52,9 @@ export function MonthlyScopeCardSkeleton() {
 }
 export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardProps) {
   const spentThisMonth = useSpentThisMonth(scope.id);
-  const transactions = useBudgetStore(state => state.transactions);
+  const transactions = useTransactions();
   const formatAmount = useFormatAmount();
+  const colors = getScopeColorClasses(scope.color);
   const sparkData = useMemo(() => {
     const now = new Date();
     const daily: Record<string, number> = {};
@@ -78,7 +79,7 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';
     if (percentage > 70) return 'bg-spendscope-500 shadow-[0_0_8px_rgba(243,128,32,0.4)]';
-    return `bg-${scope.color}-500`;
+    return colors.bg;
   };
   const Icon = scope.icon;
   return (
@@ -101,8 +102,8 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
       <div className="flex justify-between items-start">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className={cn('p-2 rounded-lg shadow-sm', `bg-${scope.color}-100 dark:bg-${scope.color}-900/50`)}>
-              <Icon className={cn('w-6 h-6', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />
+            <div className={cn('p-2 rounded-lg shadow-sm', colors.lightBg)}>
+              <Icon className={cn('w-6 h-6', colors.text)} />
             </div>
             <h3 className="text-lg font-bold text-foreground tracking-tight">{scope.name}</h3>
           </div>

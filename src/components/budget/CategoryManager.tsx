@@ -9,8 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import * as lucideIcons from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getScopeColorClasses } from '@/lib/utils';
 import { motion } from 'framer-motion';
 const iconPresets = ['Coffee', 'ShoppingCart', 'Utensils', 'Car', 'Home', 'CreditCard', 'DollarSign', 'Gift', 'Heart', 'Plane', 'BookOpen', 'Briefcase', 'Film', 'Gamepad2', 'Music'];
 const colorPresets = ['emerald', 'sky', 'amber', 'rose', 'violet', 'indigo', 'cyan', 'fuchsia'];
@@ -115,21 +114,22 @@ export function CategoryManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {scopes.length === 0 && (
+            {(!scopes || scopes.length === 0) && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-8 px-4 border-2 border-dashed rounded-lg">
                 <PlusCircle className="mx-auto h-10 w-10 text-muted-foreground" />
                 <p className="mt-4 text-muted-foreground">Get started by adding your first category above.</p>
               </motion.div>
             )}
-            {scopes.map((scope) => {
-              const txCount = transactions.filter(t => t.scopeId === scope.id).length;
+            {(scopes || []).map((scope) => {
+              const txCount = (transactions || []).filter(t => t.scopeId === scope.id).length;
+              const colors = getScopeColorClasses(scope.color);
               return editingScopeId === scope.id ? (
                 <EditScopeForm key={scope.id} scope={scope} onSave={(data) => handleSave(scope.id, data)} onCancel={() => setEditingScopeId(null)} />
               ) : (
                 <div key={scope.id} className="group flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/60 backdrop-blur-sm rounded-lg transition-all duration-200 hover:scale-[1.02]">
                   <div className="flex items-center gap-3">
-                    <div className={cn('p-1.5 rounded-md', `bg-${scope.color}-100 dark:bg-${scope.color}-900/50`)}>
-                      <scope.icon className={cn('w-5 h-5', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />
+                    <div className={cn('p-1.5 rounded-md', colors.lightBg)}>
+                      <scope.icon className={cn('w-5 h-5', colors.text)} />
                     </div>
                     <div>
                       <span className="font-medium">{scope.name}</span>
