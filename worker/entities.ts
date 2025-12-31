@@ -1,6 +1,8 @@
 import { IndexedEntity, Env } from "./core-utils";
-import type { Scope, Transaction, Bill } from "../shared/types";
-// SEED DATA
+import type { User, Scope, Transaction, Bill } from "../shared/types";
+const SEED_USERS: User[] = [
+  { id: 'demo-user', email: 'demo@demo.com', passwordHash: 'pbkdf2:demo' }
+];
 const SEED_SCOPES: Scope[] = [
   { id: '1', name: 'Coffee', dailyLimit: 5, monthlyLimit: 150, icon: 'Coffee', color: 'emerald' },
   { id: '2', name: 'Groceries', dailyLimit: 30, monthlyLimit: 900, icon: 'ShoppingCart', color: 'sky' },
@@ -14,24 +16,26 @@ const SEED_BILLS: Bill[] = [
     { id: 'b3', name: 'Internet', amount: 60, paid: false },
 ];
 const SEED_TRANSACTIONS: Transaction[] = [
-    { id: 't1', scopeId: '1', amount: 4.50, description: 'Morning Latte', date: '2025-12-18T10:00:00.000Z' },
-    { id: 't2', scopeId: '3', amount: 15.75, description: 'Team Lunch', date: '2025-12-18T18:30:00.000Z' },
+    { id: 't1', scopeId: '1', amount: 4.50, description: 'Morning Latte', date: new Date().toISOString() },
 ];
-// SCOPE ENTITY: one DO instance per scope/category
+export class UserEntity extends IndexedEntity<User> {
+  static readonly entityName = "user";
+  static readonly indexName = "users";
+  static readonly initialState: User = { id: "", email: "", passwordHash: "" };
+  static seedData = SEED_USERS;
+}
 export class ScopeEntity extends IndexedEntity<Scope> {
   static readonly entityName = "scope";
   static readonly indexName = "scopes";
   static readonly initialState: Scope = { id: "", name: "", dailyLimit: 0, monthlyLimit: 0, icon: "Circle", color: "gray" };
   static seedData = SEED_SCOPES;
 }
-// TRANSACTION ENTITY: one DO instance per transaction
 export class TransactionEntity extends IndexedEntity<Transaction> {
   static readonly entityName = "transaction";
   static readonly indexName = "transactions";
   static readonly initialState: Transaction = { id: "", scopeId: "", amount: 0, date: "" };
   static seedData = SEED_TRANSACTIONS;
 }
-// BILL ENTITY: one DO instance per fixed bill
 export class BillEntity extends IndexedEntity<Bill> {
   static readonly entityName = "bill";
   static readonly indexName = "bills";

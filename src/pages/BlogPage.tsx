@@ -30,46 +30,48 @@ const POSTS = [
 ];
 export function BlogPage() {
   return (
-    <>
-      <div className="text-center mb-12 space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">SpendScope Blog</h1>
-        <p className="text-xl text-muted-foreground">Insights for intelligent spending.</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {POSTS.map((post, i) => (
-          <motion.div
-            key={post.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <Card className="h-full glass group overflow-hidden border-border/30 hover:shadow-lg transition-all">
-              <div className="aspect-video overflow-hidden">
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <CardHeader>
-                <div className="flex justify-between items-center mb-2">
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none">{post.category}</Badge>
-                  <span className="text-xs text-muted-foreground">{post.readTime}</span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="py-8 md:py-10 lg:py-12">
+        <div className="text-center mb-12 space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight">SpendScope Blog</h1>
+          <p className="text-xl text-muted-foreground">Insights for intelligent spending.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {POSTS.map((post, i) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <Card className="h-full glass group overflow-hidden border-border/30 hover:shadow-glow transition-all">
+                <div className="aspect-video overflow-hidden">
+                  <img 
+                    src={post.image} 
+                    alt={post.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
-                <CardTitle className="group-hover:text-primary transition-colors">{post.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm line-clamp-3">
-                  {post.excerpt}
-                </p>
-              </CardContent>
-              <CardFooter>
-                <button className="text-sm font-semibold text-primary hover:underline">Read More →</button>
-              </CardFooter>
-            </Card>
-          </motion.div>
-        ))}
+                <CardHeader>
+                  <div className="flex justify-between items-center mb-2">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none">{post.category}</Badge>
+                    <span className="text-xs text-muted-foreground">{post.readTime}</span>
+                  </div>
+                  <CardTitle className="group-hover:text-primary transition-colors">{post.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm line-clamp-3">
+                    {post.excerpt}
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <button className="text-sm font-semibold text-primary hover:underline">Read More →</button>
+                </CardFooter>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
