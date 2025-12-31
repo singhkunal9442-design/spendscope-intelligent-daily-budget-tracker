@@ -6,12 +6,19 @@ import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useMemo, useCallback } from 'react';
-export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF', 'AED'];
-export const formatCurrencyAmount = (currency: string, amount: number, locale = navigator.language || 'en-US') => {
+export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF', 'AED'] as const;
+export const formatCurrencyAmount = (currency: string, amount: number, locale = 'en-US') => {
+  const safeLocale = typeof navigator !== 'undefined' ? navigator.language || locale : locale;
   try {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+    return new Intl.NumberFormat(safeLocale, { 
+      style: 'currency', 
+      currency: currency || 'USD' 
+    }).format(amount);
   } catch (e) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD' 
+    }).format(amount);
   }
 };
 export const useFormatAmount = () => {
@@ -89,7 +96,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         scopes: scopesWithIcons,
         transactions,
         bills,
-        currentCurrency: savedCurrency && CURRENCY_PRESETS.includes(savedCurrency) ? savedCurrency : 'USD',
+        currentCurrency: savedCurrency && (CURRENCY_PRESETS as unknown as string[]).includes(savedCurrency) ? savedCurrency : 'USD',
         currentBalance: savedBalance ? parseFloat(savedBalance) : 5000,
         currentSalary: savedSalary ? parseFloat(savedSalary) : 3000,
       });
@@ -191,7 +198,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     try { await api(`/api/bills/${id}`, { method: 'DELETE' }); } catch (e) { set({ bills: oB }); }
   },
 }));
-// Strictly Individual Selectors
 export const useIsLoading = () => useBudgetStore(state => state.loading);
 export const useAuthToken = () => useBudgetStore(state => state.token);
 export const useAuthUser = () => useBudgetStore(state => state.user);
