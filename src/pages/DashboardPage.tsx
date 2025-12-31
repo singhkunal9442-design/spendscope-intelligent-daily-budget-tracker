@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Wallet } from 'lucide-react';
-import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes } from '@/lib/store';
+import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, type ScopeWithIcon } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
@@ -11,11 +11,11 @@ import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { HelpTooltip } from '@/components/HelpTooltip';
-import { Bill, ScopeWithIcon } from '@shared/types';
+import { Bill } from '@shared/types';
 export function DashboardPage() {
   const scopes = useScopes();
   const bills = useBills();
@@ -30,20 +30,29 @@ export function DashboardPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-  const totalLimit = scopes.reduce((sum, s) => sum + s.dailyLimit, 0);
-  const containerVariants = {
+  const totalLimit = React.useMemo(() => 
+    scopes.reduce((sum, s) => sum + s.dailyLimit, 0),
+  [scopes]);
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 } 
+      transition: { 
+        staggerChildren: 0.1, 
+        delayChildren: 0.2 
+      }
     }
   };
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { type: 'spring', damping: 20, stiffness: 100 } 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { 
+        type: 'spring', 
+        damping: 20, 
+        stiffness: 100 
+      } as const
     }
   };
   return (
@@ -55,7 +64,7 @@ export function DashboardPage() {
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
         <div className="flex flex-col gap-12">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
@@ -93,7 +102,7 @@ export function DashboardPage() {
                     <Wallet className="mx-auto h-16 w-16 text-spendscope-500/50 mb-6" />
                     <h3 className="text-2xl font-black text-foreground mb-2">Welcome to SpendScope!</h3>
                     <p className="text-muted-foreground mb-8 text-lg">Your dashboard is empty. Head to Settings to configure your categories.</p>
-                    <Button 
+                    <Button
                       onClick={() => setIsAddScopeDrawerOpen(true)}
                       className="btn-spendscope"
                     >
@@ -111,7 +120,7 @@ export function DashboardPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                           {scopes.map((scope) => (
                             <motion.div key={scope.id} variants={itemVariants}>
-                              <ScopeCard scope={scope as any} onEdit={(s) => setEditingScope(s as any)} />
+                              <ScopeCard scope={scope} onEdit={(s) => setEditingScope(s)} />
                             </motion.div>
                           ))}
                         </div>
@@ -150,7 +159,7 @@ export function DashboardPage() {
       <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
       <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
       <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
-      <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope as any} />
+      <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
       <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
       <Toaster richColors position="top-center" />
     </div>
