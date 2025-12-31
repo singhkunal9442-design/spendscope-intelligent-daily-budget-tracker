@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Calendar,
   TrendingUp,
+  TrendingDown,
   Landmark,
   FileWarning,
   Wallet,
@@ -61,9 +62,10 @@ export function MonthlyOverviewCard() {
     });
   }, [transactions]);
   const percentage = currentBalance > 0 ? Math.min((spentThisMonth / currentBalance) * 100, 100) : 0;
+  const isOverBudget = spentThisMonth > monthlyBudget && monthlyBudget > 0;
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';
-    if (percentage > 70) return 'bg-spendscope-500';
+    if (percentage > 70) return 'bg-spendscope-500 shadow-glow';
     return 'bg-emerald-500';
   };
   const stats = [
@@ -89,7 +91,7 @@ export function MonthlyOverviewCard() {
       bg: 'bg-indigo-50 dark:bg-indigo-900/10'
     },
     {
-      label: 'Monthly Budgets',
+      label: 'Budget Limit',
       value: formatAmount(monthlyBudget),
       icon: Target,
       color: 'text-amber-500',
@@ -98,7 +100,7 @@ export function MonthlyOverviewCard() {
     {
       label: 'Available Cash',
       value: formatAmount(availableCash),
-      icon: TrendingUp,
+      icon: availableCash < 0 ? TrendingDown : TrendingUp,
       color: availableCash < 0 ? 'text-red-500' : 'text-spendscope-500',
       bg: availableCash < 0 ? 'bg-red-50 dark:bg-red-900/10' : 'bg-spendscope-50 dark:bg-spendscope-500/10',
       isPrimary: true
@@ -108,17 +110,20 @@ export function MonthlyOverviewCard() {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative p-6 rounded-[2rem] overflow-hidden glass shadow-soft group hover:shadow-glow transition-all duration-500 mb-12"
+      className="relative p-8 rounded-[3rem] overflow-hidden glass shadow-glass group hover:shadow-glow transition-all duration-500 mb-12 border-2 border-white/40 dark:border-white/5"
     >
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-spendscope-500/10">
-              <Calendar className="w-6 h-6 text-spendscope-500" />
+      <div className="flex flex-col gap-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-spendscope-500/10 ring-1 ring-spendscope-500/20">
+              <Calendar className="w-7 h-7 text-spendscope-500" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground">Overview</h2>
+            <div>
+              <h2 className="text-3xl font-black text-foreground tracking-tight">Overview</h2>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{currentMonth} Spending Velocity</p>
+            </div>
           </div>
-          <div className="w-full md:w-64 h-12">
+          <div className="w-full md:w-80 h-16 opacity-80 group-hover:opacity-100 transition-opacity">
             <ScopeSparkline data={sparkData} color="emerald" />
           </div>
         </div>
@@ -135,24 +140,24 @@ export function MonthlyOverviewCard() {
             <motion.div
               key={i}
               variants={{
-                hidden: { opacity: 0, scale: 0.95 },
-                visible: { opacity: 1, scale: 1 }
+                hidden: { opacity: 0, scale: 0.95, y: 10 },
+                visible: { opacity: 1, scale: 1, y: 0 }
               }}
               className={cn(
-                "p-4 rounded-2xl border border-border/10 transition-all duration-300 hover:scale-105",
+                "p-5 rounded-3xl border border-border/10 transition-all duration-300 hover:scale-105 shadow-sm",
                 stat.bg,
-                stat.isPrimary && "col-span-2 sm:col-span-1 md:col-span-1 border-spendscope-500/20 ring-1 ring-spendscope-500/10"
+                stat.isPrimary && "col-span-2 sm:col-span-1 md:col-span-1 border-spendscope-500/30 ring-2 ring-spendscope-500/10 bg-gradient-to-br from-spendscope-500/5 to-transparent shadow-glow"
               )}
             >
-              <div className="flex flex-col gap-2">
-                <div className={cn("p-1.5 rounded-lg w-fit", stat.color, "bg-background/40")}>
-                  <stat.icon className="w-4 h-4" />
+              <div className="flex flex-col gap-3">
+                <div className={cn("p-2 rounded-xl w-fit", stat.color, "bg-background/60 shadow-sm")}>
+                  <stat.icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/80">{stat.label}</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] font-black text-muted-foreground/80 mb-1">{stat.label}</p>
                   <p className={cn(
-                    "text-lg font-bold truncate",
-                    stat.isPrimary ? "text-xl text-spendscope-600" : "text-foreground"
+                    "text-xl font-black tracking-tighter truncate",
+                    stat.isPrimary ? "text-2xl text-spendscope-600 dark:text-spendscope-400" : "text-foreground"
                   )}>
                     {stat.value}
                   </p>
@@ -161,15 +166,28 @@ export function MonthlyOverviewCard() {
             </motion.div>
           ))}
         </motion.div>
-        <div className="pt-2">
-          <div className="flex justify-between text-xs font-semibold text-muted-foreground mb-2">
-            <span className="flex items-center gap-1.5">
-              <TrendingUp className="w-3 h-3" />
-              Spent vs. Starting ({currentMonth})
+        <div className="pt-4 space-y-3">
+          <div className="flex justify-between items-end text-sm font-black text-muted-foreground">
+            <span className="flex items-center gap-2">
+              {isOverBudget ? (
+                <TrendingDown className="w-4 h-4 text-red-500" />
+              ) : (
+                <TrendingUp className="w-4 h-4 text-spendscope-500" />
+              )}
+              <span className="uppercase tracking-widest text-[10px]">Budget Progress</span>
             </span>
-            <span>{formatAmount(spentThisMonth)} / {formatAmount(currentBalance)}</span>
+            <span className="font-mono text-foreground tracking-tighter text-lg">
+              {formatAmount(spentThisMonth)} <span className="text-muted-foreground/40 font-normal">/</span> {formatAmount(currentBalance)}
+            </span>
           </div>
-          <Progress value={percentage} className={cn("h-2.5 rounded-full bg-muted/30 overflow-hidden", getProgressColor())} />
+          <div className="relative h-3 w-full bg-muted/30 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${percentage}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className={cn("h-full rounded-full transition-all duration-1000", getProgressColor())} 
+            />
+          </div>
         </div>
       </div>
     </motion.div>
