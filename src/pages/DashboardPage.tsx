@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Wallet, PlusCircle } from 'lucide-react';
+import { Plus, Wallet, PlusCircle, TrendingUp } from 'lucide-react';
 import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, type ScopeWithIcon } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
@@ -11,10 +11,9 @@ import { EditBillDrawer } from '@/components/budget/EditBillDrawer';
 import { OnboardingModal } from '@/components/budget/OnboardingModal';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { MonthlyOverviewCard, MonthlyOverviewCardSkeleton } from '@/components/budget/MonthlyOverviewCard';
-import { CurrencySelector } from '@/components/CurrencySelector';
+import { MonthlyScopeCard } from '@/components/budget/MonthlyScopeCard';
 import { Bill } from '@shared/types';
 export function DashboardPage() {
   const scopes = useScopes();
@@ -61,11 +60,7 @@ export function DashboardPage() {
   };
   return (
     <div className="relative min-h-screen">
-      <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-background/50 backdrop-blur-lg border-b border-border/10 flex items-center justify-end px-6 md:px-12 gap-2">
-        <CurrencySelector className="relative top-0 right-0" />
-        <ThemeToggle className="relative top-0 right-0" />
-      </header>
-      <main className="pt-10 pb-32">
+      <main className="pb-32">
         <div className="flex flex-col gap-12">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -123,6 +118,25 @@ export function DashboardPage() {
                         {scopes.map((scope) => (
                           <motion.div key={scope.id} variants={itemVariants}>
                             <ScopeCard scope={scope} onEdit={setEditingScope} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-8">
+                      <div className="flex items-end justify-between px-2">
+                        <div>
+                          <h2 className="text-3xl font-black tracking-tighter">Monthly Performance</h2>
+                          <p className="text-label mt-1">30-Day Progress</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-spendscope-500">
+                           <TrendingUp className="w-5 h-5" />
+                           <span className="text-sm font-black uppercase tracking-widest">Live View</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {scopes.map((scope) => (
+                          <motion.div key={`monthly-${scope.id}`} variants={itemVariants}>
+                            <MonthlyScopeCard scope={scope} onEdit={setEditingScope} />
                           </motion.div>
                         ))}
                       </div>

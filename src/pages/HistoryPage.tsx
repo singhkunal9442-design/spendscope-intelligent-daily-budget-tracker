@@ -12,8 +12,6 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TransactionEditDialog } from '@/components/budget/TransactionEditDialog';
-import { CurrencySelector } from '@/components/CurrencySelector';
-import { ThemeToggle } from '@/components/ThemeToggle';
 const groupTransactionsByDay = (transactions: Transaction[]) => {
   return transactions.reduce((acc, tx) => {
     const date = parseISO(tx.date);
@@ -82,8 +80,6 @@ export function HistoryPage() {
   };
   return (
     <>
-      <ThemeToggle className="fixed top-4 right-4" />
-      <CurrencySelector />
       <TransactionEditDialog
         transaction={editingTransaction}
         open={!!editingTransaction}

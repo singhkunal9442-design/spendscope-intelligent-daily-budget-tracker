@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, History, Settings, Wallet, Calendar, Newspaper, Info, HelpCircle, Mail, LogOut } from "lucide-react";
+import { Home, History, Settings, Wallet, Calendar, Newspaper, Info, HelpCircle, Mail, LogOut, Globe, Moon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useBudgetStore } from "@/lib/store";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { CurrencySelector } from "@/components/CurrencySelector";
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/history", label: "History", icon: History },
@@ -67,8 +69,24 @@ export function AppSidebar(): JSX.Element {
           })}
         </SidebarMenu>
       </SidebarContent>
-      {user && (
-        <SidebarFooter className="p-6 border-t border-border/5 bg-muted/5">
+      <SidebarFooter className="p-6 border-t border-border/5 space-y-4">
+        <div className="bg-muted/30 p-4 rounded-3xl space-y-4 border border-border/10">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-muted-foreground" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Region</span>
+            </div>
+            <CurrencySelector className="relative top-0 right-0 z-0" />
+          </div>
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Moon className="w-4 h-4 text-muted-foreground" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dark Mode</span>
+            </div>
+            <ThemeToggle className="relative top-0 right-0" />
+          </div>
+        </div>
+        {user && (
           <button
             onClick={handleLogout}
             className="flex w-full items-center gap-4 text-sm font-black text-muted-foreground/60 hover:text-red-500 transition-all p-4 rounded-2xl hover:bg-red-500/10"
@@ -76,8 +94,8 @@ export function AppSidebar(): JSX.Element {
             <LogOut className="h-5 w-5" />
             <span className="tracking-tight">Sign Out</span>
           </button>
-        </SidebarFooter>
-      )}
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }

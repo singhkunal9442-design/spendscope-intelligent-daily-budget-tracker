@@ -35,6 +35,10 @@ export interface Bill {
   amount: number;
   paid: boolean;
 }
-
+export interface UserSettings {
+  currentBalance: number;
+  currentSalary: number;
+  currentCurrency: string;
+}
 export type UserPublic = Pick<User, 'id' | 'email'>;
 export type AuthResponseData = { user: UserPublic; token: string; };

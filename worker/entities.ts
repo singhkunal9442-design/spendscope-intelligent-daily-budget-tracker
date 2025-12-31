@@ -1,5 +1,5 @@
-import { IndexedEntity, Env } from "./core-utils";
-import type { User, Scope, Transaction, Bill } from "../shared/types";
+import { IndexedEntity, Entity, Env } from "./core-utils";
+import type { User, Scope, Transaction, Bill, UserSettings } from "../shared/types";
 const SEED_USERS: User[] = [
   { id: 'demo-user', email: 'demo@demo.com', passwordHash: 'pbkdf2:demo' }
 ];
@@ -23,6 +23,14 @@ export class UserEntity extends IndexedEntity<User> {
   static readonly indexName = "users";
   static readonly initialState: User = { id: "", email: "", passwordHash: "" };
   static seedData = SEED_USERS;
+}
+export class UserSettingsEntity extends Entity<UserSettings> {
+  static readonly entityName = "user-settings";
+  static readonly initialState: UserSettings = {
+    currentBalance: 0,
+    currentSalary: 0,
+    currentCurrency: "USD"
+  };
 }
 export class ScopeEntity extends IndexedEntity<Scope> {
   static readonly entityName = "scope";
