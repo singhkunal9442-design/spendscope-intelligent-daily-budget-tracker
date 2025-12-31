@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
 import { isToday, parseISO, isSameMonth, endOfMonth, format } from 'date-fns';
-import { Scope, Transaction, Bill } from '@shared/types';
+import { Scope, Transaction, Bill, AuthResponseData } from '@shared/types';
 import * as lucideIcons from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -108,27 +108,51 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }
   },
   login: async (email, password) => {
+    const prevUser = get().user;
+    const prevToken = get().token;
+    const tempUser = { id: 'temp', email } as { id: string; email: string };
+    const tempToken = 'temp';
+
+    localStorage.setItem('spendscope-token', tempToken);
+    localStorage.setItem('spendscope-user', JSON.stringify(tempUser));
+    set({ user: tempUser, token: tempToken });
+    
     try {
-      const res = await api<any>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      const res = await api<AuthResponseData>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
       localStorage.setItem('spendscope-token', res.token);
       localStorage.setItem('spendscope-user', JSON.stringify(res.user));
       set({ user: res.user, token: res.token });
       toast.success("Welcome back!");
-    } catch (error) {
-      console.error('[STORE] Login failed:', error);
-      throw error;
+    } catch (error: any) {
+      localStorage.setItem('spendscope-token', prevToken || '');
+      localStorage.setItem('spendscope-user', prevUser ? JSON.stringify(prevUser) : '');
+      set({ user: prevUser, token: prevToken });
+      console.error('[STORE] Login failed:', error.message);
+      toast.error(error.message);
     }
   },
   register: async (email, password) => {
+    const prevUser = get().user;
+    const prevToken = get().token;
+    const tempUser = { id: 'temp', email } as { id: string; email: string };
+    const tempToken = 'temp';
+
+    localStorage.setItem('spendscope-token', tempToken);
+    localStorage.setItem('spendscope-user', JSON.stringify(tempUser));
+    set({ user: tempUser, token: tempToken });
+    
     try {
-      const res = await api<any>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
+      const res = await api<AuthResponseData>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
       localStorage.setItem('spendscope-token', res.token);
       localStorage.setItem('spendscope-user', JSON.stringify(res.user));
       set({ user: res.user, token: res.token });
       toast.success("Account created successfully!");
-    } catch (error) {
-      console.error('[STORE] Register failed:', error);
-      throw error;
+    } catch (error: any) {
+      localStorage.setItem('spendscope-token', prevToken || '');
+      localStorage.setItem('spendscope-user', prevUser ? JSON.stringify(prevUser) : '');
+      set({ user: prevUser, token: prevToken });
+      console.error('[STORE] Register failed:', error.message);
+      toast.error(error.message);
     }
   },
   logout: () => {
