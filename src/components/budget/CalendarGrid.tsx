@@ -51,10 +51,12 @@ export function CalendarGrid() {
       }
       transactionsByDay.get(dayKey)?.push(t);
     });
-    const spentDays = Array.from(dailyTotals.entries())
+    const spentDaysInMonth = Array.from(dailyTotals.entries())
       .filter(([dateStr]) => isSameMonth(parseISO(dateStr), currentMonth))
       .map(([, total]) => total);
-    const averageDailySpend = spentDays.length > 0 ? spentDays.reduce((a, b) => a + b, 0) / spentDays.length : 0;
+    const averageDailySpend = spentDaysInMonth.length > 0 
+      ? spentDaysInMonth.reduce((a, b) => a + b, 0) / spentDaysInMonth.length 
+      : 0;
     return { days, transactionsByDay, averageDailySpend };
   }, [currentMonth, transactions, dailyTotals]);
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -67,26 +69,24 @@ export function CalendarGrid() {
         open={!!editingTransaction}
         onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}
       />
-      <div className="flex justify-between items-center mb-4">
-        <Button variant="outline" size="sm" onClick={handlePrevMonth}>
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Prev
+      <div className="flex justify-between items-center mb-6">
+        <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-10 w-10 rounded-xl hover:bg-muted/50">
+          <ChevronLeft className="h-5 w-5" />
         </Button>
-        <h3 className="text-xl font-bold text-foreground">{format(currentMonth, 'MMMM yyyy')}</h3>
-        <Button variant="outline" size="sm" onClick={handleNextMonth}>
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
+        <h3 className="text-2xl font-black text-foreground tracking-tighter">{format(currentMonth, 'MMMM yyyy')}</h3>
+        <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-10 w-10 rounded-xl hover:bg-muted/50">
+          <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
-      <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-muted-foreground mb-2">
+      <div className="grid grid-cols-7 gap-2 text-center text-xs font-black uppercase tracking-widest text-muted-foreground/60 mb-3 px-1">
         {weekdays.map(day => <div key={day}>{day}</div>)}
       </div>
       <AnimatePresence mode="wait">
         <motion.div
           key={format(currentMonth, 'yyyy-MM')}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
           className="grid grid-cols-7 gap-2"
         >
@@ -98,66 +98,68 @@ export function CalendarGrid() {
             const isCurrentDay = isToday(day);
             const spendPercentage = averageDailySpend > 0 ? (totalSpent / averageDailySpend) * 100 : 0;
             const badgeColor =
-              spendPercentage > 150 ? 'bg-red-500/80 text-red-50' :
-              spendPercentage > 75 ? 'bg-amber-500/80 text-amber-50' :
-              totalSpent > 0 ? 'bg-emerald-500/80 text-emerald-50' :
+              spendPercentage > 150 ? 'bg-red-500/90 text-white' :
+              spendPercentage > 75 ? 'bg-spendscope-500/90 text-white' :
+              totalSpent > 0 ? 'bg-emerald-500/90 text-white' :
               '';
             return (
               <motion.div
                 key={dayKey}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
                 className={cn(
-                  "relative rounded-lg p-2 min-h-[100px] transition-all duration-300",
-                  isCurrentMonth ? "bg-card/50 backdrop-blur-sm border border-border/20" : "bg-muted/30",
-                  isCurrentDay && "ring-2 ring-primary"
+                  "relative rounded-2xl p-2 min-h-[90px] md:min-h-[110px] transition-all duration-300 group border",
+                  isCurrentMonth ? "bg-card/50 backdrop-blur-sm border-border/20" : "bg-muted/20 border-transparent opacity-40",
+                  isCurrentDay && "ring-2 ring-spendscope-500 ring-offset-2 ring-offset-background"
                 )}
               >
-                <div className={cn("font-semibold", isCurrentMonth ? "text-foreground" : "text-muted-foreground/50")}>
+                <div className={cn("font-black text-sm", isCurrentMonth ? "text-foreground" : "text-muted-foreground/50")}>
                   {format(day, 'd')}
                 </div>
                 {totalSpent > 0 && (
-                  <div className={cn("text-xs font-bold rounded-full px-2 py-0.5 mt-1 inline-block", badgeColor)}>
+                  <div className={cn("text-[10px] font-black rounded-lg px-2 py-0.5 mt-1 inline-block shadow-sm", badgeColor)}>
                     {formatAmount(totalSpent)}
                   </div>
                 )}
                 {dayTransactions.length > 0 && (
                   <Accordion type="single" collapsible className="w-full mt-2">
                     <AccordionItem value="transactions" className="border-none">
-                      <AccordionTrigger className="text-xs p-1 hover:no-underline justify-center [&[data-state=open]>svg]:rotate-180">
+                      <AccordionTrigger className="text-[10px] p-1 font-black uppercase tracking-tighter hover:no-underline justify-center gap-1">
                         {dayTransactions.length} tx
                       </AccordionTrigger>
-                      <AccordionContent className="absolute top-[80%] left-1/2 -translate-x-1/2 w-[280px] max-w-[calc(100vw-2rem)] bg-popover/95 backdrop-blur-xl p-3 rounded-2xl shadow-2xl z-50 border border-border/50 max-h-60 overflow-y-auto">
+                      <AccordionContent className="absolute bottom-[100%] left-1/2 -translate-x-1/2 mb-2 w-[280px] max-w-[90vw] bg-popover/95 backdrop-blur-2xl p-4 rounded-3xl shadow-2xl z-[100] border border-border/40 max-h-60 overflow-y-auto">
                         <div className="space-y-2">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 border-b border-border/10 pb-2">
+                            {format(day, 'MMMM d')}
+                          </p>
                           {dayTransactions.map(tx => {
                             const scope = scopesMap.get(tx.scopeId);
                             return (
-                              <div key={tx.id} className="group flex items-center justify-between p-2 text-left bg-muted/30 hover:bg-muted/50 rounded-xl transition-colors">
+                              <div key={tx.id} className="group flex items-center justify-between p-2.5 text-left bg-muted/40 hover:bg-muted/60 rounded-xl transition-colors border border-border/5">
                                 <div className="flex-1 min-w-0 pr-2">
-                                  <p className="text-xs font-bold truncate">{scope?.name || 'Uncategorized'}</p>
-                                  <p className="text-[10px] text-muted-foreground truncate">{tx.description || formatAmount(tx.amount)}</p>
+                                  <p className="text-xs font-black truncate text-foreground">{scope?.name || 'Uncategorized'}</p>
+                                  <p className="text-[10px] font-bold text-muted-foreground truncate">{tx.description || formatAmount(tx.amount)}</p>
                                 </div>
-                                <div className="flex items-center gap-0.5">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTransaction(tx)}>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setEditingTransaction(tx)}>
                                     <Edit className="w-3.5 h-3.5" />
                                   </Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <motion.div variants={shakeVariants} whileHover="hover">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-500/10 rounded-lg">
                                           <Trash2 className="w-3.5 h-3.5" />
                                         </Button>
                                       </motion.div>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent>
+                                    <AlertDialogContent className="rounded-3xl border-border/40">
                                       <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete transaction?</AlertDialogTitle>
-                                        <AlertDialogDescription>Remove {formatAmount(tx.amount)} for {scope?.name}?</AlertDialogDescription>
+                                        <AlertDialogTitle className="font-black tracking-tighter">Delete transaction?</AlertDialogTitle>
+                                        <AlertDialogDescription className="font-medium">
+                                          Remove {formatAmount(tx.amount)} for {scope?.name}? This cannot be undone.
+                                        </AlertDialogDescription>
                                       </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                      <AlertDialogFooter className="gap-2">
+                                        <AlertDialogCancel className="rounded-2xl">Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90 rounded-2xl">Delete</AlertDialogAction>
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   </AlertDialog>

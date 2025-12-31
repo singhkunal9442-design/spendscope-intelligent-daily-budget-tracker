@@ -28,6 +28,7 @@ export const useFormatAmount = () => {
 };
 export type ScopeWithIcon = Omit<Scope, 'icon'> & {
   icon: lucideIcons.LucideIcon;
+  iconName: string;
   monthlyLimit?: number;
 };
 interface BudgetState {
@@ -95,7 +96,12 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
         api<Bill[]>('/api/bills'),
         api<UserSettings>('/api/user-settings'),
       ]);
-      const scopesWithIcons = scopes.map(s => ({ ...s, icon: getIcon(s.icon) }));
+      const scopesWithIcons = scopes.map(s => ({ 
+        ...s, 
+        icon: getIcon(s.icon),
+        iconName: s.icon,
+        monthlyLimit: s.monthlyLimit || s.dailyLimit * 30 
+      }));
       set({
         scopes: scopesWithIcons,
         transactions,
@@ -187,6 +193,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       ...scope,
       id: tempId,
       icon: getIcon(scope.icon),
+      iconName: scope.icon,
       monthlyLimit: scope.monthlyLimit || scope.dailyLimit * 30
     };
     set(produce((state: BudgetState) => { state.scopes.push(optimisticScope); }));
@@ -194,7 +201,12 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       const res = await api<Scope>('/api/scopes', { method: 'POST', body: JSON.stringify(scope) });
       set(produce((state: BudgetState) => {
         const i = state.scopes.findIndex(s => s.id === tempId);
-        if (i !== -1) state.scopes[i] = { ...res, icon: getIcon(res.icon) };
+        if (i !== -1) state.scopes[i] = { 
+          ...res, 
+          icon: getIcon(res.icon), 
+          iconName: res.icon,
+          monthlyLimit: res.monthlyLimit || res.dailyLimit * 30 
+        };
       }));
     } catch (e) {
       set(produce((state: BudgetState) => { state.scopes = state.scopes.filter(s => s.id !== tempId); }));
@@ -222,7 +234,13 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     set(produce((state: BudgetState) => {
       const i = state.scopes.findIndex(s => s.id === id);
       if (i !== -1) {
-        state.scopes[i] = { ...state.scopes[i], ...data, icon: data.icon ? getIcon(data.icon as any) : state.scopes[i].icon };
+        const updatedIconName = data.icon || state.scopes[i].iconName;
+        state.scopes[i] = { 
+          ...state.scopes[i], 
+          ...data, 
+          iconName: updatedIconName,
+          icon: getIcon(updatedIconName) 
+        };
       }
     }));
     try {
@@ -367,12 +385,11 @@ export const useMonthlyBudget = () => {
 export const useDailyTotals = () => {
   const transactions = useTransactions();
   return useMemo(() => {
-    const now = new Date();
-    const monthTotals = new Map<string, number>();
-    (transactions || []).filter(t => isSameMonth(parseISO(t.date), now)).forEach(t => {
+    const totalsMap = new Map<string, number>();
+    (transactions || []).forEach(t => {
         const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
-        monthTotals.set(dayKey, (monthTotals.get(dayKey) || 0) + t.amount);
+        totalsMap.set(dayKey, (totalsMap.get(dayKey) || 0) + t.amount);
     });
-    return monthTotals;
+    return totalsMap;
   }, [transactions]);
 };
