@@ -44,147 +44,124 @@ export function DashboardPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
+        staggerChildren: 0.05,
+        ease: "easeOut"
       }
     }
   };
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        type: 'spring',
-        damping: 20,
-        stiffness: 100
-      } as const
+        duration: 0.3,
+        ease: "easeOut"
+      }
     }
   };
   return (
-    <div className="min-h-screen w-full bg-background text-foreground relative selection:bg-spendscope-500 selection:text-white">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff05_1px,transparent_1px)] [background-size:24px_24px]"></div>
-      <header className="fixed top-0 left-0 right-0 z-40 h-16 glass flex items-center justify-end px-6 md:px-12 gap-4">
-        <CurrencySelector className="relative top-0 right-0" />
-        <ThemeToggle className="relative top-0 right-0" />
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
-        <div className="flex flex-col gap-12">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <div className="inline-flex items-center gap-2 mb-4 bg-spendscope-500/10 px-4 py-2 rounded-full ring-1 ring-spendscope-500/20">
-              <span className="text-spendscope-500 font-bold text-sm tracking-wide uppercase">Your Financial Scope</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground mb-4">
-              Spend<span className="text-gradient-spendscope">Scope</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-medium">
-              Total daily budget: <span className="text-spendscope-600 font-black">{formatAmount(totalLimit)}</span>
-            </p>
-          </motion.div>
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div key="loader" exit={{ opacity: 0 }} className="space-y-12">
-                <MonthlyOverviewCardSkeleton />
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-16">
-                  {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={i} />)}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col gap-20"
-              >
-                <motion.div variants={itemVariants}>
-                  <MonthlyOverviewCard />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="py-8 md:py-10 lg:py-12 relative min-h-screen bg-background text-foreground">
+        <header className="fixed top-0 left-0 right-0 z-40 h-16 glass flex items-center justify-end px-6 md:px-12 gap-4">
+          <CurrencySelector className="relative top-0 right-0" />
+          <ThemeToggle className="relative top-0 right-0" />
+        </header>
+        <main className="pt-16 pb-32">
+          <div className="flex flex-col gap-10">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground mb-2">
+                Spend<span className="text-spendscope-500">Scope</span>
+              </h1>
+              <p className="text-lg text-muted-foreground font-medium">
+                Daily Budget: <span className="text-foreground font-bold">{formatAmount(totalLimit)}</span>
+              </p>
+            </motion.div>
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div key="loader" exit={{ opacity: 0 }} className="space-y-10">
+                  <MonthlyOverviewCardSkeleton />
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={i} />)}
+                  </div>
                 </motion.div>
-                {scopes.length === 0 && bills.length === 0 ? (
-                  <motion.div variants={itemVariants} className="text-center py-24 px-8 glass rounded-[3rem] border-2 border-dashed border-spendscope-500/30">
-                    <Wallet className="mx-auto h-16 w-16 text-spendscope-500/50 mb-6" />
-                    <h3 className="text-2xl font-black text-foreground mb-2">Welcome to SpendScope!</h3>
-                    <p className="text-muted-foreground mb-8 text-lg">Your dashboard is empty. Head to Settings to configure your categories.</p>
-                    <Button
-                      onClick={() => setIsAddScopeDrawerOpen(true)}
-                      className="btn-spendscope"
-                    >
-                      Create First Category
-                    </Button>
+              ) : (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex flex-col gap-12"
+                >
+                  <motion.div variants={itemVariants}>
+                    <MonthlyOverviewCard />
                   </motion.div>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-8">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <h2 className="text-3xl font-black text-foreground tracking-tight">Daily Budgets</h2>
-                          <HelpTooltip message="Manage your daily category limits. Cards turn amber and red as you reach your limit." />
+                  {scopes.length === 0 && bills.length === 0 ? (
+                    <motion.div variants={itemVariants} className="text-center py-20 glass rounded-3xl border border-dashed border-border">
+                      <Wallet className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-xl font-bold mb-2">Welcome to SpendScope</h3>
+                      <p className="text-muted-foreground mb-6">Create your first category to start tracking.</p>
+                      <Button onClick={() => setIsAddScopeDrawerOpen(true)} className="btn-spendscope">
+                        New Category
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-2xl font-bold tracking-tight">Categories</h2>
+                          <Button variant="outline" size="sm" onClick={() => setIsAddScopeDrawerOpen(true)}>
+                            <PlusCircle className="w-4 h-4 mr-2" /> New
+                          </Button>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          onClick={() => setIsAddScopeDrawerOpen(true)}
-                          className="text-spendscope-600 dark:text-spendscope-400 hover:bg-spendscope-500/10 font-bold"
-                        >
-                          <PlusCircle className="w-5 h-5 mr-2" />
-                          New Category
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                        {scopes.map((scope) => (
-                          <motion.div key={scope.id} variants={itemVariants}>
-                            <ScopeCard scope={scope} onEdit={(s) => setEditingScope(s)} />
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-8">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <h2 className="text-3xl font-black text-foreground tracking-tight">Monthly Bills</h2>
-                          <HelpTooltip message="Recurring monthly expenses. Mark them as paid to clear your monthly overview." />
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {scopes.map((scope) => (
+                            <motion.div key={scope.id} variants={itemVariants}>
+                              <ScopeCard scope={scope} onEdit={setEditingScope} />
+                            </motion.div>
+                          ))}
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          onClick={() => setIsAddBillDrawerOpen(true)}
-                          className="text-spendscope-600 dark:text-spendscope-400 hover:bg-spendscope-500/10 font-bold"
-                        >
-                          <PlusCircle className="w-5 h-5 mr-2" />
-                          New Bill
-                        </Button>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                        {bills.map((bill) => (
-                          <motion.div key={bill.id} variants={itemVariants}>
-                            <BillCard bill={bill} onEdit={setEditingBill} />
-                          </motion.div>
-                        ))}
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-2xl font-bold tracking-tight">Monthly Bills</h2>
+                          <Button variant="outline" size="sm" onClick={() => setIsAddBillDrawerOpen(true)}>
+                            <PlusCircle className="w-4 h-4 mr-2" /> New
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {bills.map((bill) => (
+                            <motion.div key={bill.id} variants={itemVariants}>
+                              <BillCard bill={bill} onEdit={setEditingBill} />
+                            </motion.div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </main>
-      <Button
-        onClick={() => setIsAddDrawerOpen(true)}
-        className="fixed bottom-10 right-10 h-20 w-20 rounded-full btn-spendscope shadow-glow z-50 p-0"
-        size="icon"
-      >
-        <Plus className="h-10 w-10" />
-        <span className="sr-only">Add Expense</span>
-      </Button>
-      <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
-      <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
-      <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
-      <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
-      <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
-      <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
-      <Toaster richColors position="top-center" />
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </main>
+        <Button
+          onClick={() => setIsAddDrawerOpen(true)}
+          className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-spendscope-500 hover:bg-spendscope-600 text-white shadow-lg z-50"
+          size="icon"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+        <AddExpenseDrawer open={isAddDrawerOpen} onOpenChange={setIsAddDrawerOpen} />
+        <AddBillDrawer open={isAddBillDrawerOpen} onOpenChange={setIsAddBillDrawerOpen} />
+        <AddScopeDrawer open={isAddScopeDrawerOpen} onOpenChange={setIsAddScopeDrawerOpen} />
+        <EditScopeDrawer open={!!editingScope} onOpenChange={() => setEditingScope(null)} scope={editingScope} />
+        <EditBillDrawer open={!!editingBill} onOpenChange={() => setEditingBill(null)} bill={editingBill} />
+        <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
+        <Toaster richColors position="top-center" />
+      </div>
     </div>
   );
 }

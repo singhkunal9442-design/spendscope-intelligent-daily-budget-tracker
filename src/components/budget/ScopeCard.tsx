@@ -14,24 +14,16 @@ interface ScopeCardProps {
 }
 export function ScopeCardSkeleton() {
   return (
-    <div className="relative p-6 rounded-[2rem] overflow-hidden glass shadow-glass">
+    <div className="p-6 rounded-2xl border bg-card shadow-sm animate-pulse space-y-4">
       <div className="flex justify-between items-start">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-xl" />
-            <Skeleton className="h-6 w-24" />
-          </div>
-          <Skeleton className="h-4 w-20" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-5 w-24" />
         </div>
-        <div className="text-right space-y-2">
-          <Skeleton className="h-4 w-12 ml-auto" />
-          <Skeleton className="h-6 w-16 ml-auto" />
-        </div>
+        <Skeleton className="h-5 w-16" />
       </div>
-      <div className="mt-6 space-y-2">
-        <div className="flex justify-between"><Skeleton className="h-4 w-16" /><Skeleton className="h-4 w-12" /></div>
-        <Skeleton className="h-2 w-full" />
-      </div>
+      <Skeleton className="h-2 w-full rounded-full" />
+      <Skeleton className="h-10 w-full rounded-md" />
     </div>
   );
 }
@@ -59,7 +51,7 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
   const getProgressColor = () => {
     if (percentage > 90) return 'bg-red-500';
-    if (percentage > 70) return 'bg-spendscope-500 shadow-[0_0_8px_rgba(243,128,32,0.6)]';
+    if (percentage > 70) return 'bg-amber-500';
     return `bg-${scope.color}-500`;
   };
   const Icon = scope.icon;
@@ -67,45 +59,41 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
     <motion.div
       layout
       onClick={() => onEdit(scope)}
-      whileHover={{ scale: 1.02, rotate: [0, 0.5, -0.5, 0] }}
-      className="relative p-6 rounded-[2rem] overflow-hidden glass shadow-soft group hover:shadow-glow hover:backdrop-blur-2xl transition-all duration-300 cursor-pointer border border-white/20 dark:border-white/5"
+      whileHover={{ scale: 1.01 }}
+      className="group relative p-6 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
     >
       <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="p-2 glass rounded-xl text-muted-foreground hover:text-foreground">
-          <Pencil className="w-4 h-4" />
+        <div className="p-1.5 bg-muted rounded-md text-muted-foreground hover:text-foreground border shadow-sm">
+          <Pencil className="w-3.5 h-3.5" />
         </div>
       </div>
-      <div className="flex justify-between items-start">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className={cn('p-2.5 rounded-2xl transition-colors shadow-sm', `bg-${scope.color}-100 dark:bg-${scope.color}-900/50`)}>
-              <Icon className={cn('w-6 h-6', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />
-            </div>
-            <h3 className="text-lg font-bold text-foreground tracking-tight">{scope.name}</h3>
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-3">
+          <div className={cn('p-2.5 rounded-xl shadow-sm border border-border/10', `bg-${scope.color}-50 dark:bg-${scope.color}-950/30`)}>
+            <Icon className={cn('w-5 h-5', `text-${scope.color}-600 dark:text-${scope.color}-400`)} />
           </div>
-          <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-            Limit: {formatAmount(scope.dailyLimit)}
-          </p>
+          <div>
+            <h3 className="font-bold text-foreground leading-tight">{scope.name}</h3>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Limit: {formatAmount(scope.dailyLimit)}
+            </p>
+          </div>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Spent</p>
-          <p className="text-xl font-black text-foreground">{formatAmount(spentToday)}</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Spent</p>
+          <p className="font-bold text-foreground">{formatAmount(spentToday)}</p>
         </div>
       </div>
-      <div className="mt-6 space-y-2">
-        <div className="flex justify-between text-sm font-bold">
-          <span className="text-muted-foreground">Remaining Today</span>
-          <motion.span
-            className={cn('text-lg tracking-tighter', remaining < 0 ? 'text-red-500' : 'text-spendscope-600')}
-            animate={{ scale: [1, 1.1, 1] }}
-            key={remaining}
-          >
+      <div className="space-y-3">
+        <div className="flex justify-between text-xs font-bold">
+          <span className="text-muted-foreground">Remaining</span>
+          <span className={cn(remaining < 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>
             {formatAmount(remaining)}
-          </motion.span>
+          </span>
         </div>
-        <Progress value={percentage} className={cn("h-2.5 rounded-full bg-muted/30 overflow-hidden transition-all duration-500", getProgressColor())} />
+        <Progress value={percentage} className={cn("h-1.5 bg-muted/50 rounded-full", getProgressColor())} />
       </div>
-      <div className="mt-4 h-12 w-full opacity-60 group-hover:opacity-100 transition-opacity">
+      <div className="mt-4 h-10 w-full opacity-40 group-hover:opacity-80 transition-opacity">
         <ScopeSparkline data={sparkData} color={scope.color} />
       </div>
     </motion.div>

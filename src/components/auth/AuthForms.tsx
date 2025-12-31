@@ -24,12 +24,13 @@ export function LoginForm() {
     try {
       await login(data.email, data.password);
     } catch (e) {
+      console.error('[AUTH] Login failed:', e);
     } finally {
       setLoading(false);
     }
   };
   return (
-    <Card className="border-none shadow-none bg-transparent">
+    <Card className="border shadow-sm bg-card">
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>Enter your credentials to access your scopes.</CardDescription>
@@ -48,7 +49,7 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-spendscope-500 hover:bg-spendscope-600 text-white" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
@@ -68,12 +69,13 @@ export function SignupForm() {
     try {
       await registerAction(data.email, data.password);
     } catch (e) {
+      console.error('[AUTH] Registration failed:', e);
     } finally {
       setLoading(false);
     }
   };
   return (
-    <Card className="border-none shadow-none bg-transparent">
+    <Card className="border shadow-sm bg-card">
       <CardHeader>
         <CardTitle>Create Account</CardTitle>
         <CardDescription>Start tracking your daily spending today.</CardDescription>
@@ -92,7 +94,7 @@ export function SignupForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-spendscope-500 hover:bg-spendscope-600 text-white" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Get Started
           </Button>
