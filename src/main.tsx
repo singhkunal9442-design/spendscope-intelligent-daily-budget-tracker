@@ -1,8 +1,8 @@
 import '@/lib/errorReporter';
 import { enableMapSet } from "immer";
 enableMapSet();
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React, { StrictMode } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import {
   createBrowserRouter,
   RouterProvider,
@@ -20,7 +20,19 @@ import { BlogPage } from '@/pages/BlogPage';
 import { AboutPage, ContactPage, HelpPage } from '@/pages/StaticPages';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-const queryClient = new QueryClient();
+declare global {
+  interface Window {
+    __reactRoot?: Root;
+  }
+}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -68,12 +80,18 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
 ]);
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <RouterProvider router={router} />
-      </ErrorBoundary>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+const container = document.getElementById('root');
+if (container) {
+  if (!window.__reactRoot) {
+    window.__reactRoot = createRoot(container);
+  }
+  window.__reactRoot.render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          <RouterProvider router={router} />
+        </ErrorBoundary>
+      </QueryClientProvider>
+    </StrictMode>
+  );
+}
