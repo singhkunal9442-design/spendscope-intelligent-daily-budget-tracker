@@ -37,24 +37,12 @@ export default {
   			}
   		},
   		boxShadow: {
-  			soft: '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-  			glow: '0 0 25px -5px rgba(243, 128, 32, 0.4)',
-  			glass: '0 8px 32px 0 rgba(0, 0, 0, 0.05)'
+  			soft: '0 2px 10px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+  			glass: '0 4px 20px -2px rgba(0, 0, 0, 0.05)'
   		},
   		keyframes: {
-  			'float-gentle': {
-  				'0%, 100%': { transform: 'translateY(0px)' },
-  				'50%': { transform: 'translateY(-6px)' }
-  			},
-  			'shake-subtle': {
-  				'0%, 100%': { transform: 'rotate(0deg)' },
-  				'25%': { transform: 'rotate(1deg)' },
-  				'75%': { transform: 'rotate(-1deg)' }
-  			}
   		},
   		animation: {
-  			'float-gentle': 'float-gentle 4s ease-in-out infinite',
-  			'shake-subtle': 'shake-subtle 0.3s ease-in-out'
   		}
   	}
   },
