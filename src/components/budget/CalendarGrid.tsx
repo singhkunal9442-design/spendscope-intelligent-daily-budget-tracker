@@ -126,34 +126,46 @@ export function CalendarGrid() {
                   <Accordion type="single" collapsible className="w-full mt-2">
                     <AccordionItem value="transactions" className="border-none">
                       <AccordionTrigger className="text-xs p-1 hover:no-underline justify-center [&[data-state=open]>svg]:rotate-180">
-                        {dayTransactions.length} transaction{dayTransactions.length > 1 ? 's' : ''}
+                        {dayTransactions.length} tx
                       </AccordionTrigger>
-                      <AccordionContent className="absolute top-full left-0 w-[250px] bg-popover p-2 rounded-lg shadow-lg z-10 border max-h-60 overflow-y-auto">
-                        {dayTransactions.map(tx => {
-                          const scope = scopesMap.get(tx.scopeId);
-                          return (
-                            <div key={tx.id} className="group flex items-center justify-between p-1.5 text-left hover:bg-muted/50 rounded-md">
-                              <div>
-                                <p className="text-xs font-medium">{scope?.name || 'Uncategorized'}</p>
-                                <p className="text-xs text-muted-foreground">{tx.description || formatAmount(tx.amount)}</p>
+                      <AccordionContent className="absolute top-[80%] left-1/2 -translate-x-1/2 w-[280px] max-w-[calc(100vw-2rem)] bg-popover/95 backdrop-blur-xl p-3 rounded-2xl shadow-2xl z-50 border border-border/50 max-h-60 overflow-y-auto">
+                        <div className="space-y-2">
+                          {dayTransactions.map(tx => {
+                            const scope = scopesMap.get(tx.scopeId);
+                            return (
+                              <div key={tx.id} className="group flex items-center justify-between p-2 text-left bg-muted/30 hover:bg-muted/50 rounded-xl transition-colors">
+                                <div className="flex-1 min-w-0 pr-2">
+                                  <p className="text-xs font-bold truncate">{scope?.name || 'Uncategorized'}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">{tx.description || formatAmount(tx.amount)}</p>
+                                </div>
+                                <div className="flex items-center gap-0.5">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingTransaction(tx)}>
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <motion.div variants={shakeVariants} whileHover="hover">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80">
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                      </motion.div>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete transaction?</AlertDialogTitle>
+                                        <AlertDialogDescription>Remove {formatAmount(tx.amount)} for {scope?.name}?</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-1 opacity-100">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingTransaction(tx)}><Edit className="w-3.5 h-3.5" /></Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <motion.div variants={shakeVariants} whileHover="hover">
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive/80"><Trash2 className="w-3.5 h-3.5" /></Button>
-                                    </motion.div>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>Delete this transaction of {formatAmount(tx.amount)}?</AlertDialogDescription></AlertDialogHeader>
-                                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteTransaction(tx.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>

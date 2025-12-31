@@ -41,42 +41,42 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <ProtectedRoute><AppLayout container={false}><HomePage /></AppLayout></ProtectedRoute>,
+    element: <ProtectedRoute><AppLayout container={true}><HomePage /></AppLayout></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/settings",
-    element: <ProtectedRoute><AppLayout container={false}><SettingsPage /></AppLayout></ProtectedRoute>,
+    element: <ProtectedRoute><AppLayout container={true}><SettingsPage /></AppLayout></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/history",
-    element: <ProtectedRoute><AppLayout container><HistoryPage /></AppLayout></ProtectedRoute>,
+    element: <ProtectedRoute><AppLayout container={true}><HistoryPage /></AppLayout></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/calendar",
-    element: <ProtectedRoute><AppLayout container><CalendarPage /></AppLayout></ProtectedRoute>,
+    element: <ProtectedRoute><AppLayout container={true}><CalendarPage /></AppLayout></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/blog",
-    element: <AppLayout container><BlogPage /></AppLayout>,
+    element: <AppLayout container={true}><BlogPage /></AppLayout>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/about",
-    element: <AppLayout container><AboutPage /></AppLayout>,
+    element: <AppLayout container={true}><AboutPage /></AppLayout>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/help",
-    element: <AppLayout container><HelpPage /></AppLayout>,
+    element: <AppLayout container={true}><HelpPage /></AppLayout>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/contact",
-    element: <AppLayout container><ContactPage /></AppLayout>,
+    element: <AppLayout container={true}><ContactPage /></AppLayout>,
     errorElement: <RouteErrorBoundary />,
   },
 ]);
