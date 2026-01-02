@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
 import { cn, getScopeColorClasses } from '@/lib/utils';
 import { useTransactions, useSpentToday, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
@@ -52,9 +51,9 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   if (isLoading) return <ScopeCardSkeleton />;
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
-  const getProgressColor = () => {
-    if (percentage > 90) return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]';
-    if (percentage > 70) return 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]';
+  const getIndicatorColor = () => {
+    if (percentage > 90) return 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]';
+    if (percentage > 70) return 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]';
     return cn(colors.bg, colors.glow);
   };
   const Icon = scope.icon;
@@ -93,7 +92,14 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
             {formatAmount(remaining)}
           </span>
         </div>
-        <Progress value={percentage} className={cn("h-2 bg-muted/30 rounded-full", getProgressColor())} />
+        <div className="h-2.5 w-full bg-muted/30 rounded-full overflow-hidden p-0.5 border border-border/5">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+            className={cn("h-full rounded-full", getIndicatorColor())}
+          />
+        </div>
       </div>
       <div className="mt-6 h-12 w-full opacity-70 group-hover:opacity-100 transition-opacity">
         <ScopeSparkline data={sparkData} color={scope.color} />

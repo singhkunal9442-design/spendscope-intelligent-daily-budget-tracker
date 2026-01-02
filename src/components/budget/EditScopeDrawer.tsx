@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,11 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBudgetStore, ScopeWithIcon, useFormatAmount, useTransactions, getIcon } from '@/lib/store';
+import { useBudgetStore, ScopeWithIcon, useFormatAmount, useTransactions } from '@/lib/store';
 import { Save, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn, getScopeColorClasses } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
@@ -37,14 +36,7 @@ interface EditScopeDrawerProps {
   onOpenChange: (open: boolean) => void;
   scope: ScopeWithIcon | null;
 }
-const shakeVariants = {
-  hover: {
-    scale: [1, 1.1, 0.9, 1.05, 1],
-    rotate: [0, 2, -2, 1, -1, 0],
-    transition: { duration: 0.4 }
-  }
-};
-const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIcon; spentToday: number; spentAllTime: number; }) => {
+const SpendingStats = ({ scope, spentToday }: { scope: ScopeWithIcon; spentToday: number; }) => {
   const formatAmount = useFormatAmount();
   const colors = getScopeColorClasses(scope.color);
   const remaining = scope.dailyLimit - spentToday;
@@ -58,9 +50,15 @@ const SpendingStats = ({ scope, spentToday, spentAllTime }: { scope: ScopeWithIc
               <span className="text-muted-foreground/60">Daily Usage</span>
               <span className="text-foreground">{formatAmount(spentToday)} / {formatAmount(scope.dailyLimit)}</span>
             </div>
-            <Progress value={percentage} className={cn("h-2.5 rounded-full overflow-hidden bg-muted/20", percentage > 90 ? 'bg-red-500' : colors.bg)} />
+            <div className="h-3 w-full bg-muted/20 rounded-full overflow-hidden p-0.5 border border-border/5">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${percentage}%` }}
+                className={cn("h-full rounded-full transition-all", percentage > 90 ? 'bg-red-500' : colors.bg)}
+              />
+            </div>
             <div className="flex justify-between items-center mt-3">
-              <span className="text-label">Available</span>
+              <span className="text-label">Available Scope</span>
               <motion.span
                 className={cn('text-lg font-black tracking-tighter', remaining < 0 ? 'text-red-500' : 'text-emerald-500')}
                 animate={{ scale: [1, 1.05, 1] }}
@@ -80,23 +78,14 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
   const deleteScope = useBudgetStore(state => state.deleteScope);
   const addTransaction = useBudgetStore(state => state.addTransaction);
   const updateTransaction = useBudgetStore(state => state.updateTransaction);
-  const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
   const formatAmount = useFormatAmount();
   const transactions = useTransactions();
-  const transactionsForScope = useMemo(() => 
+  const transactionsForScope = useMemo(() =>
     transactions.filter(t => t.scopeId === scope?.id),
     [transactions, scope?.id]
   );
-  const recentTransactions = useMemo(() => 
-    [...transactionsForScope].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()).slice(0, 5),
-    [transactionsForScope]
-  );
-  const spentToday = useMemo(() => 
+  const spentToday = useMemo(() =>
     transactionsForScope.filter(t => isToday(parseISO(t.date))).reduce((sum, t) => sum + t.amount, 0),
-    [transactionsForScope]
-  );
-  const spentAllTime = useMemo(() => 
-    transactionsForScope.reduce((sum, t) => sum + t.amount, 0),
     [transactionsForScope]
   );
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
@@ -107,17 +96,6 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
     resolver: zodResolver(expenseMiniSchema),
     defaultValues: { amount: 0, description: '' },
   });
-  useEffect(() => {
-    if (editingTxId) {
-      const tx = recentTransactions.find(t => t.id === editingTxId);
-      if (tx) {
-        setMiniValue('amount', tx.amount);
-        setMiniValue('description', tx.description || '');
-      }
-    } else {
-      resetMiniForm();
-    }
-  }, [editingTxId, recentTransactions, setMiniValue, resetMiniForm]);
   useEffect(() => {
     if (scope) {
       reset({
@@ -158,18 +136,18 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
       <DrawerContent className="h-full w-full max-w-sm mt-0 ml-auto rounded-none border-l border-border/20">
         <div className="mx-auto w-full h-full flex flex-col bg-background">
           <DrawerHeader className="flex-shrink-0">
-            <DrawerTitle className="font-black tracking-tighter text-2xl">Manage Scope</DrawerTitle>
+            <DrawerTitle className="font-black tracking-tighter text-2xl">Scope Settings</DrawerTitle>
             <DrawerDescription>Edit details for {scope?.name || '...'}</DrawerDescription>
           </DrawerHeader>
-          <div className="p-4 pt-0 space-y-4 overflow-y-auto">
-            {scope && <SpendingStats scope={scope} spentToday={spentToday} spentAllTime={spentAllTime} />}
+          <div className="p-4 pt-0 space-y-4 overflow-y-auto pb-20">
+            {scope && <SpendingStats scope={scope} spentToday={spentToday} />}
             <Accordion type="multiple" defaultValue={['recent-tx']} className="w-full space-y-2">
               <AccordionItem value="add-edit-tx" className="border-none">
                 <Card className="glass rounded-2xl overflow-hidden shadow-sm">
                   <AccordionTrigger className="p-4 text-xs font-black uppercase tracking-widest hover:no-underline">
                     <div className="flex items-center gap-2">
-                      {editingTxId ? <Edit className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                      <span>{editingTxId ? 'Edit Expense' : 'Quick Add'}</span>
+                      <PlusCircle className="w-4 h-4" />
+                      <span>Quick Add Expense</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="p-4 pt-0">
@@ -183,25 +161,25 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                       <Controller name="description" control={miniControl} render={({ field }) => (
                         <div className="space-y-1">
                           <Label className="text-label ml-1">Note</Label>
-                          <Input {...field} placeholder="Lunch, etc." value={field.value || ''} className="h-12 rounded-2xl" />
+                          <Input {...field} placeholder="Lunch, coffee, etc." value={field.value || ''} className="h-12 rounded-2xl" />
                         </div>
                       )} />
                       <Button type="submit" className="btn-premium w-full h-12 shadow-glow">
-                        {editingTxId ? 'Update' : 'Add'} Expense
+                        Log Expense
                       </Button>
                     </form>
                   </AccordionContent>
                 </Card>
               </AccordionItem>
             </Accordion>
-            <form onSubmit={handleSubmit(onFullSubmit)} className="space-y-4 mt-4">
+            <form onSubmit={handleSubmit(onFullSubmit)} className="space-y-4 mt-6">
               <div className="space-y-2">
-                <Label className="text-label ml-1">Category Name</Label>
+                <Label className="text-label ml-1">Name</Label>
                 <Controller name="name" control={control} render={({ field }) => <Input {...field} className="h-12 rounded-2xl" />} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-label ml-1">Daily</Label>
+                  <Label className="text-label ml-1">Daily Limit</Label>
                   <Controller name="dailyLimit" control={control} render={({ field }) => <Input {...field} type="number" step="0.01" className="h-12 rounded-2xl" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />} />
                 </div>
                 <div className="space-y-2">
@@ -214,7 +192,16 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                   )} />
                 </div>
               </div>
-              <DrawerFooter className="flex-row items-center gap-2 p-0 pt-4">
+              <div className="space-y-2">
+                <Label className="text-label ml-1">Color Theme</Label>
+                <Controller name="color" control={control} render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Color" /></SelectTrigger>
+                    <SelectContent className="max-h-[200px]">{colorPresets.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
+              </div>
+              <div className="flex items-center gap-2 pt-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button size="icon" variant="ghost" className="h-12 w-12 text-destructive hover:bg-red-500/10 rounded-2xl">
@@ -233,7 +220,7 @@ export function EditScopeDrawer({ open, onOpenChange, scope }: EditScopeDrawerPr
                   </AlertDialogContent>
                 </AlertDialog>
                 <Button type="submit" className="btn-premium flex-1 h-12">Save Changes</Button>
-              </DrawerFooter>
+              </div>
             </form>
           </div>
         </div>

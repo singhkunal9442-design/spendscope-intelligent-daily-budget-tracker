@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Wallet, PlusCircle, TrendingUp } from 'lucide-react';
-import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, type ScopeWithIcon } from '@/lib/store';
+import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, useSettings, type ScopeWithIcon } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
 import { BillCard, BillCardSkeleton } from '@/components/budget/BillCard';
 import { AddExpenseDrawer } from '@/components/budget/AddExpenseDrawer';
@@ -18,6 +18,7 @@ import { Bill } from '@shared/types';
 export function DashboardPage() {
   const scopes = useScopes();
   const bills = useBills();
+  const settings = useSettings();
   const loadData = useBudgetStore(state => state.loadData);
   const isLoading = useIsLoading();
   const formatAmount = useFormatAmount();
@@ -29,11 +30,13 @@ export function DashboardPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     loadData();
-    const onboarded = localStorage.getItem('spendscope-onboarded');
-    if (!onboarded) {
+  }, [loadData]);
+  useEffect(() => {
+    // Sync onboarding with remote settings
+    if (!isLoading && settings && !settings.onboarded) {
       setShowOnboarding(true);
     }
-  }, [loadData]);
+  }, [isLoading, settings?.onboarded]);
   const totalLimit = React.useMemo(() =>
     scopes.reduce((sum, s) => sum + s.dailyLimit, 0),
   [scopes]);
@@ -107,11 +110,11 @@ export function DashboardPage() {
                     <div className="space-y-8">
                       <div className="flex items-end justify-between px-2">
                         <div>
-                          <h2 className="text-3xl font-black tracking-tighter">Categories</h2>
-                          <p className="text-label mt-1">Daily Allowance</p>
+                          <h2 className="text-3xl font-black tracking-tighter">Daily Scopes</h2>
+                          <p className="text-label mt-1">Today's Allowances</p>
                         </div>
                         <Button variant="ghost" size="sm" className="font-bold text-spendscope-600 dark:text-spendscope-400" onClick={() => setIsAddScopeDrawerOpen(true)}>
-                          <PlusCircle className="w-4 h-4 mr-2" /> Add New
+                          <PlusCircle className="w-4 h-4 mr-2" /> Add Scope
                         </Button>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -125,8 +128,8 @@ export function DashboardPage() {
                     <div className="space-y-8">
                       <div className="flex items-end justify-between px-2">
                         <div>
-                          <h2 className="text-3xl font-black tracking-tighter">Monthly Performance</h2>
-                          <p className="text-label mt-1">30-Day Progress</p>
+                          <h2 className="text-3xl font-black tracking-tighter">Monthly Progress</h2>
+                          <p className="text-label mt-1">30-Day Velocity</p>
                         </div>
                         <div className="flex items-center gap-2 text-spendscope-500">
                            <TrendingUp className="w-5 h-5" />
@@ -144,11 +147,11 @@ export function DashboardPage() {
                     <div className="space-y-8">
                       <div className="flex items-end justify-between px-2">
                         <div>
-                          <h2 className="text-3xl font-black tracking-tighter">Monthly Bills</h2>
-                          <p className="text-label mt-1">Fixed Recurring Expenses</p>
+                          <h2 className="text-3xl font-black tracking-tighter">Recurring Bills</h2>
+                          <p className="text-label mt-1">Fixed Expenses</p>
                         </div>
                         <Button variant="ghost" size="sm" className="font-bold text-spendscope-600 dark:text-spendscope-400" onClick={() => setIsAddBillDrawerOpen(true)}>
-                          <PlusCircle className="w-4 h-4 mr-2" /> Add New
+                          <PlusCircle className="w-4 h-4 mr-2" /> Add Bill
                         </Button>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

@@ -35,26 +35,32 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const { items } = await ScopeEntity.list(c.env);
-    return ok(c, items);
+    const userItems = items.filter(i => i.userId === userId || !i.userId); // Allow seeded ones initially
+    return ok(c, userItems);
   });
   app.post('/api/scopes', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const data = await c.req.json();
-    const newScope = { ...data, id: crypto.randomUUID() };
+    const newScope = { ...data, id: crypto.randomUUID(), userId };
     return ok(c, await ScopeEntity.create(c.env, newScope));
   });
   app.put('/api/scopes/:id', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
-    const data = await c.req.json();
     const inst = new ScopeEntity(c.env, c.req.param('id'));
+    const state = await inst.getState();
+    if (state.userId && state.userId !== userId) return bad(c, 'Forbidden');
+    const data = await c.req.json();
     await inst.patch(data);
     return ok(c, await inst.getState());
   });
   app.delete('/api/scopes/:id', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
+    const inst = new ScopeEntity(c.env, c.req.param('id'));
+    const state = await inst.getState();
+    if (state.userId && state.userId !== userId) return bad(c, 'Forbidden');
     await ScopeEntity.delete(c.env, c.req.param('id'));
     return ok(c, { success: true });
   });
@@ -63,7 +69,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const { items } = await TransactionEntity.list(c.env);
-    return ok(c, items);
+    return ok(c, items.filter(t => t.userId === userId));
   });
   app.post('/api/transactions', async (c) => {
     const userId = getUserId(c);
@@ -72,6 +78,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const newTx = {
       ...data,
       id: crypto.randomUUID(),
+      userId,
       date: data.date || new Date().toISOString()
     };
     return ok(c, await TransactionEntity.create(c.env, newTx));
@@ -79,14 +86,19 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.put('/api/transactions/:id', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
-    const data = await c.req.json();
     const inst = new TransactionEntity(c.env, c.req.param('id'));
+    const state = await inst.getState();
+    if (state.userId !== userId) return bad(c, 'Forbidden');
+    const data = await c.req.json();
     await inst.patch(data);
     return ok(c, await inst.getState());
   });
   app.delete('/api/transactions/:id', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
+    const inst = new TransactionEntity(c.env, c.req.param('id'));
+    const state = await inst.getState();
+    if (state.userId !== userId) return bad(c, 'Forbidden');
     await TransactionEntity.delete(c.env, c.req.param('id'));
     return ok(c, { success: true });
   });
@@ -95,26 +107,31 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const { items } = await BillEntity.list(c.env);
-    return ok(c, items);
+    return ok(c, items.filter(b => b.userId === userId || !b.userId));
   });
   app.post('/api/bills', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const data = await c.req.json();
-    const newBill = { ...data, id: crypto.randomUUID(), paid: false };
+    const newBill = { ...data, id: crypto.randomUUID(), userId, paid: false };
     return ok(c, await BillEntity.create(c.env, newBill));
   });
   app.put('/api/bills/:id', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
-    const data = await c.req.json();
     const inst = new BillEntity(c.env, c.req.param('id'));
+    const state = await inst.getState();
+    if (state.userId && state.userId !== userId) return bad(c, 'Forbidden');
+    const data = await c.req.json();
     await inst.patch(data);
     return ok(c, await inst.getState());
   });
   app.delete('/api/bills/:id', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
+    const inst = new BillEntity(c.env, c.req.param('id'));
+    const state = await inst.getState();
+    if (state.userId && state.userId !== userId) return bad(c, 'Forbidden');
     await BillEntity.delete(c.env, c.req.param('id'));
     return ok(c, { success: true });
   });
@@ -123,14 +140,15 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return ok(c, UserSettingsEntity.initialState);
     const settings = new UserSettingsEntity(c.env, userId);
-    return ok(c, await settings.getState());
+    const state = await settings.getState();
+    return ok(c, { ...state, userId });
   });
   app.put('/api/user-settings', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const partial = await c.req.json();
     const settings = new UserSettingsEntity(c.env, userId);
-    await settings.patch(partial);
+    await settings.patch({ ...partial, userId });
     return ok(c, await settings.getState());
   });
 }
