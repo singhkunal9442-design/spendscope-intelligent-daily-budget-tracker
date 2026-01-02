@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Wallet, PlusCircle, TrendingUp } from 'lucide-react';
 import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, useSettings, type ScopeWithIcon } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
@@ -32,11 +32,12 @@ export function DashboardPage() {
     loadData();
   }, [loadData]);
   useEffect(() => {
-    // Sync onboarding with remote settings - fixed dependency
+    // Sync onboarding with remote settings
+    // Lint fix: Including settings in dependency array as it's used in the effect body
     if (!isLoading && settings && !settings.onboarded) {
       setShowOnboarding(true);
     }
-  }, [isLoading, settings?.onboarded]);
+  }, [isLoading, settings]);
   const totalLimit = React.useMemo(() =>
     scopes.reduce((sum, s) => sum + s.dailyLimit, 0),
   [scopes]);
@@ -80,7 +81,13 @@ export function DashboardPage() {
           </motion.div>
           <AnimatePresence mode="wait">
             {isLoading ? (
-              <motion.div key="loader" exit={{ opacity: 0 }} className="space-y-12">
+              <motion.div 
+                key="loader" 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }} 
+                className="space-y-12"
+              >
                 <MonthlyOverviewCardSkeleton />
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={`skeleton-${i}`} />)}

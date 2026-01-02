@@ -25,6 +25,7 @@ export function MonthlyOverviewCard() {
   const currentBalance = useCurrentBalance();
   const currentSalary = useCurrentSalary();
   const unpaidBillsTotal = useUnpaidBillsTotal();
+  // Available cash represents liquidity: Starting Balance minus what's been spent so far.
   const availableCash = currentBalance - spentThisMonth;
   const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
@@ -42,11 +43,11 @@ export function MonthlyOverviewCard() {
   }, [transactions]);
   const percentage = currentBalance > 0 ? Math.min((spentThisMonth / currentBalance) * 100, 100) : 0;
   const stats = [
-    { label: 'Live Balance', value: formatAmount(currentBalance), icon: Landmark, help: "Your current account balance. Automatically adjusted when bills are paid." },
-    { label: 'Total Spent', value: formatAmount(spentThisMonth), icon: FileWarning, help: "Sum of all transactions logged this month." },
-    { label: 'Salary', value: formatAmount(currentSalary), icon: Wallet, help: "Your expected monthly income." },
-    { label: 'Bills Due', value: formatAmount(unpaidBillsTotal), icon: ShoppingBag, help: "Sum of all recurring bills not yet marked as paid." },
-    { label: 'Available Cash', value: formatAmount(availableCash), icon: availableCash < 0 ? TrendingDown : TrendingUp, isPrimary: true, help: "Live Balance minus current month's expenses." },
+    { label: 'Live Balance', value: formatAmount(currentBalance), icon: Landmark, help: "Your account baseline. This amount decreases immediately when a recurring bill is marked as paid." },
+    { label: 'Total Spent', value: formatAmount(spentThisMonth), icon: FileWarning, help: "Total volume of all transactions logged this month across all categories." },
+    { label: 'Salary', value: formatAmount(currentSalary), icon: Wallet, help: "Your expected monthly income, used as a reference for your total financial scope." },
+    { label: 'Bills Due', value: formatAmount(unpaidBillsTotal), icon: ShoppingBag, help: "Outstanding recurring payments that have not yet been settled for this month." },
+    { label: 'Available Cash', value: formatAmount(availableCash), icon: availableCash < 0 ? TrendingDown : TrendingUp, isPrimary: true, help: "True liquidity: Live Balance minus current month's logged expenses." },
   ];
   return (
     <div className="p-8 md:p-12 rounded-[3rem] border border-border/50 shadow-glass bg-card/80 backdrop-blur-md relative overflow-hidden group">
@@ -96,9 +97,9 @@ export function MonthlyOverviewCard() {
         <div className="space-y-5">
           <div className="flex justify-between items-end px-1">
             <div className="space-y-1">
-              <p className="text-label">Spending Efficiency</p>
+              <p className="text-label">Monthly Utilization</p>
               <p className="text-sm font-bold text-muted-foreground">
-                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized of <span className="text-foreground">{formatAmount(currentBalance + spentThisMonth)}</span> total month starting funds
+                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized from <span className="text-foreground">{formatAmount(currentBalance)}</span> starting baseline.
               </p>
             </div>
             <p className="text-2xl font-black text-foreground tracking-tighter">{Math.round(percentage)}%</p>
