@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Landmark, FileWarning, Wallet, Target, TrendingUp, TrendingDown } from 'lucide-react';
+import { Calendar, Landmark, FileWarning, Wallet, ShoppingBag, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFormatAmount, useSpentThisMonth, useCurrentBalance, useCurrentSalary, useMonthlyBudget, useTransactions } from '@/lib/store';
+import { useFormatAmount, useSpentThisMonth, useCurrentBalance, useCurrentSalary, useUnpaidBillsTotal, useTransactions } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HelpTooltip } from '@/components/HelpTooltip';
 export function MonthlyOverviewCardSkeleton() {
   return (
     <div className="p-8 rounded-[2.5rem] border bg-card shadow-glass animate-pulse space-y-8">
@@ -23,7 +24,7 @@ export function MonthlyOverviewCard() {
   const spentThisMonth = useSpentThisMonth();
   const currentBalance = useCurrentBalance();
   const currentSalary = useCurrentSalary();
-  const monthlyBudget = useMonthlyBudget();
+  const unpaidBillsTotal = useUnpaidBillsTotal();
   const availableCash = currentBalance - spentThisMonth;
   const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
@@ -41,11 +42,11 @@ export function MonthlyOverviewCard() {
   }, [transactions]);
   const percentage = currentBalance > 0 ? Math.min((spentThisMonth / currentBalance) * 100, 100) : 0;
   const stats = [
-    { label: 'Starting Balance', value: formatAmount(currentBalance), icon: Landmark },
-    { label: 'Total Spent', value: formatAmount(spentThisMonth), icon: FileWarning },
-    { label: 'Salary', value: formatAmount(currentSalary), icon: Wallet },
-    { label: 'Monthly Cap', value: formatAmount(monthlyBudget), icon: Target },
-    { label: 'Available Cash', value: formatAmount(availableCash), icon: availableCash < 0 ? TrendingDown : TrendingUp, isPrimary: true },
+    { label: 'Live Balance', value: formatAmount(currentBalance), icon: Landmark, help: "Your current account balance. Automatically adjusted when bills are paid." },
+    { label: 'Total Spent', value: formatAmount(spentThisMonth), icon: FileWarning, help: "Sum of all transactions logged this month." },
+    { label: 'Salary', value: formatAmount(currentSalary), icon: Wallet, help: "Your expected monthly income." },
+    { label: 'Bills Due', value: formatAmount(unpaidBillsTotal), icon: ShoppingBag, help: "Sum of all recurring bills not yet marked as paid." },
+    { label: 'Available Cash', value: formatAmount(availableCash), icon: availableCash < 0 ? TrendingDown : TrendingUp, isPrimary: true, help: "Live Balance minus current month's expenses." },
   ];
   return (
     <div className="p-8 md:p-12 rounded-[3rem] border border-border/50 shadow-glass bg-card/80 backdrop-blur-md relative overflow-hidden group">
@@ -72,15 +73,18 @@ export function MonthlyOverviewCard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               className={cn(
-                "p-5 rounded-3xl border border-border/20 transition-all duration-300",
+                "p-5 rounded-3xl border border-border/20 transition-all duration-300 relative",
                 stat.isPrimary
                   ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 shadow-lg shadow-emerald-500/5"
                   : "bg-muted/10 hover:bg-muted/20"
               )}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <stat.icon className={cn("w-4 h-4", stat.isPrimary ? "text-emerald-500" : "text-muted-foreground/60")} />
-                <p className="text-label leading-none">{stat.label}</p>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <stat.icon className={cn("w-4 h-4", stat.isPrimary ? "text-emerald-500" : "text-muted-foreground/60")} />
+                  <p className="text-label leading-none">{stat.label}</p>
+                </div>
+                <HelpTooltip message={stat.help} className="h-4 w-4" />
               </div>
               <p className={cn(
                 "text-2xl font-black tracking-tighter",
@@ -94,7 +98,7 @@ export function MonthlyOverviewCard() {
             <div className="space-y-1">
               <p className="text-label">Spending Efficiency</p>
               <p className="text-sm font-bold text-muted-foreground">
-                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized of <span className="text-foreground">{formatAmount(currentBalance)}</span>
+                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized of <span className="text-foreground">{formatAmount(currentBalance + spentThisMonth)}</span> total month starting funds
               </p>
             </div>
             <p className="text-2xl font-black text-foreground tracking-tighter">{Math.round(percentage)}%</p>
