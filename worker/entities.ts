@@ -1,22 +1,31 @@
 import { IndexedEntity, Entity, Env } from "./core-utils";
-import type { User, Scope, Transaction, Bill, UserSettings } from "../shared/types";
+import type { User, Scope, Transaction, Bill, UserSettings, Post, Comment } from "../shared/types";
 const SEED_USERS: User[] = [
   { id: 'demo-user', email: 'demo@demo.com', passwordHash: 'pbkdf2:demo' }
 ];
-const SEED_SCOPES: Scope[] = [
-  { id: '1', name: 'Coffee', dailyLimit: 5, monthlyLimit: 150, icon: 'Coffee', color: 'emerald' },
-  { id: '2', name: 'Groceries', dailyLimit: 30, monthlyLimit: 900, icon: 'ShoppingCart', color: 'sky' },
-  { id: '3', name: 'Lunch', dailyLimit: 20, monthlyLimit: 600, icon: 'Utensils', color: 'amber' },
-  { id: '4', name: 'Transport', dailyLimit: 15, monthlyLimit: 450, icon: 'Car', color: 'rose' },
-  { id: '5', name: 'Rent', dailyLimit: 50, monthlyLimit: 1500, icon: 'Home', color: 'indigo' },
-];
-const SEED_BILLS: Bill[] = [
-    { id: 'b1', name: 'Rent', amount: 1500, paid: false },
-    { id: 'b2', name: 'Utilities', amount: 200, paid: true },
-    { id: 'b3', name: 'Internet', amount: 60, paid: false },
-];
-const SEED_TRANSACTIONS: Transaction[] = [
-    { id: 't1', scopeId: '1', amount: 4.50, description: 'Morning Latte', date: new Date().toISOString() },
+const SEED_POSTS: Post[] = [
+  {
+    id: 'p1',
+    title: 'The Art of Financial Clarity',
+    content: 'In an era of endless consumption, clarity is the ultimate luxury. SpendScope was designed to bring the Apple aesthetic to your ledger...',
+    excerpt: 'Discover why minimal design leads to better financial decisions.',
+    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=1200',
+    authorId: 'demo-user',
+    category: 'Philosophy',
+    publishedAt: new Date().toISOString(),
+    readTime: '5 min'
+  },
+  {
+    id: 'p2',
+    title: 'Building for the Future',
+    content: 'Our transition to a unified blog and budget platform represents our commitment to holistic financial health...',
+    excerpt: 'A deep dive into the SpendScope 2.0 architecture.',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200',
+    authorId: 'demo-user',
+    category: 'Updates',
+    publishedAt: new Date().toISOString(),
+    readTime: '3 min'
+  }
 ];
 export class UserEntity extends IndexedEntity<User> {
   static readonly entityName = "user";
@@ -29,24 +38,34 @@ export class UserSettingsEntity extends Entity<UserSettings> {
   static readonly initialState: UserSettings = {
     currentBalance: 0,
     currentSalary: 0,
-    currentCurrency: "USD"
+    currentCurrency: "USD",
+    onboarded: false,
+    theme: 'light'
   };
+}
+export class PostEntity extends IndexedEntity<Post> {
+  static readonly entityName = "post";
+  static readonly indexName = "posts";
+  static readonly initialState: Post = { id: "", title: "", content: "", excerpt: "", image: "", authorId: "", category: "", publishedAt: "", readTime: "" };
+  static seedData = SEED_POSTS;
+}
+export class CommentEntity extends IndexedEntity<Comment> {
+  static readonly entityName = "comment";
+  static readonly indexName = "comments";
+  static readonly initialState: Comment = { id: "", postId: "", userId: "", userName: "", text: "", createdAt: "" };
 }
 export class ScopeEntity extends IndexedEntity<Scope> {
   static readonly entityName = "scope";
   static readonly indexName = "scopes";
   static readonly initialState: Scope = { id: "", name: "", dailyLimit: 0, monthlyLimit: 0, icon: "Circle", color: "gray" };
-  static seedData = SEED_SCOPES;
 }
 export class TransactionEntity extends IndexedEntity<Transaction> {
   static readonly entityName = "transaction";
   static readonly indexName = "transactions";
   static readonly initialState: Transaction = { id: "", scopeId: "", amount: 0, date: "" };
-  static seedData = SEED_TRANSACTIONS;
 }
 export class BillEntity extends IndexedEntity<Bill> {
   static readonly entityName = "bill";
   static readonly indexName = "bills";
   static readonly initialState: Bill = { id: "", name: "", amount: 0, paid: false };
-  static seedData = SEED_BILLS;
 }

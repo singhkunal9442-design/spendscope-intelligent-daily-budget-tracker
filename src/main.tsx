@@ -20,72 +20,61 @@ import { BlogPage } from '@/pages/BlogPage';
 import { AboutPage, ContactPage, HelpPage } from '@/pages/StaticPages';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-declare global {
-  interface Window {
-    __reactRoot?: Root;
-  }
-}
+import { DashboardPage } from '@/pages/DashboardPage';
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
+    queries: { retry: 1, refetchOnWindowFocus: false },
   },
 });
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+    errorElement: <RouteErrorBoundary />,
+  },
   {
     path: "/login",
     element: <AuthPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/",
-    element: <ProtectedRoute><AppLayout container={true}><HomePage /></AppLayout></ProtectedRoute>,
+    path: "/blog",
+    element: <BlogPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/about",
+    element: <AboutPage />,
+  },
+  {
+    path: "/contact",
+    element: <ContactPage />,
+  },
+  {
+    path: "/help",
+    element: <HelpPage />,
+  },
+  {
+    path: "/dashboard",
+    element: <ProtectedRoute><AppLayout container={true}><DashboardPage /></AppLayout></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/settings",
     element: <ProtectedRoute><AppLayout container={true}><SettingsPage /></AppLayout></ProtectedRoute>,
-    errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/history",
     element: <ProtectedRoute><AppLayout container={true}><HistoryPage /></AppLayout></ProtectedRoute>,
-    errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/calendar",
     element: <ProtectedRoute><AppLayout container={true}><CalendarPage /></AppLayout></ProtectedRoute>,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/blog",
-    element: <AppLayout container={true}><BlogPage /></AppLayout>,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/about",
-    element: <AppLayout container={true}><AboutPage /></AppLayout>,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/help",
-    element: <AppLayout container={true}><HelpPage /></AppLayout>,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/contact",
-    element: <AppLayout container={true}><ContactPage /></AppLayout>,
-    errorElement: <RouteErrorBoundary />,
   },
 ]);
 const container = document.getElementById('root');
 if (container) {
-  if (!window.__reactRoot) {
-    window.__reactRoot = createRoot(container);
-  }
-  window.__reactRoot.render(
+  createRoot(container).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>

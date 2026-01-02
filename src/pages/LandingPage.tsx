@@ -1,18 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion, type Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Wallet, Shield, Zap, ArrowRight, BarChart3 } from 'lucide-react';
-const fadeIn: Variants = {
+import { Wallet, Shield, Zap, ArrowRight, BarChart3, Users } from 'lucide-react';
+const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { 
-      delay: i * 0.1, 
-      duration: 0.6, 
-      ease: [0.215, 0.61, 0.355, 1] as const 
-    }
+    transition: { delay: i * 0.1, duration: 0.6, ease: [0.215, 0.61, 0.355, 1] }
   })
 };
 export function LandingPage() {
@@ -40,9 +36,9 @@ export function LandingPage() {
         </motion.div>
         <motion.div custom={4} variants={fadeIn} initial="hidden" animate="visible" className="mt-20 w-full max-w-6xl mx-auto px-4">
           <div className="aspect-[21/9] rounded-[2rem] overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl">
-            <img
-              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000"
-              alt="Premium Workspace"
+            <img 
+              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000" 
+              alt="Premium Workspace" 
               className="w-full h-full object-cover grayscale opacity-50 dark:opacity-30"
             />
           </div>
@@ -56,7 +52,7 @@ export function LandingPage() {
             { title: 'Privacy First', icon: Shield, desc: 'Your data is encrypted and stored in global Durable Objects for unmatched security.' },
             { title: 'Real-time Sync', icon: Zap, desc: 'Every transaction reflects instantly across all your devices via Cloudflare edge.' }
           ].map((f, i) => (
-            <motion.div
+            <motion.div 
               key={i} custom={i} variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}
               className="p-10 rounded-[2rem] bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group"
             >
@@ -89,7 +85,7 @@ export function LandingPage() {
         <Button asChild size="lg" className="h-16 px-12 rounded-full text-xl font-bold bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900">
           <Link to="/login">Join SpendScope</Link>
         </Button>
-        <p className="mt-12 text-zinc-400 text-sm font-medium">Built with ❤�� at Cloudflare</p>
+        <p className="mt-12 text-zinc-400 text-sm font-medium">Built with ❤️ at Cloudflare</p>
       </footer>
     </div>
   );
