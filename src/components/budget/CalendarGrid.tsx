@@ -3,7 +3,7 @@ import { useBudgetStore, useDailyTotals, useFormatAmount } from '@/lib/store';
 import { Transaction } from '@shared/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isToday, parseISO, addMonths, subMonths } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, getScopeColorClasses } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -32,12 +32,12 @@ export function CalendarGridSkeleton() {
 export function CalendarGrid() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const transactions = useBudgetStore(state => state.transactions);
-  const scopes = useBudgetStore(state => state.scopes);
+  const rawScopes = useBudgetStore(state => state.scopes);
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
   const dailyTotals = useDailyTotals();
   const formatAmount = useFormatAmount();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const scopesMap = useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
+  const scopesMap = useMemo(() => new Map(rawScopes.map(s => [s.id, s])), [rawScopes]);
   const { days, transactionsByDay, averageDailySpend } = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentMonth));
     const end = endOfWeek(endOfMonth(currentMonth));
@@ -54,8 +54,8 @@ export function CalendarGrid() {
     const spentDaysInMonth = Array.from(dailyTotals.entries())
       .filter(([dateStr]) => isSameMonth(parseISO(dateStr), currentMonth))
       .map(([, total]) => total);
-    const averageDailySpend = spentDaysInMonth.length > 0 
-      ? spentDaysInMonth.reduce((a, b) => a + b, 0) / spentDaysInMonth.length 
+    const averageDailySpend = spentDaysInMonth.length > 0
+      ? spentDaysInMonth.reduce((a, b) => a + b, 0) / spentDaysInMonth.length
       : 0;
     return { days, transactionsByDay, averageDailySpend };
   }, [currentMonth, transactions, dailyTotals]);
@@ -90,7 +90,7 @@ export function CalendarGrid() {
           transition={{ duration: 0.3 }}
           className="grid grid-cols-7 gap-2"
         >
-          {days.map((day, index) => {
+          {days.map((day) => {
             const dayKey = format(day, 'yyyy-MM-dd');
             const totalSpent = dailyTotals.get(dayKey) || 0;
             const dayTransactions = transactionsByDay.get(dayKey) || [];

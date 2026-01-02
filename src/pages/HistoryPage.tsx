@@ -8,7 +8,7 @@ import { generateCSV, downloadCSV } from '@/lib/csv-utils';
 import { HistoryChart } from '@/components/charts/HistoryChart';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Edit, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getScopeColorClasses } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TransactionEditDialog } from '@/components/budget/TransactionEditDialog';
@@ -133,13 +133,13 @@ export function HistoryPage() {
                         {dayTxs.map(tx => {
                           const scope = scopesMap.get(tx.scopeId);
                           const Icon = scope?.icon;
-                          const color = scope?.color ?? 'emerald';
+                          const colors = getScopeColorClasses(scope?.color || 'emerald');
                           return (
                             <div key={tx.id} className="flex items-center justify-between p-3.5 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors duration-200">
                               <div className="flex items-center gap-4">
                                 {Icon && (
-                                  <div className={cn('p-1.5 rounded-md', `bg-${color}-100 dark:bg-${color}-900/50`)}>
-                                    <Icon className={cn('w-5 h-5', `text-${color}-600 dark:text-${color}-400`)} />
+                                  <div className={cn('p-1.5 rounded-md', colors.lightBg)}>
+                                    <Icon className={cn('w-5 h-5', colors.text)} />
                                   </div>
                                 )}
                                 <div>
