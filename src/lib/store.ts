@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { produce } from 'immer';
 import {
   Post, Comment, Scope, Transaction, Bill,
@@ -7,14 +8,14 @@ import {
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import * as LucideIcons from 'lucide-react';
-import { format, parseISO, isToday, isSameMonth, subDays } from 'date-fns';
+import { format, parseISO, isToday, isSameMonth } from 'date-fns';
 export { CURRENCY_PRESETS };
 export type LucideIconName = keyof typeof LucideIcons;
 export interface ScopeWithIcon extends Omit<Scope, 'icon'> {
   icon: LucideIcons.LucideIcon;
   iconName: string;
 }
-const getIcon = (name: string): LucideIcons.LucideIcon => {
+export const getIcon = (name: string): LucideIcons.LucideIcon => {
   const Icon = (LucideIcons as any)[name];
   return Icon || LucideIcons.Circle;
 };
@@ -28,12 +29,10 @@ interface BudgetState {
   bills: Bill[];
   settings: UserSettings;
   loading: boolean;
-  // Core Actions
   loadData: () => Promise<void>;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string) => Promise<void>;
   logout: () => void;
-  // Budgeting Actions
   addTransaction: (data: Partial<Transaction>) => Promise<void>;
   updateTransaction: (id: string, data: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
@@ -43,7 +42,6 @@ interface BudgetState {
   addBill: (data: Partial<Bill>) => Promise<void>;
   updateBill: (id: string, data: Partial<Bill>) => Promise<void>;
   deleteBill: (id: string) => Promise<void>;
-  // Settings Actions
   updateSettings: (partial: Partial<UserSettings>) => Promise<void>;
   setCurrentBalance: (balance: number) => Promise<void>;
   setCurrentSalary: (salary: number) => Promise<void>;
@@ -187,16 +185,15 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     await get().updateSettings({ currentCurrency: currency });
   }
 }));
-// Primitive Selectors
 export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
 export const useLoading = () => useBudgetStore(s => s.loading);
 export const useIsLoading = () => useBudgetStore(s => s.loading);
 export const useSettings = () => useBudgetStore(s => s.settings);
-export const useTransactions = () => useBudgetStore(s => s.transactions);
-export const useBills = () => useBudgetStore(s => s.bills);
+export const useTransactions = () => useBudgetStore(useShallow(s => s.transactions));
+export const useBills = () => useBudgetStore(useShallow(s => s.bills));
 export const useScopes = (): ScopeWithIcon[] => {
-  const rawScopes = useBudgetStore(s => s.scopes);
+  const rawScopes = useBudgetStore(useShallow(s => s.scopes));
   return rawScopes.map(s => ({
     ...s,
     icon: getIcon(s.icon),
@@ -206,7 +203,6 @@ export const useScopes = (): ScopeWithIcon[] => {
 export const useCurrentCurrency = () => useBudgetStore(s => s.settings.currentCurrency);
 export const useCurrentBalance = () => useBudgetStore(s => s.settings.currentBalance);
 export const useCurrentSalary = () => useBudgetStore(s => s.settings.currentSalary);
-// Derived Logic Hooks
 export const useFormatAmount = () => {
   const currency = useCurrentCurrency();
   return (amount: number) => {
@@ -217,28 +213,24 @@ export const useFormatAmount = () => {
   };
 };
 export const useSpentToday = (scopeId?: string) => {
-  const transactions = useTransactions();
+  const transactions = useBudgetStore(useShallow(s => s.transactions));
   return transactions
     .filter(t => isToday(parseISO(t.date)) && (!scopeId || t.scopeId === scopeId))
     .reduce((sum, t) => sum + t.amount, 0);
 };
 export const useSpentThisMonth = (scopeId?: string) => {
-  const transactions = useTransactions();
+  const transactions = useBudgetStore(useShallow(s => s.transactions));
   const now = new Date();
   return transactions
     .filter(t => isSameMonth(parseISO(t.date), now) && (!scopeId || t.scopeId === scopeId))
     .reduce((sum, t) => sum + t.amount, 0);
 };
 export const useMonthlyBudget = () => {
-  const scopes = useBudgetStore(s => s.scopes);
+  const scopes = useBudgetStore(useShallow(s => s.scopes));
   return scopes.reduce((sum, s) => sum + (s.monthlyLimit || s.dailyLimit * 30), 0);
 };
-export const useTransactionsForScope = (scopeId: string) => {
-  const transactions = useTransactions();
-  return transactions.filter(t => t.scopeId === scopeId);
-};
 export const useDailyTotals = () => {
-  const transactions = useTransactions();
+  const transactions = useBudgetStore(useShallow(s => s.transactions));
   const totals = new Map<string, number>();
   transactions.forEach(t => {
     const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
