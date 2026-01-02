@@ -24,6 +24,7 @@ export function MonthlyOverviewCard() {
   const currentBalance = useCurrentBalance();
   const currentSalary = useCurrentSalary();
   const monthlyBudget = useMonthlyBudget();
+  // Available Cash = Starting Balance - Spent so far this month
   const availableCash = currentBalance - spentThisMonth;
   const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
@@ -66,21 +67,21 @@ export function MonthlyOverviewCard() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {stats.map((stat, i) => (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               className={cn(
                 "p-5 rounded-3xl border border-border/20 transition-all duration-300",
-                stat.isPrimary 
-                  ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 shadow-lg shadow-emerald-500/5" 
+                stat.isPrimary
+                  ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 shadow-lg shadow-emerald-500/5"
                   : "bg-muted/10 hover:bg-muted/20"
               )}
             >
               <div className="flex items-center gap-2 mb-3">
                 <stat.icon className={cn("w-4 h-4", stat.isPrimary ? "text-emerald-500" : "text-muted-foreground/60")} />
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-none">{stat.label}</p>
+                <p className="text-label leading-none">{stat.label}</p>
               </div>
               <p className={cn(
                 "text-2xl font-black tracking-tighter",
@@ -92,7 +93,7 @@ export function MonthlyOverviewCard() {
         <div className="space-y-5">
           <div className="flex justify-between items-end px-1">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Spending Efficiency</p>
+              <p className="text-label">Spending Efficiency</p>
               <p className="text-sm font-bold text-muted-foreground">
                 <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized of <span className="text-foreground">{formatAmount(currentBalance)}</span>
               </p>

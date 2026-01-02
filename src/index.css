@@ -11,6 +11,7 @@
     --muted-foreground: 240 3.8% 46.1%;
     --border: 240 5.9% 90%;
     --radius: 1.25rem;
+    --spendscope: 25 90% 54%;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -23,11 +24,26 @@
   }
 }
 @layer components {
-  .shadow-premium {
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  .btn-premium {
+    @apply relative overflow-hidden bg-gradient-to-br from-spendscope-500 to-spendscope-600 text-white font-black tracking-tight rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-glow active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
-  .minimal-card {
-    @apply bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 transition-all hover:shadow-premium;
+  .glass {
+    @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50;
+  }
+  .glass-dark {
+    @apply bg-zinc-900/90 dark:bg-black/90 backdrop-blur-2xl border border-white/10;
+  }
+  .shadow-glass {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  }
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(243, 128, 32, 0.25);
+  }
+  .text-label {
+    @apply text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-none;
+  }
+  .shimmer-bg {
+    @apply animate-pulse bg-gradient-to-r from-muted/20 via-muted/40 to-muted/20 bg-[length:200%_100%];
   }
 }
 * {
