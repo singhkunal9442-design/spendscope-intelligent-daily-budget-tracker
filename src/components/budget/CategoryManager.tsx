@@ -38,26 +38,26 @@ const EditScopeForm = ({ scope, onSave, onCancel }: { scope: ScopeWithIcon, onSa
     },
   });
   return (
-    <form onSubmit={handleSubmit(onSave)} className="p-4 bg-muted/30 border border-border/10 rounded-2xl space-y-4">
+    <form onSubmit={handleSubmit(onSave)} className="p-6 bg-muted/30 border border-border/10 rounded-3xl space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Controller name="name" control={control} render={({ field }) => <Input placeholder="Category Name" {...field} className="h-10 rounded-xl" />} />
-        <Controller name="dailyLimit" control={control} render={({ field }) => <Input type="number" placeholder="Daily Limit" {...field} value={field.value ?? 0} onChange={(e) => field.onChange(Number(e.target.value) || 0)} className="h-10 rounded-xl" />} />
+        <Controller name="name" control={control} render={({ field }) => <Input placeholder="Category Name" {...field} className="h-12 rounded-2xl" />} />
+        <Controller name="dailyLimit" control={control} render={({ field }) => <Input type="number" placeholder="Daily Limit" {...field} value={field.value ?? 0} onChange={(e) => field.onChange(Number(e.target.value) || 0)} className="h-12 rounded-2xl" />} />
         <Controller name="icon" control={control} render={({ field }) => (
           <Select onValueChange={field.onChange} defaultValue={field.value}>
-            <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Select Icon" /></SelectTrigger>
-            <SelectContent>{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
+            <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Select Icon" /></SelectTrigger>
+            <SelectContent className="max-h-60">{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
           </Select>
         )} />
         <Controller name="color" control={control} render={({ field }) => (
           <Select onValueChange={field.onChange} defaultValue={field.value}>
-            <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Select Color" /></SelectTrigger>
+            <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Select Color" /></SelectTrigger>
             <SelectContent>{colorPresets.map(color => <SelectItem key={color} value={color}>{color}</SelectItem>)}</SelectContent>
           </Select>
         )} />
       </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="rounded-xl"><X className="w-4 h-4 mr-1" />Cancel</Button>
-        <Button type="submit" size="sm" className="btn-premium h-9 px-6"><Save className="w-4 h-4 mr-1" />Save</Button>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="rounded-xl h-10 px-4">Cancel</Button>
+        <Button type="submit" size="sm" className="btn-premium h-10 px-8"><Save className="w-4 h-4 mr-2" />Save Changes</Button>
       </div>
     </form>
   );
@@ -72,42 +72,42 @@ export function CategoryManager() {
     resolver: zodResolver(scopeSchema),
     defaultValues: { name: '', dailyLimit: 0, icon: 'Circle', color: 'emerald' },
   });
-  const handleAddNewScope = (data: ScopeFormData) => {
-    addScope(data);
+  const handleAddNewScope = async (data: ScopeFormData) => {
+    await addScope(data);
     reset();
   };
-  const handleSave = (scopeId: string, data: ScopeFormData) => {
-    updateScopeFull(scopeId, data);
+  const handleSave = async (scopeId: string, data: ScopeFormData) => {
+    await updateScopeFull(scopeId, data);
     setEditingScopeId(null);
   };
   return (
     <div className="space-y-8">
-      <Card className="rounded-3xl border-border/40 shadow-glass overflow-hidden">
-        <CardHeader>
-          <CardTitle className="font-black tracking-tighter text-2xl">Add New Category</CardTitle>
+      <Card className="rounded-[2.5rem] border-border/40 shadow-glass overflow-hidden">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-black tracking-tighter text-3xl">Add Category</CardTitle>
           <CardDescription>Define a new spending scope with a daily limit.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(handleAddNewScope)} className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Name</label>
+              <label className="text-label ml-1">Name</label>
               <Controller name="name" control={control} render={({ field }) => <Input placeholder="e.g. Dining" {...field} className="h-12 rounded-2xl" />} />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Daily Allowance</label>
+              <label className="text-label ml-1">Daily Allowance</label>
               <Controller name="dailyLimit" control={control} render={({ field }) => <Input type="number" placeholder="0.00" {...field} value={field.value ?? 0} onChange={(e) => field.onChange(Number(e.target.value) || 0)} className="h-12 rounded-2xl" />} />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Icon</label>
+              <label className="text-label ml-1">Icon</label>
               <Controller name="icon" control={control} render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Icon" /></SelectTrigger>
-                  <SelectContent className="max-h-[300px]">{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
+                  <SelectContent className="max-h-60">{iconPresets.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}</SelectContent>
                 </Select>
               )} />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Color Theme</label>
+              <label className="text-label ml-1">Color Theme</label>
               <Controller name="color" control={control} render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Color" /></SelectTrigger>
@@ -116,22 +116,22 @@ export function CategoryManager() {
               )} />
             </div>
             <Button type="submit" className="md:col-span-2 btn-premium h-14 w-full shadow-glow text-lg">
-              <PlusCircle className="w-6 h-6 mr-2" />Add Category
+              <PlusCircle className="w-6 h-6 mr-2" />Add New Category
             </Button>
           </form>
         </CardContent>
       </Card>
-      <Card className="rounded-3xl border-border/40 shadow-glass overflow-hidden">
-        <CardHeader>
-          <CardTitle className="font-black tracking-tighter text-2xl">Existing Categories</CardTitle>
-          <CardDescription>Manage and adjust your active spending scopes.</CardDescription>
+      <Card className="rounded-[2.5rem] border-border/40 shadow-glass overflow-hidden">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-black tracking-tighter text-3xl">Manage Scopes</CardTitle>
+          <CardDescription>Adjust your active spending categories.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {(!scopes || scopes.length === 0) && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 border-2 border-dashed border-border/20 rounded-3xl">
                 <PlusCircle className="mx-auto h-12 w-12 text-muted-foreground/30" />
-                <p className="mt-4 text-muted-foreground/60 font-black uppercase tracking-widest text-xs">Your scopes list is empty</p>
+                <p className="mt-4 text-muted-foreground/60 font-black uppercase tracking-widest text-xs">No active scopes found</p>
               </motion.div>
             )}
             {(scopes || []).map((scope) => {
@@ -140,34 +140,34 @@ export function CategoryManager() {
               return editingScopeId === scope.id ? (
                 <EditScopeForm key={scope.id} scope={scope} onSave={(data) => handleSave(scope.id, data)} onCancel={() => setEditingScopeId(null)} />
               ) : (
-                <div key={scope.id} className="group flex items-center justify-between p-4 bg-muted/20 hover:bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/10 transition-all duration-300">
+                <div key={scope.id} className="group flex items-center justify-between p-4 bg-muted/10 hover:bg-muted/30 backdrop-blur-sm rounded-2xl border border-border/10 transition-all duration-300">
                   <div className="flex items-center gap-4">
                     <div className={cn('p-3 rounded-2xl border shadow-sm transition-all duration-300', colors.lightBg, colors.border, colors.glow)}>
                       <Icon className={cn('w-6 h-6', colors.text)} />
                     </div>
                     <div>
                       <span className="font-black text-lg tracking-tight">{scope.name}</span>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">${scope.dailyLimit.toFixed(2)} / day</p>
+                      <p className="text-label">${scope.dailyLimit.toFixed(2)} / day</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="icon" variant="ghost" onClick={() => setEditingScopeId(scope.id)} className="h-10 w-10 rounded-xl hover:bg-muted/50"><Edit className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setEditingScopeId(scope.id)} className="h-10 w-10 rounded-xl hover:bg-muted/50 transition-colors"><Edit className="w-4 h-4" /></Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <motion.div variants={shakeVariants} whileHover="hover">
-                          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-500/10"><Trash2 className="w-4 h-4" /></Button>
+                          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors"><Trash2 className="w-4 h-4" /></Button>
                         </motion.div>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="rounded-3xl border-border/40 shadow-2xl">
+                      <AlertDialogContent className="rounded-[2.5rem] border-border/40 shadow-2xl">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="font-black tracking-tighter text-2xl">Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription className="font-medium">
-                            Deleting "{scope.name}" will remove it from your grid. Historical transactions will be kept for records.
+                          <AlertDialogTitle className="font-black tracking-tighter text-2xl">Delete Scope?</AlertDialogTitle>
+                          <AlertDialogDescription className="font-medium text-muted-foreground">
+                            This will remove "{scope.name}" from your active dashboard. Historic ledger data remains for reporting.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="gap-2 pt-4">
                           <AlertDialogCancel className="rounded-2xl">Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteScope(scope.id)} className="bg-destructive hover:bg-destructive/90 rounded-2xl">Delete</AlertDialogAction>
+                          <AlertDialogAction onClick={() => deleteScope(scope.id)} className="bg-destructive hover:bg-destructive/90 rounded-2xl">Confirm Delete</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
