@@ -79,7 +79,7 @@ function updateWranglerJsonc() {
 function runSetupCommands() {
     const commands = [
     "bun add uuid",
-    "bun add date-fns lucide-react framer-motion clsx tailwind-merge"
+    "bun add date-fns lucide-react framer-motion clsx tailwind-merge zustand immer"
 ];
     
     if (commands.length === 0) {
