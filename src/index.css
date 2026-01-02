@@ -25,29 +25,39 @@
 }
 @layer components {
   .btn-premium {
-    @apply relative overflow-hidden bg-gradient-to-br from-spendscope-500 to-spendscope-600 text-white font-black tracking-tight rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-glow active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+    @apply relative overflow-hidden bg-gradient-to-br from-spendscope-500 to-orange-600 text-white font-black tracking-tight rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-glow active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
   .glass {
     @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50;
   }
   .glass-dark {
-    @apply bg-zinc-900/90 dark:bg-black/90 backdrop-blur-2xl border border-white/10;
+    @apply bg-zinc-900/80 backdrop-blur-3xl border border-white/10 shadow-2xl;
   }
   .shadow-glass {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
   }
   .shadow-glow {
-    box-shadow: 0 0 20px rgba(243, 128, 32, 0.25);
+    box-shadow: 0 0 30px rgba(243, 128, 32, 0.35);
   }
   .text-label {
     @apply text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-none;
   }
+  .text-gradient-orange {
+    @apply bg-gradient-to-br from-spendscope-400 via-spendscope-500 to-orange-600 bg-clip-text text-transparent;
+  }
   .shimmer-bg {
     @apply animate-pulse bg-gradient-to-r from-muted/20 via-muted/40 to-muted/20 bg-[length:200%_100%];
   }
+  .bg-gradient-mesh {
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(25, 90%, 54%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(142, 76%, 36%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(262, 83%, 57%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, hsla(198, 93%, 49%, 0.1) 0px, transparent 50%);
+  }
 }
 * {
-  @apply border-border selection:bg-zinc-900 selection:text-white dark:selection:bg-zinc-100 dark:selection:text-zinc-900;
+  @apply border-border selection:bg-spendscope-500 selection:text-white;
 }
 body {
   @apply bg-background text-foreground antialiased font-sans;
