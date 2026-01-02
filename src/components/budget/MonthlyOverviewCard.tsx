@@ -24,7 +24,6 @@ export function MonthlyOverviewCard() {
   const currentBalance = useCurrentBalance();
   const currentSalary = useCurrentSalary();
   const monthlyBudget = useMonthlyBudget();
-  // Available Cash = Starting Balance - Spent so far this month
   const availableCash = currentBalance - spentThisMonth;
   const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
@@ -45,7 +44,7 @@ export function MonthlyOverviewCard() {
     { label: 'Starting Balance', value: formatAmount(currentBalance), icon: Landmark },
     { label: 'Total Spent', value: formatAmount(spentThisMonth), icon: FileWarning },
     { label: 'Salary', value: formatAmount(currentSalary), icon: Wallet },
-    { label: 'Budget Cap', value: formatAmount(monthlyBudget), icon: Target },
+    { label: 'Monthly Cap', value: formatAmount(monthlyBudget), icon: Target },
     { label: 'Available Cash', value: formatAmount(availableCash), icon: availableCash < 0 ? TrendingDown : TrendingUp, isPrimary: true },
   ];
   return (
@@ -58,7 +57,7 @@ export function MonthlyOverviewCard() {
             </div>
             <div>
               <h2 className="text-3xl font-black tracking-tighter">{currentMonth} Overview</h2>
-              <p className="text-label mt-1">Real-time Financial Vitals</p>
+              <p className="text-label mt-1">Real-time Financial Pulse</p>
             </div>
           </div>
           <div className="w-full md:w-80 h-16 opacity-30 group-hover:opacity-60 transition-all duration-700 hover:scale-105">
@@ -104,8 +103,9 @@ export function MonthlyOverviewCard() {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${percentage}%` }}
+              transition={{ duration: 1.5, ease: "circOut" }}
               className={cn(
-                "h-full rounded-full transition-all duration-1000 shadow-glow",
+                "h-full rounded-full transition-all shadow-glow",
                 percentage > 90 ? "bg-red-500" : "bg-gradient-to-r from-spendscope-500 to-emerald-500"
               )}
             />

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
 import { cn, getScopeColorClasses } from '@/lib/utils';
 import { useTransactions, useSpentThisMonth, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
@@ -69,16 +68,14 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [scope.id, transactions]);
-  if (isLoading) {
-    return <MonthlyScopeCardSkeleton />;
-  }
+  if (isLoading) return <MonthlyScopeCardSkeleton />;
   const monthlyLimit = scope.monthlyLimit ?? scope.dailyLimit * 30;
   const remaining = monthlyLimit - spentThisMonth;
   const percentage = monthlyLimit > 0 ? Math.min((spentThisMonth / monthlyLimit) * 100, 100) : 0;
-  const getProgressColor = () => {
-    if (percentage > 90) return 'bg-red-500';
-    if (percentage > 70) return 'bg-spendscope-500 shadow-[0_0_8px_rgba(243,128,32,0.4)]';
-    return colors.bg;
+  const getIndicatorColor = () => {
+    if (percentage > 90) return 'bg-red-500 shadow-glow-sm';
+    if (percentage > 70) return 'bg-amber-500 shadow-glow-sm';
+    return cn(colors.bg, colors.glow);
   };
   const Icon = scope.icon;
   return (
@@ -103,11 +100,11 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
             <h3 className="text-lg font-bold text-foreground tracking-tight">{scope.name}</h3>
           </div>
           <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-            Monthly: {formatAmount(monthlyLimit)}
+            Monthly Cap: {formatAmount(monthlyLimit)}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Total Spent</p>
+          <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Spent</p>
           <p className="text-lg font-bold text-foreground tracking-tighter">
             {formatAmount(spentThisMonth)}
           </p>
@@ -119,13 +116,19 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
           <motion.span
             className={cn('font-black tracking-tighter', remaining < 0 ? 'text-red-500' : 'text-emerald-500')}
             animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 0.3 }}
             key={remaining}
           >
             {formatAmount(remaining)}
           </motion.span>
         </div>
-        <Progress value={percentage} className={cn("h-2 rounded-full bg-muted/30 overflow-hidden", getProgressColor())} />
+        <div className="h-2 w-full bg-muted/20 rounded-full overflow-hidden p-0.5 border border-border/5">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 1, ease: "circOut" }}
+            className={cn("h-full rounded-full transition-colors", getIndicatorColor())}
+          />
+        </div>
       </div>
       <div className="mt-4 h-10 w-full opacity-60 group-hover:opacity-100 transition-opacity">
         <ScopeSparkline data={sparkData} color={scope.color} />

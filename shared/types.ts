@@ -37,6 +37,7 @@ export interface Comment {
 }
 export interface Scope {
   id: string;
+  userId: string;
   name: string;
   dailyLimit: number;
   monthlyLimit: number;
@@ -45,6 +46,7 @@ export interface Scope {
 }
 export interface Transaction {
   id: string;
+  userId: string;
   scopeId: string;
   amount: number;
   description?: string;
@@ -52,11 +54,13 @@ export interface Transaction {
 }
 export interface Bill {
   id: string;
+  userId: string;
   name: string;
   amount: number;
   paid: boolean;
 }
 export interface UserSettings {
+  userId: string;
   currentBalance: number;
   currentSalary: number;
   currentCurrency: string;

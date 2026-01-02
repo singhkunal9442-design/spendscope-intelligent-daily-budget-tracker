@@ -53,6 +53,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   transactions: [],
   bills: [],
   settings: {
+    userId: "",
     currentBalance: 0,
     currentSalary: 0,
     currentCurrency: 'USD',
@@ -72,7 +73,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       ]);
       set({ settings, scopes, transactions, bills });
     } catch (e) {
-      console.error(e);
+      console.error("[STORE] Data load failed:", e);
     } finally {
       set({ loading: false });
     }
@@ -173,7 +174,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     set({ settings: updated });
   },
   setCurrentBalance: async (balance) => {
-    await get().updateSettings({ currentBalance: balance });
+    await get().updateSettings({ currentBalance: balance, onboarded: true });
   },
   setCurrentSalary: async (salary) => {
     await get().updateSettings({ currentSalary: salary });
