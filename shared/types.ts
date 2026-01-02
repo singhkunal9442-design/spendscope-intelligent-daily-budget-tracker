@@ -8,11 +8,32 @@ export interface User {
   email: string;
   passwordHash: string;
 }
-export interface AuthResponse {
-  success: boolean;
-  user?: Omit<User, 'passwordHash'>;
-  token?: string;
-  error?: string;
+export interface UserPublic {
+  id: string;
+  email: string;
+}
+export interface AuthResponseData {
+  user: UserPublic;
+  token: string;
+}
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  image: string;
+  authorId: string;
+  category: string;
+  publishedAt: string;
+  readTime: string;
+}
+export interface Comment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string;
 }
 export interface Scope {
   id: string;
@@ -39,6 +60,6 @@ export interface UserSettings {
   currentBalance: number;
   currentSalary: number;
   currentCurrency: string;
+  onboarded: boolean;
+  theme: 'light' | 'dark';
 }
-export type UserPublic = Pick<User, 'id' | 'email'>;
-export type AuthResponseData = { user: UserPublic; token: string; };
