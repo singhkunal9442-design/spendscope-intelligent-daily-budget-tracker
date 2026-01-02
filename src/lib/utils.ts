@@ -71,3 +71,13 @@ export function getScopeColorClasses(color: string): ColorClasses {
   };
   return mapping[color] || mapping.emerald;
 }
+export function formatCurrencyAmount(amount: number, currency: string = 'USD', locale?: string): string {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+    }).format(amount);
+  } catch (e) {
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+}
