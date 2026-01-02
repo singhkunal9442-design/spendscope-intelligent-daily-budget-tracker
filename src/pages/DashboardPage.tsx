@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Wallet, PlusCircle, TrendingUp } from 'lucide-react';
 import { useBudgetStore, useIsLoading, useFormatAmount, useBills, useScopes, useSettings, type ScopeWithIcon } from '@/lib/store';
 import { ScopeCard, ScopeCardSkeleton } from '@/components/budget/ScopeCard';
@@ -19,7 +19,7 @@ export function DashboardPage() {
   const scopes = useScopes();
   const bills = useBills();
   const settings = useSettings();
-  const loadData = useBudgetStore(state => state.loadData);
+  const loadData = useBudgetStore(s => s.loadData);
   const isLoading = useIsLoading();
   const formatAmount = useFormatAmount();
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
@@ -32,7 +32,7 @@ export function DashboardPage() {
     loadData();
   }, [loadData]);
   useEffect(() => {
-    // Sync onboarding with remote settings
+    // Sync onboarding with remote settings - fixed dependency
     if (!isLoading && settings && !settings.onboarded) {
       setShowOnboarding(true);
     }
@@ -83,11 +83,12 @@ export function DashboardPage() {
               <motion.div key="loader" exit={{ opacity: 0 }} className="space-y-12">
                 <MonthlyOverviewCardSkeleton />
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={i} />)}
+                  {[...Array(3)].map((_, i) => <ScopeCardSkeleton key={`skeleton-${i}`} />)}
                 </div>
               </motion.div>
             ) : (
               <motion.div
+                key="dashboard-content"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -119,7 +120,7 @@ export function DashboardPage() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {scopes.map((scope) => (
-                          <motion.div key={scope.id} variants={itemVariants}>
+                          <motion.div key={`daily-${scope.id}`} variants={itemVariants}>
                             <ScopeCard scope={scope} onEdit={setEditingScope} />
                           </motion.div>
                         ))}
@@ -156,7 +157,7 @@ export function DashboardPage() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {bills.map((bill) => (
-                          <motion.div key={bill.id} variants={itemVariants}>
+                          <motion.div key={`bill-${bill.id}`} variants={itemVariants}>
                             <BillCard bill={bill} onEdit={setEditingBill} />
                           </motion.div>
                         ))}

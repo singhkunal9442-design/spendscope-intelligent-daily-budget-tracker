@@ -7,6 +7,7 @@ import { useBudgetStore, useFormatAmount } from '@/lib/store';
 import { Bill } from '@shared/types';
 import { Banknote } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 interface BillCardProps {
   bill: Bill;
   onEdit: (bill: Bill) => void;
@@ -28,8 +29,17 @@ export function BillCardSkeleton() {
 export function BillCard({ bill, onEdit }: BillCardProps) {
   const updateBill = useBudgetStore(state => state.updateBill);
   const formatAmount = useFormatAmount();
-  const handlePaidToggle = (checked: boolean) => {
-    updateBill(bill.id, { paid: checked });
+  const handlePaidToggle = async (checked: boolean) => {
+    try {
+      await updateBill(bill.id, { paid: checked });
+      if (checked) {
+        toast.success(`Deducted ${formatAmount(bill.amount)} from balance`);
+      } else {
+        toast.info(`Restored ${formatAmount(bill.amount)} to balance`);
+      }
+    } catch (e) {
+      toast.error("Failed to update bill status");
+    }
   };
   return (
     <motion.div
@@ -59,7 +69,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
         </div>
         <div
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all",
+            "flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all z-10",
             bill.paid ? "bg-emerald-500/10 border-emerald-500/20" : "bg-muted/20 border-border/20"
           )}
           onClick={(e) => e.stopPropagation()}
