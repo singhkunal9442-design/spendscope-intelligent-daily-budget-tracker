@@ -39,7 +39,7 @@ export interface Scope {
   id: string;
   name: string;
   dailyLimit: number;
-  monthlyLimit?: number;
+  monthlyLimit: number;
   icon: string;
   color: string;
 }
@@ -63,3 +63,4 @@ export interface UserSettings {
   onboarded: boolean;
   theme: 'light' | 'dark';
 }
+export const CURRENCY_PRESETS = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'CHF', 'AED'] as const;
