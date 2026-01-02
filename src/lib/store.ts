@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { produce } from 'immer';
 import {
-  Post, Comment, Scope, Transaction, Bill,
+  Scope, Transaction, Bill,
   UserPublic, UserSettings, CURRENCY_PRESETS
 } from '@shared/types';
 import { api } from '@/lib/api-client';
@@ -22,8 +22,6 @@ export const getIcon = (name: string): LucideIcons.LucideIcon => {
 interface BudgetState {
   user: UserPublic | null;
   token: string | null;
-  posts: Post[];
-  comments: Comment[];
   scopes: Scope[];
   transactions: Transaction[];
   bills: Bill[];
@@ -50,8 +48,6 @@ interface BudgetState {
 export const useBudgetStore = create<BudgetState>((set, get) => ({
   user: localStorage.getItem('spendscope-user') ? JSON.parse(localStorage.getItem('spendscope-user')!) : null,
   token: localStorage.getItem('spendscope-token'),
-  posts: [],
-  comments: [],
   scopes: [],
   transactions: [],
   bills: [],
@@ -189,7 +185,7 @@ export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
 export const useLoading = () => useBudgetStore(s => s.loading);
 export const useIsLoading = () => useBudgetStore(s => s.loading);
-export const useSettings = () => useBudgetStore(s => s.settings);
+export const useSettings = () => useBudgetStore(useShallow(s => s.settings));
 export const useTransactions = () => useBudgetStore(useShallow(s => s.transactions));
 export const useBills = () => useBudgetStore(useShallow(s => s.bills));
 export const useScopes = (): ScopeWithIcon[] => {

@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useBudgetStore, useFormatAmount } from '@/lib/store';
 import { Bill } from '@shared/types';
-import { Banknote, Pencil } from 'lucide-react';
+import { Banknote } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 interface BillCardProps {
   bill: Bill;
@@ -38,11 +38,6 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
       whileHover={{ scale: 1.01, y: -2 }}
       className="group relative p-8 rounded-3xl bg-card border border-border/40 shadow-glass hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
     >
-      <div className="absolute top-6 right-6 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="p-2 bg-muted/80 backdrop-blur rounded-xl text-muted-foreground hover:text-foreground border border-border/20 shadow-sm">
-          <Pencil className="w-4 h-4" />
-        </div>
-      </div>
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <div className={cn(

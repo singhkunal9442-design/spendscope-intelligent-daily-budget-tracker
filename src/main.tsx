@@ -2,7 +2,7 @@ import '@/lib/errorReporter';
 import { enableMapSet } from "immer";
 enableMapSet();
 import React, { StrictMode } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 import {
   createBrowserRouter,
   RouterProvider,
@@ -16,8 +16,6 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { CalendarPage } from '@/pages/CalendarPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { AuthPage } from '@/pages/AuthPage';
-import { BlogPage } from '@/pages/BlogPage';
-import { AboutPage, ContactPage, HelpPage } from '@/pages/StaticPages';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -29,7 +27,7 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomePage />,
+    element: <ProtectedRoute><AppLayout container={true}><DashboardPage /></AppLayout></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
   },
   {
@@ -38,38 +36,19 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/blog",
-    element: <BlogPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/about",
-    element: <AboutPage />,
-  },
-  {
-    path: "/contact",
-    element: <ContactPage />,
-  },
-  {
-    path: "/help",
-    element: <HelpPage />,
-  },
-  {
-    path: "/dashboard",
-    element: <ProtectedRoute><AppLayout container={true}><DashboardPage /></AppLayout></ProtectedRoute>,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
     path: "/settings",
     element: <ProtectedRoute><AppLayout container={true}><SettingsPage /></AppLayout></ProtectedRoute>,
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/history",
     element: <ProtectedRoute><AppLayout container={true}><HistoryPage /></AppLayout></ProtectedRoute>,
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/calendar",
     element: <ProtectedRoute><AppLayout container={true}><CalendarPage /></AppLayout></ProtectedRoute>,
+    errorElement: <RouteErrorBoundary />,
   },
 ]);
 const container = document.getElementById('root');

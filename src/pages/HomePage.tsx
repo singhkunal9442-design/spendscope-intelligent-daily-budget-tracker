@@ -1,13 +1,10 @@
 import React from 'react';
-import { LandingPage } from './LandingPage';
-import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { Navigate } from 'react-router-dom';
+import { useIsLoggedIn } from '@/lib/store';
 export function HomePage() {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <PublicNavbar />
-      <main className="flex-grow">
-        <LandingPage />
-      </main>
-    </div>
-  );
+  const isLoggedIn = useIsLoggedIn();
+  if (isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
+  return <Navigate to="/login" replace />;
 }
