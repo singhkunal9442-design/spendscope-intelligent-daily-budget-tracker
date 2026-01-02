@@ -8,7 +8,7 @@ import {
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import * as LucideIcons from 'lucide-react';
-import { format, parseISO, isToday, isSameMonth } from 'date-fns';
+import { format, parseISO, isToday, isSameMonth, getDaysInMonth } from 'date-fns';
 import { useMemo } from 'react';
 export { CURRENCY_PRESETS };
 export type LucideIconName = keyof typeof LucideIcons;
@@ -155,10 +155,12 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   updateBill: async (id, data) => {
     const currentBills = get().bills;
     const billToUpdate = currentBills.find(b => b.id === id);
-    if (billToUpdate && typeof data.paid === 'boolean' && data.paid !== billToUpdate.paid) {
+    // Balance Mutation Logic: Sync bill settlement with currentBalance
+    if (billToUpdate && data.paid !== undefined && data.paid !== billToUpdate.paid) {
       const balanceAdjustment = data.paid ? -billToUpdate.amount : billToUpdate.amount;
-      const newBalance = get().settings.currentBalance + balanceAdjustment;
-      get().updateSettings({ currentBalance: newBalance });
+      const nextBalance = get().settings.currentBalance + balanceAdjustment;
+      // Persist the balance change immediately alongside the bill update
+      await get().updateSettings({ currentBalance: nextBalance });
     }
     const res = await api<Bill>(`/api/bills/${id}`, {
       method: 'PUT', body: JSON.stringify(data)
@@ -176,6 +178,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   },
   updateSettings: async (partial) => {
     const oldSettings = get().settings;
+    // Optimistic local update
     set({ settings: { ...oldSettings, ...partial } });
     try {
       const updated = await api<UserSettings>('/api/user-settings', {
@@ -183,6 +186,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       });
       set({ settings: updated });
     } catch (e) {
+      // Rollback on failure
       set({ settings: oldSettings });
       throw e;
     }
@@ -197,6 +201,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     await get().updateSettings({ currentCurrency: currency });
   }
 }));
+// SELECTORS (Primitive Only)
 export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
 export const useIsLoading = () => useBudgetStore(s => s.loading);
@@ -240,7 +245,13 @@ export const useSpentThisMonth = (scopeId?: string) => {
 };
 export const useMonthlyBudget = () => {
   const rawScopes = useBudgetStore(useShallow(s => s.scopes));
-  return useMemo(() => rawScopes.reduce((sum, s) => sum + (s.monthlyLimit || s.dailyLimit * 30), 0), [rawScopes]);
+  return useMemo(() => {
+    const daysInMonth = getDaysInMonth(new Date());
+    return rawScopes.reduce((sum, s) => {
+      // Use explicit monthly limit if defined, otherwise calculate based on actual days in the current month
+      return sum + (s.monthlyLimit || (s.dailyLimit * daysInMonth));
+    }, 0);
+  }, [rawScopes]);
 };
 export const useUnpaidBillsTotal = () => {
   const bills = useBills();

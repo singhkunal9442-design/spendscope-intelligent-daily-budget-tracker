@@ -25,7 +25,7 @@ export function MonthlyOverviewCard() {
   const currentBalance = useCurrentBalance();
   const currentSalary = useCurrentSalary();
   const unpaidBillsTotal = useUnpaidBillsTotal();
-  // Available cash represents liquidity: Starting Balance minus what's been spent so far.
+  // availableCash is strictly the adjusted balance minus month-to-date spending
   const availableCash = currentBalance - spentThisMonth;
   const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
@@ -41,13 +41,40 @@ export function MonthlyOverviewCard() {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [transactions]);
-  const percentage = currentBalance > 0 ? Math.min((spentThisMonth / currentBalance) * 100, 100) : 0;
+  // Percentage reflects how much of the CURRENT liquid balance has been consumed by transactions
+  const percentage = currentBalance > 0 ? Math.min((spentThisMonth / (currentBalance + spentThisMonth)) * 100, 100) : 0;
   const stats = [
-    { label: 'Live Balance', value: formatAmount(currentBalance), icon: Landmark, help: "Your account baseline. This amount decreases immediately when a recurring bill is marked as paid." },
-    { label: 'Total Spent', value: formatAmount(spentThisMonth), icon: FileWarning, help: "Total volume of all transactions logged this month across all categories." },
-    { label: 'Salary', value: formatAmount(currentSalary), icon: Wallet, help: "Your expected monthly income, used as a reference for your total financial scope." },
-    { label: 'Bills Due', value: formatAmount(unpaidBillsTotal), icon: ShoppingBag, help: "Outstanding recurring payments that have not yet been settled for this month." },
-    { label: 'Available Cash', value: formatAmount(availableCash), icon: availableCash < 0 ? TrendingDown : TrendingUp, isPrimary: true, help: "True liquidity: Live Balance minus current month's logged expenses." },
+    { 
+      label: 'Live Balance', 
+      value: formatAmount(currentBalance), 
+      icon: Landmark, 
+      help: "Your liquid baseline. This represents your starting balance minus any recurring bills you have marked as 'Settled' for this month." 
+    },
+    { 
+      label: 'Total Spent', 
+      value: formatAmount(spentThisMonth), 
+      icon: FileWarning, 
+      help: "Sum of all transactions logged this month across all categories." 
+    },
+    { 
+      label: 'Salary', 
+      value: formatAmount(currentSalary), 
+      icon: Wallet, 
+      help: "Your expected monthly income, used as a high-level scope indicator." 
+    },
+    { 
+      label: 'Bills Due', 
+      value: formatAmount(unpaidBillsTotal), 
+      icon: ShoppingBag, 
+      help: "Total value of recurring bills not yet marked as paid." 
+    },
+    { 
+      label: 'Available Cash', 
+      value: formatAmount(availableCash), 
+      icon: availableCash < 0 ? TrendingDown : TrendingUp, 
+      isPrimary: true, 
+      help: "True Liquidity: Your Live Balance minus your month-to-date spending. This is exactly what you have left to spend." 
+    },
   ];
   return (
     <div className="p-8 md:p-12 rounded-[3rem] border border-border/50 shadow-glass bg-card/80 backdrop-blur-md relative overflow-hidden group">
@@ -99,7 +126,7 @@ export function MonthlyOverviewCard() {
             <div className="space-y-1">
               <p className="text-label">Monthly Utilization</p>
               <p className="text-sm font-bold text-muted-foreground">
-                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized from <span className="text-foreground">{formatAmount(currentBalance)}</span> starting baseline.
+                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized from available liquid baseline.
               </p>
             </div>
             <p className="text-2xl font-black text-foreground tracking-tighter">{Math.round(percentage)}%</p>
