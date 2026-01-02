@@ -1,13 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useBudgetStore, CURRENCY_PRESETS } from '@/lib/store';
+import { useBudgetStore, useCurrentCurrency, CURRENCY_PRESETS } from '@/lib/store';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 interface CurrencySelectorProps {
   className?: string;
 }
 export function CurrencySelector({ className }: CurrencySelectorProps) {
-  const currentCurrency = useBudgetStore(state => state.currentCurrency);
+  const currentCurrency = useCurrentCurrency();
   const setCurrency = useBudgetStore(state => state.setCurrency);
   return (
     <motion.div
