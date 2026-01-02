@@ -1,5 +1,5 @@
 import { IndexedEntity, Entity } from "./core-utils";
-import type { User, Scope, Transaction, Bill, UserSettings, Post, Comment } from "../shared/types";
+import type { User, Scope, Transaction, Bill, UserSettings } from "../shared/types";
 const DEMO_USER_ID = 'demo-user';
 const SEED_USERS: User[] = [
   { id: DEMO_USER_ID, email: 'demo@demo.com', passwordHash: 'pbkdf2:demo' }
@@ -14,30 +14,6 @@ const SEED_BILLS: Bill[] = [
   { id: 'b1', name: 'Rent', amount: 1500, paid: true },
   { id: 'b2', name: 'Internet', amount: 60, paid: false },
   { id: 'b3', name: 'Netflix', amount: 15, paid: true },
-];
-const SEED_POSTS: Post[] = [
-  {
-    id: 'p1',
-    title: 'The Art of Financial Clarity',
-    content: 'In an era of endless consumption, clarity is the ultimate luxury. SpendScope was designed to bring the Apple aesthetic to your ledger...',
-    excerpt: 'Discover why minimal design leads to better financial decisions.',
-    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=1200',
-    authorId: DEMO_USER_ID,
-    category: 'Philosophy',
-    publishedAt: new Date().toISOString(),
-    readTime: '5 min'
-  },
-  {
-    id: 'p2',
-    title: 'Building for the Future',
-    content: 'Our transition to a unified blog and budget platform represents our commitment to holistic financial health...',
-    excerpt: 'A deep dive into the SpendScope 2.0 architecture.',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200',
-    authorId: DEMO_USER_ID,
-    category: 'Updates',
-    publishedAt: new Date().toISOString(),
-    readTime: '3 min'
-  }
 ];
 export class UserEntity extends IndexedEntity<User> {
   static readonly entityName = "user";
@@ -54,17 +30,6 @@ export class UserSettingsEntity extends Entity<UserSettings> {
     onboarded: true,
     theme: 'light'
   };
-}
-export class PostEntity extends IndexedEntity<Post> {
-  static readonly entityName = "post";
-  static readonly indexName = "posts";
-  static readonly initialState: Post = { id: "", title: "", content: "", excerpt: "", image: "", authorId: "", category: "", publishedAt: "", readTime: "" };
-  static seedData = SEED_POSTS;
-}
-export class CommentEntity extends IndexedEntity<Comment> {
-  static readonly entityName = "comment";
-  static readonly indexName = "comments";
-  static readonly initialState: Comment = { id: "", postId: "", userId: "", userName: "", text: "", createdAt: "" };
 }
 export class ScopeEntity extends IndexedEntity<Scope> {
   static readonly entityName = "scope";

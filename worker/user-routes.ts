@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import type { Env } from './core-utils';
-import { 
-  ScopeEntity, TransactionEntity, BillEntity, 
-  UserEntity, UserSettingsEntity, PostEntity, CommentEntity 
+import {
+  ScopeEntity, TransactionEntity, BillEntity,
+  UserEntity, UserSettingsEntity
 } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import { User, Scope, Transaction, Bill } from "../shared/types";
+import { User } from "../shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   const getUserId = (c: any) => {
     const auth = c.req.header('Authorization');
@@ -69,10 +69,10 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const data = await c.req.json();
-    const newTx = { 
-      ...data, 
-      id: crypto.randomUUID(), 
-      date: data.date || new Date().toISOString() 
+    const newTx = {
+      ...data,
+      id: crypto.randomUUID(),
+      date: data.date || new Date().toISOString()
     };
     return ok(c, await TransactionEntity.create(c.env, newTx));
   });
@@ -117,17 +117,6 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!userId) return bad(c, 'Unauthorized');
     await BillEntity.delete(c.env, c.req.param('id'));
     return ok(c, { success: true });
-  });
-  // BLOG API
-  app.get('/api/posts', async (c) => {
-    await PostEntity.ensureSeed(c.env);
-    const { items } = await PostEntity.list(c.env);
-    return ok(c, items);
-  });
-  app.get('/api/comments/:postId', async (c) => {
-    const { items } = await CommentEntity.list(c.env);
-    const filtered = items.filter(it => it.postId === c.req.param('postId'));
-    return ok(c, filtered);
   });
   // SETTINGS
   app.get('/api/user-settings', async (c) => {

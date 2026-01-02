@@ -5,7 +5,6 @@ import { cn, getScopeColorClasses } from '@/lib/utils';
 import { useTransactions, useSpentThisMonth, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
-import { Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 interface MonthlyScopeCardProps {
   scope: ScopeWithIcon;
@@ -95,10 +94,6 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
         "backdrop-blur-xl bg-gradient-to-br from-card/60 to-muted/40 border border-border/20"
       )}
     >
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/90 text-white px-2 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-lg">
-        <Pencil className="w-3 h-3" />
-        Edit
-      </div>
       <div className="flex justify-between items-start">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
