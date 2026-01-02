@@ -9,6 +9,7 @@ import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import * as LucideIcons from 'lucide-react';
 import { format, parseISO, isToday, isSameMonth } from 'date-fns';
+import { useMemo } from 'react';
 export { CURRENCY_PRESETS };
 export type LucideIconName = keyof typeof LucideIcons;
 export interface ScopeWithIcon extends Omit<Scope, 'icon'> {
@@ -183,54 +184,57 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 }));
 export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
-export const useLoading = () => useBudgetStore(s => s.loading);
 export const useIsLoading = () => useBudgetStore(s => s.loading);
 export const useSettings = () => useBudgetStore(useShallow(s => s.settings));
 export const useTransactions = () => useBudgetStore(useShallow(s => s.transactions));
 export const useBills = () => useBudgetStore(useShallow(s => s.bills));
 export const useScopes = (): ScopeWithIcon[] => {
   const rawScopes = useBudgetStore(useShallow(s => s.scopes));
-  return rawScopes.map(s => ({
+  return useMemo(() => rawScopes.map(s => ({
     ...s,
     icon: getIcon(s.icon),
     iconName: s.icon
-  }));
+  })), [rawScopes]);
 };
 export const useCurrentCurrency = () => useBudgetStore(s => s.settings.currentCurrency);
 export const useCurrentBalance = () => useBudgetStore(s => s.settings.currentBalance);
 export const useCurrentSalary = () => useBudgetStore(s => s.settings.currentSalary);
 export const useFormatAmount = () => {
   const currency = useCurrentCurrency();
-  return (amount: number) => {
+  return useMemo(() => (amount: number) => {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency: currency || 'USD',
     }).format(amount);
-  };
+  }, [currency]);
 };
 export const useSpentToday = (scopeId?: string) => {
   const transactions = useBudgetStore(useShallow(s => s.transactions));
-  return transactions
+  return useMemo(() => transactions
     .filter(t => isToday(parseISO(t.date)) && (!scopeId || t.scopeId === scopeId))
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + t.amount, 0), [transactions, scopeId]);
 };
 export const useSpentThisMonth = (scopeId?: string) => {
   const transactions = useBudgetStore(useShallow(s => s.transactions));
-  const now = new Date();
-  return transactions
-    .filter(t => isSameMonth(parseISO(t.date), now) && (!scopeId || t.scopeId === scopeId))
-    .reduce((sum, t) => sum + t.amount, 0);
+  return useMemo(() => {
+    const now = new Date();
+    return transactions
+      .filter(t => isSameMonth(parseISO(t.date), now) && (!scopeId || t.scopeId === scopeId))
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [transactions, scopeId]);
 };
 export const useMonthlyBudget = () => {
-  const scopes = useBudgetStore(useShallow(s => s.scopes));
-  return scopes.reduce((sum, s) => sum + (s.monthlyLimit || s.dailyLimit * 30), 0);
+  const rawScopes = useBudgetStore(useShallow(s => s.scopes));
+  return useMemo(() => rawScopes.reduce((sum, s) => sum + (s.monthlyLimit || s.dailyLimit * 30), 0), [rawScopes]);
 };
 export const useDailyTotals = () => {
   const transactions = useBudgetStore(useShallow(s => s.transactions));
-  const totals = new Map<string, number>();
-  transactions.forEach(t => {
-    const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
-    totals.set(dayKey, (totals.get(dayKey) || 0) + t.amount);
-  });
-  return totals;
+  return useMemo(() => {
+    const totals = new Map<string, number>();
+    transactions.forEach(t => {
+      const dayKey = format(parseISO(t.date), 'yyyy-MM-dd');
+      totals.set(dayKey, (totals.get(dayKey) || 0) + t.amount);
+    });
+    return totals;
+  }, [transactions]);
 };

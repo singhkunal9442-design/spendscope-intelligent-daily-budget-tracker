@@ -27,8 +27,8 @@ export function AddBillDrawer({ open, onOpenChange }: AddBillDrawerProps) {
       amount: 0,
     },
   });
-  const onSubmit = (data: BillFormData) => {
-    addBill({ name: data.name, amount: data.amount });
+  const onSubmit = async (data: BillFormData) => {
+    await addBill({ name: data.name, amount: data.amount });
     toast.success(`Bill "${data.name}" added.`);
     reset();
     onOpenChange(false);
@@ -38,34 +38,34 @@ export function AddBillDrawer({ open, onOpenChange }: AddBillDrawerProps) {
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
-            <DrawerTitle>Quick Add Bill</DrawerTitle>
+            <DrawerTitle className="font-black tracking-tighter text-2xl">Quick Add Bill</DrawerTitle>
             <DrawerDescription>Add a new recurring monthly bill.</DrawerDescription>
           </DrawerHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-0 space-y-4">
-            <div>
-              <Label htmlFor="name">Bill Name</Label>
+          <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-0 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-label ml-1">Bill Name</Label>
               <Controller
                 name="name"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="name" placeholder="e.g., Rent" className="rounded-xl" />
+                  <Input {...field} id="name" placeholder="e.g., Rent" className="h-12 rounded-2xl" />
                 )}
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+              {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name.message}</p>}
             </div>
-            <div>
-              <Label htmlFor="amount">Amount</Label>
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="text-label ml-1">Amount</Label>
               <Controller
                 name="amount"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} id="amount" type="number" step="0.01" placeholder="0.00" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="rounded-xl" />
+                  <Input {...field} id="amount" type="number" step="0.01" placeholder="0.00" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-12 rounded-2xl" />
                 )}
               />
-              {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>}
+              {errors.amount && <p className="text-red-500 text-xs mt-1 ml-1">{errors.amount.message}</p>}
             </div>
-            <DrawerFooter className="gap-2">
-              <Button type="submit" className="btn-premium h-12 w-full">
+            <DrawerFooter className="gap-2 px-0 pb-8 pt-4">
+              <Button type="submit" className="btn-premium h-14 w-full">
                 <Plus className="w-5 h-5 mr-2" />
                 Add Bill
               </Button>
