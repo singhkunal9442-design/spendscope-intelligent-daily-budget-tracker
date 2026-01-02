@@ -122,7 +122,7 @@ export function MonthlyScopeCard({ scope, onEdit, isLoading }: MonthlyScopeCardP
         <div className="flex justify-between text-sm font-bold">
           <span className="text-muted-foreground">Remaining</span>
           <motion.span
-            className={cn('font-black tracking-tighter', remaining < 0 ? 'text-red-500' : 'text-gradient-spendscope')}
+            className={cn('font-black tracking-tighter', remaining < 0 ? 'text-red-500' : 'text-emerald-500')}
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 0.3 }}
             key={remaining}

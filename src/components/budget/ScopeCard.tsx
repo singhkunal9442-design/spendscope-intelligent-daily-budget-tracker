@@ -5,7 +5,6 @@ import { cn, getScopeColorClasses } from '@/lib/utils';
 import { useTransactions, useSpentToday, ScopeWithIcon, useFormatAmount } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
-import { Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 interface ScopeCardProps {
   scope: ScopeWithIcon;
@@ -79,7 +78,7 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
             </div>
           </div>
         </div>
-        <div className="text-right pr-12 mr-auto">
+        <div className="text-right">
           <p className="text-label mb-1">Spent Today</p>
           <p className="font-black text-xl tracking-tighter text-foreground">{formatAmount(spentToday)}</p>
         </div>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useBudgetStore, useIsLoading, useFormatAmount } from '@/lib/store';
+import { useBudgetStore, useIsLoading, useFormatAmount, useScopes, useCurrentCurrency } from '@/lib/store';
 import { Transaction } from '@shared/types';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -51,10 +51,10 @@ const shakeVariants = {
 };
 export function HistoryPage() {
   const transactions = useBudgetStore(state => state.transactions);
-  const scopes = useBudgetStore(state => state.scopes);
+  const scopes = useScopes();
   const deleteTransaction = useBudgetStore(state => state.deleteTransaction);
-  const currentCurrency = useBudgetStore(state => state.currentCurrency);
-  const loading = useBudgetStore(state => state.loading);
+  const currentCurrency = useCurrentCurrency();
+  const loading = useIsLoading();
   const formatAmount = useFormatAmount();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const scopesMap = React.useMemo(() => new Map(scopes.map(s => [s.id, s])), [scopes]);
@@ -133,11 +133,15 @@ export function HistoryPage() {
                         {dayTxs.map(tx => {
                           const scope = scopesMap.get(tx.scopeId);
                           const Icon = scope?.icon;
-                          const color = scope?.color ?? 'gray';
+                          const color = scope?.color ?? 'emerald';
                           return (
                             <div key={tx.id} className="flex items-center justify-between p-3.5 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors duration-200">
                               <div className="flex items-center gap-4">
-                                {Icon && <div className={cn('p-1.5 rounded-md', `bg-${color}-100 dark:bg-${color}-900/50`)}><Icon className={cn('w-5 h-5', `text-${color}-600 dark:text-${color}-400`)} /></div>}
+                                {Icon && (
+                                  <div className={cn('p-1.5 rounded-md', `bg-${color}-100 dark:bg-${color}-900/50`)}>
+                                    <Icon className={cn('w-5 h-5', `text-${color}-600 dark:text-${color}-400`)} />
+                                  </div>
+                                )}
                                 <div>
                                   <p className="font-medium">{scope?.name || 'Uncategorized'}</p>
                                   <p className="text-sm text-muted-foreground">{tx.description || format(parseISO(tx.date), 'p')}</p>
@@ -147,12 +151,12 @@ export function HistoryPage() {
                                 <p className="font-mono font-semibold mr-2">{formatAmount(tx.amount)}</p>
                                 <div className="ml-auto flex items-center gap-2 p-2.5 bg-muted/50 backdrop-blur-xl rounded-xl shadow-sm border border-border/20 hover:shadow-md hover:bg-muted/60 transition-all opacity-100">
                                   <motion.div whileHover={{ scale: 1.1, rotate: [0, 1, -1, 0] }}>
-                                    <Button variant="ghost" size="lg" className="h-12 w-12 min-w-[48px] rounded-xl" onClick={() => setEditingTransaction(tx)}><Edit className="w-5 h-5" /></Button>
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 min-w-[40px] rounded-xl" onClick={() => setEditingTransaction(tx)}><Edit className="w-5 h-5" /></Button>
                                   </motion.div>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <motion.div variants={shakeVariants} whileHover="hover">
-                                        <Button variant="ghost" size="lg" className="h-12 w-12 min-w-[48px] rounded-xl text-destructive hover:text-destructive/80"><Trash2 className="w-5 h-5" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-10 w-10 min-w-[40px] rounded-xl text-destructive hover:text-destructive/80"><Trash2 className="w-5 h-5" /></Button>
                                       </motion.div>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>

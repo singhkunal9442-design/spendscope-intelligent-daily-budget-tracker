@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { 
-  Post, Comment, Scope, Transaction, Bill, 
-  UserPublic, UserSettings, CURRENCY_PRESETS 
+import {
+  Post, Comment, Scope, Transaction, Bill,
+  UserPublic, UserSettings, CURRENCY_PRESETS
 } from '@shared/types';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import * as LucideIcons from 'lucide-react';
-import { format, parseISO, isToday, isSameMonth, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
+import { format, parseISO, isToday, isSameMonth, subDays } from 'date-fns';
 export { CURRENCY_PRESETS };
 export type LucideIconName = keyof typeof LucideIcons;
-export interface ScopeWithIcon extends Scope {
+export interface ScopeWithIcon extends Omit<Scope, 'icon'> {
   icon: LucideIcons.LucideIcon;
   iconName: string;
 }
@@ -44,10 +44,10 @@ interface BudgetState {
   updateBill: (id: string, data: Partial<Bill>) => Promise<void>;
   deleteBill: (id: string) => Promise<void>;
   // Settings Actions
+  updateSettings: (partial: Partial<UserSettings>) => Promise<void>;
   setCurrentBalance: (balance: number) => Promise<void>;
   setCurrentSalary: (salary: number) => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
-  updateSettings: (partial: Partial<UserSettings>) => Promise<void>;
 }
 export const useBudgetStore = create<BudgetState>((set, get) => ({
   user: localStorage.getItem('spendscope-user') ? JSON.parse(localStorage.getItem('spendscope-user')!) : null,
@@ -83,8 +83,8 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }
   },
   login: async (email, password) => {
-    const res = await api<{ user: UserPublic, token: string }>('/api/auth/login', { 
-      method: 'POST', body: JSON.stringify({ email, password }) 
+    const res = await api<{ user: UserPublic, token: string }>('/api/auth/login', {
+      method: 'POST', body: JSON.stringify({ email, password })
     });
     localStorage.setItem('spendscope-token', res.token);
     localStorage.setItem('spendscope-user', JSON.stringify(res.user));
@@ -93,8 +93,8 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     toast.success("Welcome back");
   },
   register: async (email, password) => {
-    const res = await api<{ user: UserPublic, token: string }>('/api/auth/register', { 
-      method: 'POST', body: JSON.stringify({ email, password }) 
+    const res = await api<{ user: UserPublic, token: string }>('/api/auth/register', {
+      method: 'POST', body: JSON.stringify({ email, password })
     });
     localStorage.setItem('spendscope-token', res.token);
     localStorage.setItem('spendscope-user', JSON.stringify(res.user));
@@ -109,14 +109,14 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     toast.info("Logged out");
   },
   addTransaction: async (data) => {
-    const res = await api<Transaction>('/api/transactions', { 
-      method: 'POST', body: JSON.stringify(data) 
+    const res = await api<Transaction>('/api/transactions', {
+      method: 'POST', body: JSON.stringify(data)
     });
     set(produce(s => { s.transactions.push(res); }));
   },
   updateTransaction: async (id, data) => {
-    const res = await api<Transaction>(`/api/transactions/${id}`, { 
-      method: 'PUT', body: JSON.stringify(data) 
+    const res = await api<Transaction>(`/api/transactions/${id}`, {
+      method: 'PUT', body: JSON.stringify(data)
     });
     set(produce(s => {
       const idx = s.transactions.findIndex((t: Transaction) => t.id === id);
@@ -130,14 +130,14 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }));
   },
   addScope: async (data) => {
-    const res = await api<Scope>('/api/scopes', { 
-      method: 'POST', body: JSON.stringify(data) 
+    const res = await api<Scope>('/api/scopes', {
+      method: 'POST', body: JSON.stringify(data)
     });
     set(produce(s => { s.scopes.push(res); }));
   },
   updateScopeFull: async (id, data) => {
-    const res = await api<Scope>(`/api/scopes/${id}`, { 
-      method: 'PUT', body: JSON.stringify(data) 
+    const res = await api<Scope>(`/api/scopes/${id}`, {
+      method: 'PUT', body: JSON.stringify(data)
     });
     set(produce(s => {
       const idx = s.scopes.findIndex((sc: Scope) => sc.id === id);
@@ -151,14 +151,14 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }));
   },
   addBill: async (data) => {
-    const res = await api<Bill>('/api/bills', { 
-      method: 'POST', body: JSON.stringify(data) 
+    const res = await api<Bill>('/api/bills', {
+      method: 'POST', body: JSON.stringify(data)
     });
     set(produce(s => { s.bills.push(res); }));
   },
   updateBill: async (id, data) => {
-    const res = await api<Bill>(`/api/bills/${id}`, { 
-      method: 'PUT', body: JSON.stringify(data) 
+    const res = await api<Bill>(`/api/bills/${id}`, {
+      method: 'PUT', body: JSON.stringify(data)
     });
     set(produce(s => {
       const idx = s.bills.findIndex((b: Bill) => b.id === id);
@@ -172,8 +172,8 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }));
   },
   updateSettings: async (partial) => {
-    const updated = await api<UserSettings>('/api/user-settings', { 
-      method: 'PUT', body: JSON.stringify(partial) 
+    const updated = await api<UserSettings>('/api/user-settings', {
+      method: 'PUT', body: JSON.stringify(partial)
     });
     set({ settings: updated });
   },
@@ -191,6 +191,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
 export const useLoading = () => useBudgetStore(s => s.loading);
+export const useIsLoading = () => useBudgetStore(s => s.loading);
 export const useSettings = () => useBudgetStore(s => s.settings);
 export const useTransactions = () => useBudgetStore(s => s.transactions);
 export const useBills = () => useBudgetStore(s => s.bills);

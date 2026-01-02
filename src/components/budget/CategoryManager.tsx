@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useBudgetStore, ScopeWithIcon } from '@/lib/store';
+import { useBudgetStore, useScopes, type ScopeWithIcon } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -63,14 +63,14 @@ const EditScopeForm = ({ scope, onSave, onCancel }: { scope: ScopeWithIcon, onSa
   );
 };
 export function CategoryManager() {
-  const scopes = useBudgetStore(state => state.scopes);
+  const scopes = useScopes();
   const addScope = useBudgetStore(state => state.addScope);
   const updateScopeFull = useBudgetStore(state => state.updateScopeFull);
   const deleteScope = useBudgetStore(state => state.deleteScope);
   const [editingScopeId, setEditingScopeId] = useState<string | null>(null);
   const { control, handleSubmit, reset } = useForm<ScopeFormData>({
     resolver: zodResolver(scopeSchema),
-    defaultValues: { name: '', dailyLimit: 0, icon: '', color: '' },
+    defaultValues: { name: '', dailyLimit: 0, icon: 'Circle', color: 'emerald' },
   });
   const handleAddNewScope = (data: ScopeFormData) => {
     addScope(data);
@@ -136,13 +136,14 @@ export function CategoryManager() {
             )}
             {(scopes || []).map((scope) => {
               const colors = getScopeColorClasses(scope.color);
+              const Icon = scope.icon;
               return editingScopeId === scope.id ? (
                 <EditScopeForm key={scope.id} scope={scope} onSave={(data) => handleSave(scope.id, data)} onCancel={() => setEditingScopeId(null)} />
               ) : (
                 <div key={scope.id} className="group flex items-center justify-between p-4 bg-muted/20 hover:bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/10 transition-all duration-300">
                   <div className="flex items-center gap-4">
                     <div className={cn('p-3 rounded-2xl border shadow-sm transition-all duration-300', colors.lightBg, colors.border, colors.glow)}>
-                      <scope.icon className={cn('w-6 h-6', colors.text)} />
+                      <Icon className={cn('w-6 h-6', colors.text)} />
                     </div>
                     <div>
                       <span className="font-black text-lg tracking-tight">{scope.name}</span>
