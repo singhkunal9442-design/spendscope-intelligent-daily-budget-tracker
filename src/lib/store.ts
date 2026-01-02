@@ -155,11 +155,9 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   updateBill: async (id, data) => {
     const currentBills = get().bills;
     const billToUpdate = currentBills.find(b => b.id === id);
-    // Logic: If 'paid' status changes, adjust 'currentBalance'
     if (billToUpdate && typeof data.paid === 'boolean' && data.paid !== billToUpdate.paid) {
       const balanceAdjustment = data.paid ? -billToUpdate.amount : billToUpdate.amount;
       const newBalance = get().settings.currentBalance + balanceAdjustment;
-      // Optimistic balance update
       get().updateSettings({ currentBalance: newBalance });
     }
     const res = await api<Bill>(`/api/bills/${id}`, {
@@ -177,7 +175,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }));
   },
   updateSettings: async (partial) => {
-    // Optimistic Update
     const oldSettings = get().settings;
     set({ settings: { ...oldSettings, ...partial } });
     try {
@@ -186,7 +183,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       });
       set({ settings: updated });
     } catch (e) {
-      // Revert on error
       set({ settings: oldSettings });
       throw e;
     }
@@ -228,13 +224,13 @@ export const useFormatAmount = () => {
   }, [currency]);
 };
 export const useSpentToday = (scopeId?: string) => {
-  const transactions = useBudgetStore(useShallow(s => s.transactions));
+  const transactions = useTransactions();
   return useMemo(() => transactions
     .filter(t => isToday(parseISO(t.date)) && (!scopeId || t.scopeId === scopeId))
     .reduce((sum, t) => sum + t.amount, 0), [transactions, scopeId]);
 };
 export const useSpentThisMonth = (scopeId?: string) => {
-  const transactions = useBudgetStore(useShallow(s => s.transactions));
+  const transactions = useTransactions();
   return useMemo(() => {
     const now = new Date();
     return transactions
@@ -247,13 +243,13 @@ export const useMonthlyBudget = () => {
   return useMemo(() => rawScopes.reduce((sum, s) => sum + (s.monthlyLimit || s.dailyLimit * 30), 0), [rawScopes]);
 };
 export const useUnpaidBillsTotal = () => {
-  const bills = useBudgetStore(useShallow(s => s.bills));
+  const bills = useBills();
   return useMemo(() => bills
     .filter(b => !b.paid)
     .reduce((sum, b) => sum + b.amount, 0), [bills]);
 };
 export const useDailyTotals = () => {
-  const transactions = useBudgetStore(useShallow(s => s.transactions));
+  const transactions = useTransactions();
   return useMemo(() => {
     const totals = new Map<string, number>();
     transactions.forEach(t => {
