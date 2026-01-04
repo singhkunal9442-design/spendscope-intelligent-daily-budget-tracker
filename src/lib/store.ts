@@ -73,36 +73,47 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       ]);
       set({ settings, scopes, transactions, bills });
     } catch (e) {
-      console.error("[STORE] Data load failed:", e);
+      console.error("[STORE] Data load failed (check Atlas connection):", e);
+      toast.error("Failed to sync with cloud database. Re-authenticating might help.");
     } finally {
       set({ loading: false });
     }
   },
   login: async (email, password) => {
-    const res = await api<{ user: UserPublic, token: string }>('/api/auth/login', {
-      method: 'POST', body: JSON.stringify({ email, password })
-    });
-    localStorage.setItem('spendscope-token', res.token);
-    localStorage.setItem('spendscope-user', JSON.stringify(res.user));
-    set({ user: res.user, token: res.token });
-    await get().loadData();
-    toast.success("Welcome back");
+    try {
+      const res = await api<{ user: UserPublic, token: string }>('/api/auth/login', {
+        method: 'POST', body: JSON.stringify({ email, password })
+      });
+      localStorage.setItem('spendscope-token', res.token);
+      localStorage.setItem('spendscope-user', JSON.stringify(res.user));
+      set({ user: res.user, token: res.token });
+      await get().loadData();
+      toast.success("Welcome back");
+    } catch (e) {
+      toast.error("Login failed. Please check credentials.");
+      throw e;
+    }
   },
   register: async (email, password) => {
-    const res = await api<{ user: UserPublic, token: string }>('/api/auth/register', {
-      method: 'POST', body: JSON.stringify({ email, password })
-    });
-    localStorage.setItem('spendscope-token', res.token);
-    localStorage.setItem('spendscope-user', JSON.stringify(res.user));
-    set({ user: res.user, token: res.token });
-    await get().loadData();
-    toast.success("Account created");
+    try {
+      const res = await api<{ user: UserPublic, token: string }>('/api/auth/register', {
+        method: 'POST', body: JSON.stringify({ email, password })
+      });
+      localStorage.setItem('spendscope-token', res.token);
+      localStorage.setItem('spendscope-user', JSON.stringify(res.user));
+      set({ user: res.user, token: res.token });
+      await get().loadData();
+      toast.success("Account created successfully!");
+    } catch (e) {
+      toast.error("Registration failed. Email may already be taken.");
+      throw e;
+    }
   },
   logout: () => {
     localStorage.removeItem('spendscope-token');
     localStorage.removeItem('spendscope-user');
     set({ user: null, token: null, scopes: [], transactions: [], bills: [] });
-    toast.info("Logged out");
+    toast.info("Logged out safely");
   },
   addTransaction: async (data) => {
     const res = await api<Transaction>('/api/transactions', {
@@ -155,11 +166,9 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   updateBill: async (id, data) => {
     const currentBills = get().bills;
     const billToUpdate = currentBills.find(b => b.id === id);
-    // Balance Mutation Logic: Sync bill settlement with currentBalance
     if (billToUpdate && data.paid !== undefined && data.paid !== billToUpdate.paid) {
       const balanceAdjustment = data.paid ? -billToUpdate.amount : billToUpdate.amount;
       const nextBalance = get().settings.currentBalance + balanceAdjustment;
-      // Persist the balance change immediately alongside the bill update
       await get().updateSettings({ currentBalance: nextBalance });
     }
     const res = await api<Bill>(`/api/bills/${id}`, {
@@ -178,7 +187,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   },
   updateSettings: async (partial) => {
     const oldSettings = get().settings;
-    // Optimistic local update
     set({ settings: { ...oldSettings, ...partial } });
     try {
       const updated = await api<UserSettings>('/api/user-settings', {
@@ -186,8 +194,8 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       });
       set({ settings: updated });
     } catch (e) {
-      // Rollback on failure
       set({ settings: oldSettings });
+      toast.error("Settings sync failed.");
       throw e;
     }
   },
@@ -201,7 +209,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     await get().updateSettings({ currentCurrency: currency });
   }
 }));
-// SELECTORS (Primitive Only)
+// SELECTORS
 export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
 export const useIsLoading = () => useBudgetStore(s => s.loading);
@@ -248,7 +256,6 @@ export const useMonthlyBudget = () => {
   return useMemo(() => {
     const daysInMonth = getDaysInMonth(new Date());
     return rawScopes.reduce((sum, s) => {
-      // Use explicit monthly limit if defined, otherwise calculate based on actual days in the current month
       return sum + (s.monthlyLimit || (s.dailyLimit * daysInMonth));
     }, 0);
   }, [rawScopes]);

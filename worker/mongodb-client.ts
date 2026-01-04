@@ -14,12 +14,11 @@ export async function getMongoClient(env: Env): Promise<MongoClient> {
     throw new Error('MONGODB_URI environment variable is not set');
   }
   try {
-    // Cast options to any to avoid strict type mismatch in Workers environment
-    const options: any = {
+    // MongoDB driver 6.x+ supports Cloudflare Workers via standard fetch/socket APIs
+    const client = new MongoClient(env.MONGODB_URI, {
       connectTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-    };
-    const client = new MongoClient(env.MONGODB_URI, options);
+    });
     await client.connect();
     clientInstance = client;
     return client;
