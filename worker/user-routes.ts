@@ -16,8 +16,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/api/health', async (c) => {
     try {
       await seedDatabase(c.env);
-      return ok(c, { status: 'healthy', database: 'mongodb', timestamp: new Date().toISOString() });
+      return ok(c, { 
+        status: 'healthy', 
+        database: 'mongodb', 
+        timestamp: new Date().toISOString() 
+      });
     } catch (e) {
+      console.error('[API HEALTH] Error:', e);
       return bad(c, `Database connection failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   });
@@ -44,13 +49,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const items = await MongoScope.list(c.env, userId);
-    return ok(c, items);
+    return ok(c, items || []);
   });
   app.post('/api/scopes', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const data = await c.req.json();
-    const newScope = { ...data, id: crypto.randomUUID(), userId };
+    const newScope = { ...data, id: data.id || crypto.randomUUID(), userId };
     return ok(c, await MongoScope.create(c.env, newScope));
   });
   app.put('/api/scopes/:id', async (c) => {
@@ -71,7 +76,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const items = await MongoTransaction.list(c.env, userId);
-    return ok(c, items);
+    return ok(c, items || []);
   });
   app.post('/api/transactions', async (c) => {
     const userId = getUserId(c);
@@ -79,7 +84,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const data = await c.req.json();
     const newTx = {
       ...data,
-      id: crypto.randomUUID(),
+      id: data.id || crypto.randomUUID(),
       userId,
       date: data.date || new Date().toISOString()
     };
@@ -103,13 +108,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const items = await MongoBill.list(c.env, userId);
-    return ok(c, items);
+    return ok(c, items || []);
   });
   app.post('/api/bills', async (c) => {
     const userId = getUserId(c);
     if (!userId) return bad(c, 'Unauthorized');
     const data = await c.req.json();
-    const newBill = { ...data, id: crypto.randomUUID(), userId, paid: false };
+    const newBill = { ...data, id: data.id || crypto.randomUUID(), userId, paid: data.paid ?? false };
     return ok(c, await MongoBill.create(c.env, newBill));
   });
   app.put('/api/bills/:id', async (c) => {
@@ -128,15 +133,17 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // SETTINGS API
   app.get('/api/user-settings', async (c) => {
     const userId = getUserId(c);
-    if (!userId) return ok(c, { 
-        userId: "", currentBalance: 0, currentSalary: 0, 
-        currentCurrency: 'USD', onboarded: false, theme: 'light' 
-    });
+    if (!userId) return bad(c, 'Unauthorized');
     const state = await MongoSettings.get(c.env, userId);
     if (!state) {
-        return ok(c, { 
-            userId, currentBalance: 0, currentSalary: 0, 
-            currentCurrency: 'USD', onboarded: false, theme: 'light' 
+        // Return a fresh default state if none exists, but do NOT return dummy empty userId
+        return ok(c, {
+            userId, 
+            currentBalance: 0, 
+            currentSalary: 0,
+            currentCurrency: 'USD', 
+            onboarded: false, 
+            theme: 'light'
         });
     }
     return ok(c, state);
