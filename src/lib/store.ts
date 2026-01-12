@@ -73,8 +73,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       ]);
       set({ settings, scopes, transactions, bills });
     } catch (e) {
-      console.error("[STORE] Data load failed (check Atlas connection):", e);
-      toast.error("Failed to sync with cloud database. Re-authenticating might help.");
+      console.error("[STORE] Data load failed:", e);
     } finally {
       set({ loading: false });
     }
@@ -90,7 +89,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       await get().loadData();
       toast.success("Welcome back");
     } catch (e) {
-      toast.error("Login failed. Please check credentials.");
+      toast.error("Login failed.");
       throw e;
     }
   },
@@ -103,9 +102,9 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       localStorage.setItem('spendscope-user', JSON.stringify(res.user));
       set({ user: res.user, token: res.token });
       await get().loadData();
-      toast.success("Account created successfully!");
+      toast.success("Account created!");
     } catch (e) {
-      toast.error("Registration failed. Email may already be taken.");
+      toast.error("Registration failed.");
       throw e;
     }
   },
@@ -113,7 +112,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     localStorage.removeItem('spendscope-token');
     localStorage.removeItem('spendscope-user');
     set({ user: null, token: null, scopes: [], transactions: [], bills: [] });
-    toast.info("Logged out safely");
   },
   addTransaction: async (data) => {
     const res = await api<Transaction>('/api/transactions', {
@@ -195,7 +193,6 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
       set({ settings: updated });
     } catch (e) {
       set({ settings: oldSettings });
-      toast.error("Settings sync failed.");
       throw e;
     }
   },
@@ -209,7 +206,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     await get().updateSettings({ currentCurrency: currency });
   }
 }));
-// SELECTORS
+// Atomic Selectors
 export const useAuthUser = () => useBudgetStore(s => s.user);
 export const useIsLoggedIn = () => useBudgetStore(s => !!s.token);
 export const useIsLoading = () => useBudgetStore(s => s.loading);

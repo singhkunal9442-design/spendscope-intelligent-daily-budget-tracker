@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Landmark, FileWarning, Wallet, ShoppingBag, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFormatAmount, useSpentThisMonth, useCurrentBalance, useCurrentSalary, useUnpaidBillsTotal, useTransactions } from '@/lib/store';
+import { useFormatAmount, useSpentThisMonth, useCurrentBalance, useCurrentSalary, useUnpaidBillsTotal, useTransactions, useMonthlyBudget } from '@/lib/store';
 import { subDays, format, parseISO } from 'date-fns';
 import { ScopeSparkline } from '@/components/charts/ScopeSparkline';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +25,8 @@ export function MonthlyOverviewCard() {
   const currentBalance = useCurrentBalance();
   const currentSalary = useCurrentSalary();
   const unpaidBillsTotal = useUnpaidBillsTotal();
-  // availableCash is strictly the adjusted balance minus month-to-date spending
+  const monthlyBudget = useMonthlyBudget();
+  // True liquidity calculation
   const availableCash = currentBalance - spentThisMonth;
   const currentMonth = useMemo(() => format(new Date(), 'MMMM'), []);
   const sparkData = useMemo(() => {
@@ -41,55 +42,55 @@ export function MonthlyOverviewCard() {
       return { date: format(date, 'MMM d'), spent: daily[dayKey] || 0 };
     });
   }, [transactions]);
-  // Percentage reflects how much of the CURRENT liquid balance has been consumed by transactions
-  const percentage = currentBalance > 0 ? Math.min((spentThisMonth / (currentBalance + spentThisMonth)) * 100, 100) : 0;
+  // Utilization relative to dynamic monthly limit
+  const percentage = monthlyBudget > 0 ? Math.min((spentThisMonth / monthlyBudget) * 100, 100) : 0;
   const stats = [
-    { 
-      label: 'Live Balance', 
-      value: formatAmount(currentBalance), 
-      icon: Landmark, 
-      help: "Your liquid baseline. This represents your starting balance minus any recurring bills you have marked as 'Settled' for this month." 
+    {
+      label: 'Live Balance',
+      value: formatAmount(currentBalance),
+      icon: Landmark,
+      help: "Starting balance minus paid recurring bills."
     },
-    { 
-      label: 'Total Spent', 
-      value: formatAmount(spentThisMonth), 
-      icon: FileWarning, 
-      help: "Sum of all transactions logged this month across all categories." 
+    {
+      label: 'Spent Total',
+      value: formatAmount(spentThisMonth),
+      icon: FileWarning,
+      help: "Sum of all logged expenses this month."
     },
-    { 
-      label: 'Salary', 
-      value: formatAmount(currentSalary), 
-      icon: Wallet, 
-      help: "Your expected monthly income, used as a high-level scope indicator." 
+    {
+      label: 'Salary',
+      value: formatAmount(currentSalary),
+      icon: Wallet,
+      help: "Your estimated monthly income."
     },
-    { 
-      label: 'Bills Due', 
-      value: formatAmount(unpaidBillsTotal), 
-      icon: ShoppingBag, 
-      help: "Total value of recurring bills not yet marked as paid." 
+    {
+      label: 'Bills Due',
+      value: formatAmount(unpaidBillsTotal),
+      icon: ShoppingBag,
+      help: "Total of recurring bills remaining for this month."
     },
-    { 
-      label: 'Available Cash', 
-      value: formatAmount(availableCash), 
-      icon: availableCash < 0 ? TrendingDown : TrendingUp, 
-      isPrimary: true, 
-      help: "True Liquidity: Your Live Balance minus your month-to-date spending. This is exactly what you have left to spend." 
+    {
+      label: 'Available Cash',
+      value: formatAmount(availableCash),
+      icon: availableCash < 0 ? TrendingDown : TrendingUp,
+      isPrimary: true,
+      help: "Liquid Baseline minus Month-to-date spending. Your true remaining liquidity."
     },
   ];
   return (
-    <div className="p-8 md:p-12 rounded-[3rem] border border-border/50 shadow-glass bg-card/80 backdrop-blur-md relative overflow-hidden group">
+    <div className="p-8 md:p-12 rounded-[3.5rem] border border-border/50 shadow-glass bg-card/80 backdrop-blur-md relative overflow-hidden group">
       <div className="flex flex-col gap-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-spendscope-500/10 border border-spendscope-500/20">
+          <div className="flex items-center gap-5">
+            <div className="p-4 rounded-[2rem] bg-spendscope-500/10 border border-spendscope-500/20 shadow-glow/5">
               <Calendar className="w-8 h-8 text-spendscope-500" />
             </div>
             <div>
-              <h2 className="text-3xl font-black tracking-tighter">{currentMonth} Overview</h2>
-              <p className="text-label mt-1">Real-time Financial Pulse</p>
+              <h2 className="text-4xl font-black tracking-tighter">{currentMonth} Outlook</h2>
+              <p className="text-label mt-1 text-spendscope-600 dark:text-spendscope-400">Precision Spending Analysis</p>
             </div>
           </div>
-          <div className="w-full md:w-80 h-16 opacity-30 group-hover:opacity-60 transition-all duration-700 hover:scale-105">
+          <div className="w-full md:w-80 h-16 opacity-30 group-hover:opacity-100 transition-all duration-700">
             <ScopeSparkline data={sparkData} color="emerald" />
           </div>
         </div>
@@ -101,44 +102,44 @@ export function MonthlyOverviewCard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               className={cn(
-                "p-5 rounded-3xl border border-border/20 transition-all duration-300 relative",
+                "p-6 rounded-[2.5rem] border border-border/20 transition-all duration-300 relative",
                 stat.isPrimary
-                  ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 shadow-lg shadow-emerald-500/5"
+                  ? "bg-gradient-to-br from-spendscope-500/10 to-orange-500/5 border-spendscope-500/30 shadow-glow/10"
                   : "bg-muted/10 hover:bg-muted/20"
               )}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <stat.icon className={cn("w-4 h-4", stat.isPrimary ? "text-emerald-500" : "text-muted-foreground/60")} />
+                  <stat.icon className={cn("w-4 h-4", stat.isPrimary ? "text-spendscope-500" : "text-muted-foreground/60")} />
                   <p className="text-label leading-none">{stat.label}</p>
                 </div>
                 <HelpTooltip message={stat.help} className="h-4 w-4" />
               </div>
               <p className={cn(
                 "text-2xl font-black tracking-tighter",
-                stat.isPrimary ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+                stat.isPrimary ? "text-spendscope-500" : "text-foreground"
               )}>{stat.value}</p>
             </motion.div>
           ))}
         </div>
-        <div className="space-y-5">
+        <div className="space-y-6">
           <div className="flex justify-between items-end px-1">
             <div className="space-y-1">
-              <p className="text-label">Monthly Utilization</p>
+              <p className="text-label text-spendscope-500">Monthly Capacity Used</p>
               <p className="text-sm font-bold text-muted-foreground">
-                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> utilized from available liquid baseline.
+                <span className="text-foreground">{formatAmount(spentThisMonth)}</span> consumed from your defined {formatAmount(monthlyBudget)} scope.
               </p>
             </div>
-            <p className="text-2xl font-black text-foreground tracking-tighter">{Math.round(percentage)}%</p>
+            <p className="text-3xl font-black text-foreground tracking-tighter">{Math.round(percentage)}%</p>
           </div>
-          <div className="h-4 w-full bg-muted/30 rounded-full overflow-hidden p-1 border border-border/10">
+          <div className="h-5 w-full bg-muted/30 rounded-full overflow-hidden p-1.5 border border-border/10">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${percentage}%` }}
               transition={{ duration: 1.5, ease: "circOut" }}
               className={cn(
                 "h-full rounded-full transition-all shadow-glow",
-                percentage > 90 ? "bg-red-500" : "bg-gradient-to-r from-spendscope-500 to-emerald-500"
+                percentage > 90 ? "bg-red-500" : "bg-gradient-to-r from-spendscope-500 to-orange-600"
               )}
             />
           </div>

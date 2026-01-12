@@ -10,7 +10,7 @@
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
     --border: 240 5.9% 90%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
     --spendscope: 25 90% 54%;
   }
   .dark {
@@ -26,24 +26,25 @@
 @layer components {
   .btn-premium {
     @apply relative overflow-hidden bg-gradient-to-br from-spendscope-500 to-orange-600 text-white font-black tracking-tight rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-glow active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+    box-shadow: 0 10px 20px -5px rgba(243, 128, 32, 0.3);
   }
   .glass {
-    @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50;
+    @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl border border-white/20 dark:border-zinc-800/50;
   }
-  .glass-dark {
-    @apply bg-zinc-900/80 backdrop-blur-3xl border border-white/10 shadow-2xl;
+  .glass-premium {
+    @apply bg-white/80 dark:bg-zinc-950/90 backdrop-blur-[40px] border border-white/30 dark:border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)];
   }
   .shadow-glass {
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.08);
   }
   .shadow-glow {
-    box-shadow: 0 0 30px rgba(243, 128, 32, 0.35);
+    box-shadow: 0 0 30px rgba(243, 128, 32, 0.45);
   }
   .text-label {
-    @apply text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-none;
+    @apply text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 leading-none;
   }
   .text-gradient-orange {
-    @apply bg-gradient-to-br from-spendscope-400 via-spendscope-500 to-orange-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-br from-spendscope-400 via-spendscope-500 to-orange-600 bg-clip-text text-transparent font-black;
   }
   .shimmer-bg {
     @apply animate-pulse bg-gradient-to-r from-muted/20 via-muted/40 to-muted/20 bg-[length:200%_100%];
@@ -51,9 +52,9 @@
   .bg-gradient-mesh {
     background-image: 
       radial-gradient(at 0% 0%, hsla(25, 90%, 54%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(142, 76%, 36%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(262, 83%, 57%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsla(198, 93%, 49%, 0.1) 0px, transparent 50%);
+      radial-gradient(at 50% 0%, hsla(142, 76%, 36%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(262, 83%, 57%, 0.12) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, hsla(198, 93%, 49%, 0.08) 0px, transparent 50%);
   }
 }
 * {

@@ -52,17 +52,17 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
   const remaining = scope.dailyLimit - spentToday;
   const percentage = scope.dailyLimit > 0 ? Math.min((spentToday / scope.dailyLimit) * 100, 100) : 0;
   const getIndicatorColor = () => {
-    if (percentage > 90) return 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]';
-    if (percentage > 70) return 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]';
-    return cn(colors.bg, colors.glow);
+    if (percentage > 90) return 'bg-red-500 shadow-glow';
+    if (percentage > 70) return 'bg-amber-500 shadow-glow';
+    return 'bg-gradient-to-r from-spendscope-500 to-orange-600 shadow-glow';
   };
   const Icon = scope.icon;
   return (
     <motion.div
       layout
       onClick={() => onEdit(scope)}
-      whileHover={{ scale: 1.01, y: -2 }}
-      className="group relative p-8 rounded-3xl bg-card border border-border/40 shadow-glass hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+      whileHover={{ scale: 1.02, y: -4 }}
+      className="group relative p-8 rounded-[2.5rem] bg-card border border-border/40 shadow-glass hover:shadow-glow/20 transition-all duration-300 cursor-pointer overflow-hidden"
     >
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
@@ -72,13 +72,13 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
           <div>
             <h3 className="font-black text-xl text-foreground tracking-tighter leading-none mb-1.5">{scope.name}</h3>
             <div className="flex items-center gap-1.5">
-              <span className="text-label">Limit</span>
+              <span className="text-label">Allowance</span>
               <span className="text-xs font-black text-muted-foreground/80">{formatAmount(scope.dailyLimit)}</span>
             </div>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-label mb-1">Spent Today</p>
+          <p className="text-label mb-1">Spent</p>
           <p className="font-black text-xl tracking-tighter text-foreground">{formatAmount(spentToday)}</p>
         </div>
       </div>
@@ -97,12 +97,15 @@ export function ScopeCard({ scope, onEdit, isLoading }: ScopeCardProps) {
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}
             transition={{ type: "spring", damping: 20, stiffness: 100 }}
-            className={cn("h-full rounded-full", getIndicatorColor())}
+            className={cn("h-full rounded-full transition-all", getIndicatorColor())}
           />
         </div>
       </div>
-      <div className="mt-6 h-12 w-full opacity-70 group-hover:opacity-100 transition-opacity">
+      <div className="mt-6 h-12 w-full opacity-40 group-hover:opacity-100 transition-opacity">
         <ScopeSparkline data={sparkData} color={scope.color} />
+      </div>
+      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-[10px] font-black uppercase tracking-widest text-spendscope-500">Edit Scope</span>
       </div>
     </motion.div>
   );

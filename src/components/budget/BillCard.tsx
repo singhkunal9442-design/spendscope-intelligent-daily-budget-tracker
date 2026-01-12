@@ -30,10 +30,8 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
   const updateBill = useBudgetStore(state => state.updateBill);
   const formatAmount = useFormatAmount();
   const handlePaidToggle = async (checked: boolean) => {
-    // Optimistic toast feedback
     const amountStr = formatAmount(bill.amount);
     try {
-      // updateBill in store now handles currentBalance adjustment via updateSettings
       await updateBill(bill.id, { paid: checked });
       if (checked) {
         toast.success(`Bill Settled: ${amountStr} deducted from live balance`);
@@ -41,7 +39,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
         toast.info(`Bill Unmarked: ${amountStr} restored to live balance`);
       }
     } catch (e) {
-      toast.error("Failed to sync bill status with balance");
+      toast.error("Failed to sync bill status");
     }
   };
   return (
@@ -50,18 +48,18 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
       onClick={() => onEdit(bill)}
       whileHover={{ scale: 1.01, y: -2 }}
       className={cn(
-        "group relative p-8 rounded-3xl bg-card border transition-all duration-300 cursor-pointer overflow-hidden",
-        bill.paid 
-          ? "border-emerald-500/20 shadow-inner bg-emerald-500/[0.02] opacity-80" 
-          : "border-border/40 shadow-glass hover:shadow-xl"
+        "group relative p-8 rounded-[2.5rem] bg-card border transition-all duration-300 cursor-pointer overflow-hidden",
+        bill.paid
+          ? "border-emerald-500/20 shadow-inner bg-emerald-500/[0.02] opacity-80"
+          : "border-border/40 shadow-glass hover:shadow-glow/10"
       )}
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <div className={cn(
             'p-4 rounded-2xl border transition-all duration-500',
-            bill.paid 
-              ? 'bg-emerald-500/20 border-emerald-500/30 shadow-lg shadow-emerald-500/10 grayscale-0' 
+            bill.paid
+              ? 'bg-emerald-500/20 border-emerald-500/30 shadow-lg shadow-emerald-500/10'
               : 'bg-muted/30 border-border/10 grayscale'
           )}>
             <Banknote className={cn(
@@ -75,7 +73,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
               bill.paid ? "text-muted-foreground" : "text-foreground"
             )}>{bill.name}</h3>
             <div className="flex items-center gap-1.5">
-              <span className="text-label">Monthly</span>
+              <span className="text-label">Monthly Bill</span>
               <span className={cn(
                 "text-sm font-black transition-colors",
                 bill.paid ? "text-muted-foreground/60" : "text-foreground"
@@ -85,9 +83,9 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
         </div>
         <div
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all z-10",
-            bill.paid 
-              ? "bg-emerald-500/10 border-emerald-500/20" 
+            "flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all z-10",
+            bill.paid
+              ? "bg-emerald-500/10 border-emerald-500/20"
               : "bg-muted/20 border-border/20 hover:border-spendscope-500/40"
           )}
           onClick={(e) => e.stopPropagation()}
@@ -98,17 +96,16 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
             onCheckedChange={handlePaidToggle}
             className="h-5 w-5 border-muted-foreground/30 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
           />
-          <Label htmlFor={`paid-${bill.id}`} className="text-label cursor-pointer select-none">
+          <Label htmlFor={`paid-${bill.id}`} className="text-[10px] font-black uppercase tracking-widest cursor-pointer select-none">
             {bill.paid ? 'Settled' : 'Unpaid'}
           </Label>
         </div>
       </div>
-      {/* Decorative background for settled bills */}
       {bill.paid && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 bg-emerald-500/[0.03] pointer-events-none z-0" 
+          className="absolute inset-0 bg-emerald-500/[0.03] pointer-events-none z-0 backdrop-blur-[1px]"
         />
       )}
     </motion.div>
