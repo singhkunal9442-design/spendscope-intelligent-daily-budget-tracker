@@ -10,11 +10,10 @@ import { MOCK_USERS } from '../shared/mock-data';
 function mapId<T>(doc: any): T | null {
   if (!doc) return null;
   const { _id, ...rest } = doc;
-  // If the doc has an 'id' field already (which our frontend-generated ones do), 
-  // we prioritize that. Otherwise, we convert _id to id.
-  return { 
-    id: doc.id || _id?.toString(), 
-    ...rest 
+  // Fallback to _id if 'id' field is missing from document
+  return {
+    id: doc.id || _id?.toString(),
+    ...rest
   } as T;
 }
 function mapList<T>(docs: any[]): T[] {
@@ -45,9 +44,7 @@ export const MongoUser = {
 export const MongoScope = {
   async list(env: Env, userId: string) {
     const db = await getDb(env);
-    const scopes = await db.collection('scopes').find({
-      $or: [{ userId }, { userId: { $exists: false } }]
-    }).toArray();
+    const scopes = await db.collection('scopes').find({ userId }).toArray();
     return mapList<Scope>(scopes);
   },
   async create(env: Env, scope: Scope) {
@@ -99,9 +96,7 @@ export const MongoTransaction = {
 export const MongoBill = {
   async list(env: Env, userId: string) {
     const db = await getDb(env);
-    const bills = await db.collection('bills').find({
-      $or: [{ userId }, { userId: { $exists: false } }]
-    }).toArray();
+    const bills = await db.collection('bills').find({ userId }).toArray();
     return mapList<Bill>(bills);
   },
   async create(env: Env, bill: Bill) {
@@ -144,12 +139,10 @@ export async function seedDatabase(env: Env) {
   const db = await getDb(env);
   const userCount = await db.collection('users').countDocuments();
   if (userCount === 0) {
-    console.log('[MONGODB] Seeding initial data...');
-    const demoUserId = 'u1';
-    const users = [
-      { id: demoUserId, email: 'demo@spendscope.app', passwordHash: 'hash:demo' }
-    ];
-    await db.collection('users').insertMany(users);
+    console.log('[MONGODB] Seeding initial SpendScope data...');
+    const demoUser = MOCK_USERS[0];
+    await db.collection('users').insertOne(demoUser);
+    const demoUserId = demoUser.id;
     const demoScopes: Scope[] = [
       { id: 's1', userId: demoUserId, name: 'Food', dailyLimit: 30, monthlyLimit: 900, icon: 'Utensils', color: 'emerald' },
       { id: 's2', userId: demoUserId, name: 'Transport', dailyLimit: 15, monthlyLimit: 450, icon: 'Car', color: 'sky' }
